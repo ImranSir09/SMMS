@@ -3,6 +3,10 @@ import { Staff } from '../types';
 import { CloseIcon, PlusIcon } from './icons';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+const SUBJECT_OPTIONS = [
+    'English', 'Mathematics', 'Science', 'Social Science', 'Hindi', 
+    'Urdu', 'Kashmiri', 'Computer Science', 'Art & Craft', 'Music', 'Physical Education', 'General Knowledge'
+];
 
 const toBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -177,13 +181,14 @@ const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) =
                                     <option value="">-- Class --</option>
                                     {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
-                                <input
-                                    type="text"
-                                    placeholder="Subject"
+                                <select
                                     value={assignment.subject}
                                     onChange={(e) => handleAssignmentChange(index, 'subject', e.target.value)}
                                     className={inputStyle}
-                                />
+                                >
+                                    <option value="">-- Subject --</option>
+                                    {SUBJECT_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
                                 <button
                                     type="button"
                                     onClick={() => removeAssignment(index)}

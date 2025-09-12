@@ -1,4 +1,3 @@
-
 // FIX: Replaced incorrect file content (which was a React component) with the correct type definitions.
 // This resolves all cascading import and type errors across the application.
 
@@ -54,8 +53,22 @@ export interface Mark {
   examId: number;
   studentId: number;
   subject: string;
-  assessment: string; // e.g., 'Term1', 'Periodic1'
-  marks: number;
+  fa1?: number;
+  fa2?: number;
+  fa3?: number;
+  fa4?: number;
+  fa5?: number;
+  fa6?: number;
+  coCurricular?: number;
+  summative?: number;
+}
+
+export interface StudentExamData {
+    id?: number;
+    examId: number;
+    studentId: number;
+    proficiencyLevel?: 'Stream' | 'Mountain' | 'Sky' | '';
+    remarks?: string;
 }
 
 export interface DailyLog {

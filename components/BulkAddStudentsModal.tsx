@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import Modal from './Modal';
 import { db } from '../services/db';
 import { Student } from '../types';
-import { UploadIcon } from './icons';
+import { DownloadIcon, UploadIcon } from './icons';
 
 // Define the fields we want to map from the CSV
 const STUDENT_FIELDS: { key: keyof Student; label: string; required: boolean }[] = [
@@ -71,6 +71,19 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             setError(err.message || 'Failed to parse CSV file.');
         }
     };
+    
+    const handleDownloadTemplate = () => {
+        const headers = STUDENT_FIELDS.map(field => `"${field.label.replace(/"/g, '""')}"`).join(',');
+        const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'student_upload_template.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
 
     const handleMappingChange = (fieldKey: keyof Student, csvHeader: string) => {
         setMapping(prev => ({ ...prev, [fieldKey]: csvHeader }));
@@ -135,13 +148,19 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     <div className="text-center">
                         <h3 className="text-lg font-medium">Upload a CSV file</h3>
                         <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Ensure the first row of your file contains headers.
+                            Ensure the first row matches the template.
                         </p>
-                        <label className="cursor-pointer inline-flex items-center justify-center gap-2 py-2 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors">
-                            <UploadIcon className="w-5 h-5"/>
-                            <span>Choose File</span>
-                            <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
-                        </label>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                             <label className="cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 py-2 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors">
+                                <UploadIcon className="w-5 h-5"/>
+                                <span>Choose File</span>
+                                <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+                            </label>
+                             <button onClick={handleDownloadTemplate} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-2 px-4 rounded-md bg-gray-600 hover:bg-gray-700 text-white transition-colors">
+                                <DownloadIcon className="w-5 h-5"/>
+                                <span>Download Template</span>
+                            </button>
+                        </div>
                         {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
                     </div>
                 );
@@ -228,8 +247,10 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
     };
     
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title="Bulk Add Students" size="xl">
-            {renderContent()}
+        <Modal isOpen={isOpen} onClose={handleClose} title="Bulk Add Students">
+            <div className="p-4">
+                {renderContent()}
+            </div>
         </Modal>
     );
 };

@@ -1,62 +1,77 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Exam, Student, Mark } from '../types';
+import { Exam, Student, Mark, StudentExamData, SchoolDetails } from '../types';
 import Card from '../components/Card';
+import { useAppData } from '../hooks/useAppData';
+import { generatePdfFromComponent } from '../utils/pdfGenerator';
+import ProgressCard from '../components/ProgressCard';
+import { ProgressCardIcon } from '../components/icons';
 
-const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
-const labelStyle = "block text-sm font-medium text-foreground/80 mb-1";
+const inputStyle = "p-1 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs transition-colors";
+const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
 const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors";
 
 const ExamMarks: React.FC = () => {
     const { examId } = useParams<{ examId: string }>();
     const navigate = useNavigate();
     const numericExamId = Number(examId);
+    const { schoolDetails } = useAppData();
 
-    const [newMark, setNewMark] = useState({ studentId: '', subject: '', assessment: '', marks: '' });
+    const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [newMark, setNewMark] = useState<Partial<Mark>>({ subject: '' });
+    const [studentExamData, setStudentExamData] = useState<Partial<StudentExamData>>({});
 
     const exam = useLiveQuery(() => db.exams.get(numericExamId), [numericExamId]);
+    const students = useLiveQuery(() => exam ? db.students.where('className').equals(exam.className).sortBy('rollNo') : [], [exam]);
+    const marks = useLiveQuery(() => db.marks.where({ examId: numericExamId, studentId: Number(selectedStudentId) }).toArray(), [numericExamId, selectedStudentId]);
     
-    const students = useLiveQuery(async () => {
-        if (!exam) return [];
-        return db.students.where('className').equals(exam.className).sortBy('rollNo');
-    }, [exam]);
+    const studentExamDataFromDb = useLiveQuery(() => db.studentExamData.where({ examId: numericExamId, studentId: Number(selectedStudentId) }).first(), [numericExamId, selectedStudentId]);
 
-    const marks = useLiveQuery(() => db.marks.where('examId').equals(numericExamId).toArray(), [numericExamId]);
+    useEffect(() => {
+        if (students && students.length > 0 && !selectedStudentId) {
+            setSelectedStudentId(String(students[0].id));
+        }
+    }, [students, selectedStudentId]);
 
-    const marksByStudent = useMemo(() => {
-        const map = new Map<number, Mark[]>();
-        marks?.forEach(mark => {
-            const list = map.get(mark.studentId) || [];
-            list.push(mark);
-            map.set(mark.studentId, list);
-        });
-        return map;
-    }, [marks]);
+    useEffect(() => {
+        setStudentExamData(studentExamDataFromDb || { proficiencyLevel: '', remarks: '' });
+    }, [studentExamDataFromDb]);
+    
+    const handleStudentExamDataChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>) => {
+        setStudentExamData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
 
-    if (!exam || !students) {
-        return <div>Loading exam details...</div>;
-    }
+    const saveStudentExamData = useCallback(async () => {
+        if (!selectedStudentId) return;
+        const dataToSave: StudentExamData = {
+            ...studentExamData,
+            examId: numericExamId,
+            studentId: Number(selectedStudentId),
+        };
+        await db.studentExamData.put(dataToSave);
+    }, [studentExamData, numericExamId, selectedStudentId]);
 
     const handleNewMarkChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setNewMark({ ...newMark, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        // @ts-ignore
+        setNewMark({ ...newMark, [name]: value === '' ? undefined : (name === 'subject' ? value : Number(value)) });
     };
 
     const handleAddMark = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMark.studentId || !newMark.subject.trim() || !newMark.assessment.trim() || newMark.marks === '') {
-            alert('Please fill all fields for the new mark.');
+        if (!selectedStudentId || !newMark.subject?.trim()) {
+            alert('Please provide a subject.');
             return;
         }
-        await db.marks.add({
+        await db.marks.put({
             examId: numericExamId,
-            studentId: Number(newMark.studentId),
-            subject: newMark.subject.trim(),
-            assessment: newMark.assessment.trim(),
-            marks: Number(newMark.marks),
-        });
-        setNewMark({ studentId: '', subject: '', assessment: '', marks: '' }); // Reset form
+            studentId: Number(selectedStudentId),
+            ...newMark
+        } as Mark);
+        setNewMark({ subject: '' });
     };
 
     const handleDeleteMark = async (markId: number) => {
@@ -65,78 +80,105 @@ const ExamMarks: React.FC = () => {
         }
     };
 
+    const handleGenerateProgressCard = async () => {
+        const student = students?.find(s => s.id === Number(selectedStudentId));
+        if (!student || !marks || !schoolDetails) {
+            alert("Missing data to generate card.");
+            return;
+        }
+        setIsGeneratingPdf(true);
+        await generatePdfFromComponent(
+            <ProgressCard 
+                student={student} 
+                marks={marks} 
+                schoolDetails={schoolDetails as SchoolDetails}
+                studentExamData={studentExamData as StudentExamData}
+                examName={exam?.name || 'Progress Report'}
+            />,
+            `Progress-Card-${student.admissionNo}`
+        );
+        setIsGeneratingPdf(false);
+    };
+
+    if (!exam || !students) return <div>Loading...</div>;
+    const selectedStudent = students.find(s => s.id === Number(selectedStudentId));
+
     return (
-        <div className="animate-fade-in space-y-6">
-            <div>
-                 <button onClick={() => navigate('/exams')} className="text-sm text-primary hover:underline mb-2">&larr; Back to all exams</button>
-                 <h1 className="text-2xl font-bold">Manage Marks for {exam.name}</h1>
-                 <p className="text-foreground/70">Class: {exam.className}</p>
+        <div className="h-full flex flex-col gap-2 animate-fade-in">
+             <button onClick={() => navigate('/exams')} className="text-sm text-primary hover:underline self-start">&larr; Back to exams</button>
+            <div className="flex-shrink-0 grid grid-cols-2 gap-2">
+                 <select value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)} className={`${inputStyle} w-full text-sm col-span-2`}>
+                     {students.map(s => <option key={s.id} value={s.id}>{s.rollNo}. {s.name}</option>)}
+                 </select>
+                 <button onClick={handleGenerateProgressCard} disabled={isGeneratingPdf} className="flex items-center justify-center gap-2 col-span-2 py-2 px-3 rounded-md text-xs font-semibold transition-colors bg-green-600 text-white hover:bg-green-700 disabled:opacity-50">
+                    <ProgressCardIcon className="w-4 h-4" />
+                    {isGeneratingPdf ? 'Generating...' : 'Download Progress Card'}
+                 </button>
             </div>
 
-            <Card className="p-6">
-                <h2 className="text-lg font-semibold mb-4">Add New Mark</h2>
-                <form onSubmit={handleAddMark} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                    <div>
-                        <label htmlFor="studentId" className={labelStyle}>Student</label>
-                        <select id="studentId" name="studentId" value={newMark.studentId} onChange={handleNewMarkChange} className={inputStyle} required>
-                            <option value="" disabled>-- Select Student --</option>
-                            {students.map(s => <option key={s.id} value={s.id}>{s.name} (Roll: {s.rollNo})</option>)}
-                        </select>
+            <div className="grid grid-cols-2 gap-2">
+                <Card className="p-2">
+                    <label className={labelStyle}>Proficiency</label>
+                    <select name="proficiencyLevel" value={studentExamData.proficiencyLevel || ''} onChange={handleStudentExamDataChange} onBlur={saveStudentExamData} className={inputStyle}>
+                        <option value="">-- Select --</option>
+                        <option value="Stream">Stream</option>
+                        <option value="Mountain">Mountain</option>
+                        <option value="Sky">Sky</option>
+                    </select>
+                </Card>
+                 <Card className="p-2">
+                     <label className={labelStyle}>Remarks</label>
+                     <textarea name="remarks" value={studentExamData.remarks || ''} onChange={handleStudentExamDataChange} onBlur={saveStudentExamData} rows={1} className={`${inputStyle} resize-none`} />
+                </Card>
+            </div>
+            
+             <Card className="p-2">
+                <h2 className="text-sm font-semibold mb-1">Add Subject Marks</h2>
+                <form onSubmit={handleAddMark} className="space-y-1">
+                    <input name="subject" value={newMark.subject || ''} onChange={handleNewMarkChange} placeholder="Subject Name" className={inputStyle} required/>
+                    <div className="grid grid-cols-4 gap-1">
+                        <input name="fa1" type="number" value={newMark.fa1 ?? ''} onChange={handleNewMarkChange} placeholder="FA1" className={inputStyle}/>
+                        <input name="fa2" type="number" value={newMark.fa2 ?? ''} onChange={handleNewMarkChange} placeholder="FA2" className={inputStyle}/>
+                        <input name="fa3" type="number" value={newMark.fa3 ?? ''} onChange={handleNewMarkChange} placeholder="FA3" className={inputStyle}/>
+                        <input name="fa4" type="number" value={newMark.fa4 ?? ''} onChange={handleNewMarkChange} placeholder="FA4" className={inputStyle}/>
+                        <input name="fa5" type="number" value={newMark.fa5 ?? ''} onChange={handleNewMarkChange} placeholder="FA5" className={inputStyle}/>
+                        <input name="fa6" type="number" value={newMark.fa6 ?? ''} onChange={handleNewMarkChange} placeholder="FA6" className={inputStyle}/>
+                        <input name="coCurricular" type="number" value={newMark.coCurricular ?? ''} onChange={handleNewMarkChange} placeholder="CCA" className={inputStyle}/>
+                        <input name="summative" type="number" value={newMark.summative ?? ''} onChange={handleNewMarkChange} placeholder="SA" className={inputStyle}/>
                     </div>
-                     <div>
-                        <label htmlFor="assessment" className={labelStyle}>Assessment</label>
-                        <input id="assessment" name="assessment" value={newMark.assessment} onChange={handleNewMarkChange} placeholder="e.g., Term 1" className={inputStyle} required/>
-                    </div>
-                    <div>
-                        <label htmlFor="subject" className={labelStyle}>Subject</label>
-                        <input id="subject" name="subject" value={newMark.subject} onChange={handleNewMarkChange} placeholder="e.g., Maths" className={inputStyle} required/>
-                    </div>
-                    <div>
-                        <label htmlFor="marks" className={labelStyle}>Marks Obtained</label>
-                        <input id="marks" name="marks" type="number" value={newMark.marks} onChange={handleNewMarkChange} placeholder="e.g., 85" className={inputStyle} required/>
-                    </div>
-                    <button type="submit" className={`${buttonStyle} bg-primary text-primary-foreground hover:bg-primary-hover`}>Add Mark</button>
+                    <button type="submit" className="w-full mt-1 py-2 px-3 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary-hover">Add/Update Subject</button>
                 </form>
             </Card>
-
-             <Card className="p-6">
-                <h2 className="text-lg font-semibold mb-4">Entered Marks</h2>
-                <div className="space-y-4">
-                   {students.map(student => {
-                       const studentMarks = marksByStudent.get(student.id!) || [];
-                       if (studentMarks.length === 0) return null;
-                       
-                       return (
-                           <div key={student.id} className="p-3 bg-background/50 rounded-lg">
-                               <p className="font-bold">{student.name}</p>
-                               <table className="w-full text-left text-sm mt-2">
-                                   <thead>
-                                       <tr className="border-b border-border">
-                                            <th className="p-2 font-semibold">Assessment</th>
-                                            <th className="p-2 font-semibold">Subject</th>
-                                            <th className="p-2 font-semibold">Marks</th>
-                                            <th className="p-2"></th>
-                                       </tr>
-                                   </thead>
-                                   <tbody>
-                                       {studentMarks.map(mark => (
-                                           <tr key={mark.id} className="border-b border-border/50 last:border-b-0">
-                                               <td className="p-2">{mark.assessment}</td>
-                                               <td className="p-2">{mark.subject}</td>
-                                               <td className="p-2 font-medium">{mark.marks}</td>
-                                               <td className="p-2 text-right">
-                                                   <button onClick={() => handleDeleteMark(mark.id!)} className="text-red-500 hover:underline text-xs">Delete</button>
-                                               </td>
-                                           </tr>
-                                       ))}
-                                   </tbody>
-                               </table>
-                           </div>
-                       )
-                   })}
-                   {(!marks || marks.length === 0) && <p className="text-center text-foreground/60 p-4">No marks have been entered for this exam yet.</p>}
-                </div>
-            </Card>
+            
+            <div className="flex-1 overflow-y-auto">
+                {marks && marks.length > 0 ? (
+                    <div className="text-[10px] space-y-1">
+                        {marks.map(mark => (
+                           <Card key={mark.id} className="p-1.5">
+                               <div className="flex items-center justify-between">
+                                   <p className="font-bold text-xs">{mark.subject}</p>
+                                   <div>
+                                       <button onClick={() => setNewMark(mark)} className="text-primary font-semibold px-1">Edit</button>
+                                       <button onClick={() => handleDeleteMark(mark.id!)} className="text-red-500 font-semibold px-1">Del</button>
+                                   </div>
+                               </div>
+                                <div className="grid grid-cols-4 gap-x-2 gap-y-1 mt-1 text-center">
+                                    <span>FA1: {mark.fa1 ?? '-'}</span>
+                                    <span>FA2: {mark.fa2 ?? '-'}</span>
+                                    <span>FA3: {mark.fa3 ?? '-'}</span>
+                                    <span>FA4: {mark.fa4 ?? '-'}</span>
+                                    <span>FA5: {mark.fa5 ?? '-'}</span>
+                                    <span>FA6: {mark.fa6 ?? '-'}</span>
+                                    <span className="font-semibold">CCA: {mark.coCurricular ?? '-'}</span>
+                                    <span className="font-semibold">SA: {mark.summative ?? '-'}</span>
+                               </div>
+                           </Card>
+                       ))}
+                   </div>
+                ) : (
+                    <p className="text-center text-xs text-foreground/60 p-4">No marks entered for {selectedStudent?.name || 'this student'} yet.</p>
+                )}
+            </div>
         </div>
     );
 };

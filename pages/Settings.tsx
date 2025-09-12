@@ -4,7 +4,7 @@ import { db } from '../services/db';
 import { SchoolDetails } from '../types';
 import Card from '../components/Card';
 
-const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
+const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs transition-colors";
 const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors";
 const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground hover:bg-primary-hover`;
 
@@ -53,14 +53,19 @@ const Settings: React.FC = () => {
             for(const table of db.tables) {
                 allData[table.name] = await table.toArray();
             }
-
-            const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-                JSON.stringify(allData, null, 2)
-            )}`;
+            
+            // Using Blob for more robust file handling
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.href = jsonString;
+            link.href = url;
             link.download = `aegis-school-backup-${new Date().toISOString().split('T')[0]}.json`;
+            
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
         } catch (error) {
             console.error("Backup failed:", error);
             alert("Backup failed. See console for details.");
@@ -72,6 +77,7 @@ const Settings: React.FC = () => {
         if (!file) return;
 
         if(!window.confirm("Restoring from backup will ERASE all current data. Are you absolutely sure you want to proceed?")) {
+            event.target.value = ''; // Reset file input
             return;
         }
 
@@ -83,13 +89,33 @@ const Settings: React.FC = () => {
                 
                 const data = JSON.parse(text);
 
+                // Define table order to respect dependencies
+                const tableOrder = [
+                    'schoolDetails', 'students', 'staff', 'exams', 'dailyLogs',
+                    'marks', 'studentExamData', 'timetable'
+                ];
+                
+                // Validate that the backup file contains expected table data
+                const backupTables = Object.keys(data);
+                if (!backupTables.length || !db.tables.some(t => backupTables.includes(t.name))) {
+                    throw new Error("This does not appear to be a valid backup file.");
+                }
+
                 await db.transaction('rw', db.tables, async () => {
-                    for (const tableName of Object.keys(data)) {
+                    // Clear all tables first, in reverse dependency order.
+                    // @ts-ignore
+                    const tablesToClear = tableOrder.filter(name => db[name]).reverse();
+                    for (const tableName of tablesToClear) {
                         // @ts-ignore
-                        const table = db[tableName];
-                        if (table) {
-                            await table.clear();
-                            await table.bulkAdd(data[tableName]);
+                        await db[tableName].clear();
+                    }
+
+                    // Import data in dependency order using bulkPut to preserve IDs.
+                    for (const tableName of tableOrder) {
+                        // @ts-ignore
+                        if (data[tableName] && db[tableName]) {
+                            // @ts-ignore
+                            await db[tableName].bulkPut(data[tableName]);
                         }
                     }
                 });
@@ -97,54 +123,53 @@ const Settings: React.FC = () => {
                 alert('Data restored successfully! The application will now reload.');
                 refreshSchoolDetails(); // Refresh context data
                 window.location.reload(); // Reload to reflect changes everywhere
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Restore failed:", error);
-                alert("Restore failed. Make sure it's a valid backup file.");
+                alert(`Restore failed: ${error.message}. Make sure it's a valid backup file for this application.`);
+            } finally {
+                if (event.target) event.target.value = ''; // Reset file input
             }
         };
         reader.readAsText(file);
     };
 
     return (
-        <div className="space-y-8 animate-fade-in">
-            <h1 className="text-2xl font-bold">Settings</h1>
-            
-            <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4 border-b border-border pb-2">School Details</h2>
-                <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-foreground/80 mb-1">School Name</label>
-                            <input name="name" value={details.name || ''} onChange={handleChange} placeholder="School Name" className={inputStyle} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-foreground/80 mb-1">Address</label>
-                            <input name="address" value={details.address || ''} onChange={handleChange} placeholder="Address" className={inputStyle} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-foreground/80 mb-1">Contact Info</label>
-                            <input name="contact" value={details.contact || ''} onChange={handleChange} placeholder="Contact Info" className={inputStyle} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-foreground/80 mb-1">School Logo</label>
-                            <input type="file" onChange={handleLogoChange} accept="image/*" className="block w-full text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors"/>
-                            {logoPreview && <img src={logoPreview} alt="Logo Preview" className="mt-2 w-24 h-24 object-cover rounded-full border-2 border-border shadow-sm" />}
-                        </div>
+        <div className="h-full flex flex-col gap-4 animate-fade-in">
+            <Card className="p-3 flex-1">
+                <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">School Details</h2>
+                <div className="space-y-3">
+                    <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">School Name</label>
+                        <input name="name" value={details.name || ''} onChange={handleChange} className={inputStyle} />
                     </div>
-                    <button onClick={handleSaveDetails} className={primaryButtonStyle}>Save Details</button>
+                    <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">Address</label>
+                        <input name="address" value={details.address || ''} onChange={handleChange} className={inputStyle} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">Contact Info</label>
+                        <input name="contact" value={details.contact || ''} onChange={handleChange} className={inputStyle} />
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div>
+                            <label className="block text-xs font-medium text-foreground/80 mb-1">Logo</label>
+                            <input type="file" onChange={handleLogoChange} accept="image/*" className="block w-full text-xs text-foreground file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
+                        </div>
+                        {logoPreview && <img src={logoPreview} alt="Logo Preview" className="w-12 h-12 object-cover rounded-full border-2 border-border shadow-sm" />}
+                    </div>
+                    <button onClick={handleSaveDetails} className={`${primaryButtonStyle} w-full`}>Save Details</button>
                 </div>
             </Card>
 
-            <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-4 border-b border-border pb-2">Data Management</h2>
-                <div className="grid grid-cols-2 gap-4">
-                    <button onClick={handleBackup} className={`${buttonStyle} bg-green-600 hover:bg-green-700 text-white`}>Backup All Data</button>
+            <Card className="p-3">
+                <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Data Management</h2>
+                <div className="grid grid-cols-2 gap-2">
+                    <button onClick={handleBackup} className={`${buttonStyle} bg-green-600 hover:bg-green-700 text-white`}>Backup</button>
                     <label className={`${buttonStyle} bg-yellow-600 hover:bg-yellow-700 text-white block text-center cursor-pointer`}>
-                        Restore from Backup
+                        Restore
                         <input type="file" onChange={handleRestore} accept=".json" className="hidden" />
                     </label>
                 </div>
-                <p className="text-sm mt-4 text-foreground/70">Backup creates a local JSON file of all application data. <span className="font-semibold text-red-500">Restore will overwrite all existing data with the content from a backup file.</span></p>
             </Card>
         </div>
     );

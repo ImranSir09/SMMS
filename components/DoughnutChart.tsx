@@ -7,12 +7,11 @@ interface DoughnutChartProps {
 const COLORS = [
   '#4f46e5', '#f97316', '#16a34a', '#3b82f6',
   '#ef4444', '#eab308', '#8b5cf6', '#06b6d4',
-  '#d946ef', '#ec4899',
 ];
 
 const DoughnutChart: React.FC<DoughnutChartProps> = ({ data }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  if (total === 0) return <p className="text-foreground/60">No data to display</p>;
+  if (total === 0) return <p className="text-foreground/60 text-xs">No data</p>;
 
   let cumulative = 0;
   const segments = data.map((item, index) => {
@@ -34,39 +33,29 @@ const DoughnutChart: React.FC<DoughnutChartProps> = ({ data }) => {
       color: COLORS[index % COLORS.length],
       label: item.label,
       value: item.value,
-      percentage: (percentage * 100).toFixed(1),
     };
   });
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center w-full h-full gap-8">
-      <div className="relative w-56 h-56">
+    <div className="flex flex-col items-center justify-center w-full h-full gap-2">
+      <div className="relative w-28 h-28">
         <svg viewBox="0 0 100 100" className="transform -rotate-90">
           {segments.map((segment, index) => (
-             <path
-                key={index}
-                d={segment.path}
-                stroke={segment.color}
-                strokeWidth="12"
-                fill="none"
-                className="transition-all duration-500"
-             />
+             <path key={index} d={segment.path} stroke={segment.color} strokeWidth="15" fill="none" />
           ))}
         </svg>
          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl font-bold text-foreground">{total}</span>
-            <span className="text-sm text-foreground/70">Total Students</span>
+            <span className="text-xl font-bold text-foreground">{total}</span>
+            <span className="text-[10px] text-foreground/70">Students</span>
         </div>
       </div>
-      <div className="w-full md:w-1/2 max-h-64 overflow-y-auto">
-        <ul className="space-y-2 text-sm">
-          {segments.map((segment, index) => (
-            <li key={index} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: segment.color }}></span>
-                    <span className="font-semibold">{segment.label}</span>
-                </div>
-              <span className="text-foreground/80">{segment.value} ({segment.percentage}%)</span>
+      <div className="w-full">
+        <ul className="text-xs space-y-1">
+          {segments.slice(0, 4).map((segment, index) => ( // Show top 4
+            <li key={index} className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: segment.color }}></span>
+                <span className="font-semibold truncate">{segment.label}:</span>
+                <span className="text-foreground/80 ml-auto">{segment.value}</span>
             </li>
           ))}
         </ul>

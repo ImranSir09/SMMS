@@ -4,7 +4,7 @@ import { db } from '../services/db';
 import { Student } from '../types';
 import { UploadIcon, PrintIcon, StudentsIcon } from '../components/icons';
 import BulkAddStudentsModal from '../components/BulkAddStudentsModal';
-import SlideOutPanel from '../components/SlideOutPanel';
+import Modal from '../components/Modal';
 import StudentForm from '../components/StudentForm';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
@@ -12,12 +12,13 @@ import RollStatement from '../components/RollStatement';
 import StudentCard from '../components/StudentCard';
 import IdCard from '../components/IdCard';
 
-
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 
-const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors disabled:opacity-60";
+const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors disabled:opacity-60";
+const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground hover:bg-primary-hover`;
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
-const successButtonStyle = `${buttonStyle} bg-success text-success-foreground hover:bg-success-hover`;
+
+const STUDENTS_PER_PAGE = 8;
 
 const Students: React.FC = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -25,34 +26,16 @@ const Students: React.FC = () => {
     const [editingStudent, setEditingStudent] = useState<Partial<Student> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeClass, setActiveClass] = useState<string | null>(null);
-    const [generatingPdf, setGeneratingPdf] = useState<string | number | null>(null); // 'roll' or student.id
+    const [generatingPdf, setGeneratingPdf] = useState<string | number | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
     
     const { schoolDetails } = useAppData();
     const students = useLiveQuery(() => db.students.toArray(), []);
 
-    const { groupedStudents, classTabs } = useMemo(() => {
-        if (!students) return { groupedStudents: new Map(), classTabs: [] };
-
-        const grouped = new Map<string, Student[]>();
-        students.forEach(student => {
-            const classList = grouped.get(student.className) || [];
-            classList.push(student);
-            grouped.set(student.className, classList);
-        });
-
-        grouped.forEach(list => {
-            list.sort((a, b) => a.rollNo.localeCompare(b.rollNo, undefined, { numeric: true, sensitivity: 'base' }));
-        });
-
-        const tabs = Array.from(grouped.keys()).sort((a, b) => {
-            const indexA = CLASS_OPTIONS.indexOf(a);
-            const indexB = CLASS_OPTIONS.indexOf(b);
-            if (indexA === -1) return 1;
-            if (indexB === -1) return -1;
-            return indexA - indexB;
-        });
-
-        return { groupedStudents: grouped, classTabs: tabs };
+    const classTabs = useMemo(() => {
+        if (!students) return [];
+        const classes = new Set(students.map(s => s.className));
+        return CLASS_OPTIONS.filter(c => classes.has(c));
     }, [students]);
 
     useEffect(() => {
@@ -62,16 +45,30 @@ const Students: React.FC = () => {
     }, [classTabs, activeClass]);
 
     const filteredStudents = useMemo(() => {
-        if (!activeClass || !groupedStudents.has(activeClass)) return [];
-        const classStudents = groupedStudents.get(activeClass) || [];
-        if (!searchTerm) return classStudents;
+        if (!activeClass || !students) return [];
+        const classStudents = students
+            .filter(s => s.className === activeClass)
+            .sort((a, b) => a.rollNo.localeCompare(b.rollNo, undefined, { numeric: true, sensitivity: 'base' }));
 
+        if (!searchTerm) return classStudents;
         return classStudents.filter(student =>
             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.rollNo.includes(searchTerm) ||
-            student.admissionNo.includes(searchTerm)
+            student.rollNo.includes(searchTerm)
         );
-    }, [activeClass, groupedStudents, searchTerm]);
+    }, [activeClass, students, searchTerm]);
+    
+    // Pagination logic
+    const totalPages = Math.ceil((filteredStudents?.length || 0) / STUDENTS_PER_PAGE);
+    const paginatedStudents = useMemo(() => {
+        if (!filteredStudents) return [];
+        const startIndex = (currentPage - 1) * STUDENTS_PER_PAGE;
+        return filteredStudents.slice(startIndex, startIndex + STUDENTS_PER_PAGE);
+    }, [filteredStudents, currentPage]);
+    
+    useEffect(() => {
+        setCurrentPage(1); // Reset to first page on filter change
+    }, [activeClass, searchTerm]);
+
 
     const handleGenerateIdCard = async (student: Student) => {
         if (!schoolDetails || !student.id) return;
@@ -83,20 +80,8 @@ const Students: React.FC = () => {
         setGeneratingPdf(null);
     };
 
-    const handleGenerateRollStatement = async (className: string) => {
-        if (!schoolDetails || !className) return;
-        setGeneratingPdf('roll');
-        const classStudents = await db.students.where('className').equals(className).sortBy('rollNo');
-        await generatePdfFromComponent(
-            <RollStatement students={classStudents} className={className} schoolDetails={schoolDetails} />,
-            `Roll-Statement-Class-${className}`
-        );
-        setGeneratingPdf(null);
-    };
-
-
     const handleAdd = () => {
-        setEditingStudent({ gender: 'Male', photo: null, className: activeClass || '', category: 'General', admissionDate: '' });
+        setEditingStudent({ gender: 'Male', photo: null, className: activeClass || '', section: 'A' });
         setIsFormOpen(true);
     };
 
@@ -118,7 +103,7 @@ const Students: React.FC = () => {
             await db.students.add(studentData);
         }
         handleCloseForm();
-        setActiveClass(studentData.className); // Switch to the class of the saved student
+        setActiveClass(studentData.className);
     };
 
     const handleCloseForm = () => {
@@ -127,102 +112,75 @@ const Students: React.FC = () => {
     }
 
     return (
-        <div className="animate-fade-in">
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-                <h1 className="text-2xl font-bold">Student Database</h1>
-                <div className="flex gap-2">
-                    <button onClick={() => setIsBulkAddModalOpen(true)} className={`${successButtonStyle} flex items-center gap-2`}>
-                        <UploadIcon className="w-4 h-4"/> Bulk Add
-                    </button>
-                    <button onClick={handleAdd} className={accentButtonStyle}>Add Student</button>
-                </div>
-            </div>
-            
-            <div className="border-b border-border mb-4 bg-card/80 sticky top-16 z-10 -mx-4 px-4 py-2">
-                <nav className="-mb-px flex space-x-4 overflow-x-auto" aria-label="Tabs">
-                    {classTabs.map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveClass(tab)}
-                            className={`whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors ${
-                                activeClass === tab
-                                ? 'border-primary text-primary'
-                                : 'border-transparent text-foreground/60 hover:text-foreground/80 hover:border-gray-300'
-                            }`}
-                        >
-                            Class {tab}
-                        </button>
-                    ))}
-                </nav>
-            </div>
-            
-            {activeClass && (
-                <div>
-                     <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-                         <input
-                            type="text"
-                            placeholder={`Search in Class ${activeClass}...`}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="p-2 bg-background border border-input rounded-md w-full sm:w-auto"
-                        />
-                         <button 
-                            onClick={() => handleGenerateRollStatement(activeClass)}
-                            disabled={!!generatingPdf}
-                            className="flex items-center gap-2 py-2 px-4 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors disabled:opacity-60">
-                            <PrintIcon className="w-4 h-4" />
-                            {generatingPdf === 'roll' ? 'Generating...' : 'Generate Roll Statement'}
-                         </button>
-                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {filteredStudents.map((student) => (
-                           <StudentCard
-                                key={student.id}
-                                student={student}
-                                isPdfGenerating={generatingPdf === student.id}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                                onGenerateId={handleGenerateIdCard}
-                           />
-                        ))}
-                    </div>
-                     {filteredStudents.length === 0 && <p className="text-center p-6 text-foreground/60 col-span-full">No students found for this class or matching your search.</p>}
-                </div>
-            )}
-            
-            {!activeClass && students && students.length > 0 && (
-                <p className="text-center p-6 text-foreground/60">Select a class tab to view students.</p>
-            )}
-
-            {(!students || students.length === 0) && (
-                 <div className="text-center p-10 border-2 border-dashed border-border rounded-lg mt-6">
-                    <div className="flex justify-center mb-4">
-                        <StudentsIcon className="w-12 h-12 text-foreground/20" />
-                    </div>
-                    <h3 className="text-xl font-semibold">No Students Found</h3>
-                    <p className="mt-2 text-foreground/60">
-                        Get started by adding your first student to the database.
-                    </p>
-                    <button onClick={handleAdd} className={`${accentButtonStyle} mt-4`}>
-                        Add First Student
-                    </button>
-                </div>
-            )}
-
-            {editingStudent && (
-                <SlideOutPanel
-                    isOpen={isFormOpen}
-                    onClose={handleCloseForm}
-                    title={editingStudent.id ? 'Edit Student' : 'Add New Student'}
+        <div className="h-full flex flex-col">
+            {/* Header */}
+            <div className="flex-shrink-0 flex items-center justify-between gap-2 mb-2">
+                <select 
+                    value={activeClass || ''} 
+                    onChange={e => setActiveClass(e.target.value)}
+                    className="p-2 text-sm bg-background border border-input rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                    <StudentForm 
-                        studentToEdit={editingStudent}
-                        onSave={handleSave}
-                        onClose={handleCloseForm}
-                    />
-                </SlideOutPanel>
+                    <option value="" disabled>-- Select a Class --</option>
+                    {classTabs.map(c => <option key={c} value={c}>Class {c}</option>)}
+                </select>
+                <button onClick={handleAdd} className={accentButtonStyle}>Add</button>
+            </div>
+             <input
+                type="text"
+                placeholder={`Search in Class ${activeClass}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="p-2 text-sm bg-background border border-input rounded-md w-full mb-2"
+            />
+
+            {/* Content Area */}
+            <div className="flex-1 grid grid-cols-2 grid-rows-4 gap-2">
+                {paginatedStudents.map((student) => (
+                   <StudentCard
+                        key={student.id}
+                        student={student}
+                        isPdfGenerating={generatingPdf === student.id}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        onGenerateId={handleGenerateIdCard}
+                   />
+                ))}
+            </div>
+            
+            {(paginatedStudents.length === 0 && students && students.length > 0) && (
+                <div className="flex-1 flex items-center justify-center text-center">
+                    <p className="text-sm text-foreground/60">No students found for this class or search term.</p>
+                </div>
             )}
+            
+            {(!students || students.length === 0) && (
+                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-border rounded-lg">
+                    <StudentsIcon className="w-10 h-10 text-foreground/20" />
+                    <h3 className="text-md font-semibold mt-2">No Students Added</h3>
+                    <p className="mt-1 text-xs text-foreground/60">
+                        Add your first student to the database.
+                    </p>
+                </div>
+            )}
+
+            {/* Footer / Pagination */}
+            <div className="flex-shrink-0 flex items-center justify-center gap-4 pt-2 text-sm">
+                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="font-semibold disabled:opacity-50">Prev</button>
+                <span className="text-foreground/80">Page {currentPage} of {totalPages || 1}</span>
+                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="font-semibold disabled:opacity-50">Next</button>
+            </div>
+            
+            <Modal
+                isOpen={isFormOpen}
+                onClose={handleCloseForm}
+                title={editingStudent?.id ? 'Edit Student' : 'Add New Student'}
+            >
+                <StudentForm 
+                    studentToEdit={editingStudent!}
+                    onSave={handleSave}
+                    onClose={handleCloseForm}
+                />
+            </Modal>
             
             <BulkAddStudentsModal isOpen={isBulkAddModalOpen} onClose={() => setIsBulkAddModalOpen(false)} />
         </div>
