@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAppData } from '../hooks/useAppData';
@@ -16,7 +15,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="flex-shrink-0 grid grid-cols-3 items-center p-2 bg-card/80 backdrop-blur-sm border-b border-border h-14 z-20">
+    <header className="flex-shrink-0 grid grid-cols-3 items-center p-2 bg-card border-b border-border h-14 z-20">
       <div className="flex items-center justify-start">
         {/* Placeholder for potential left-side action */}
       </div>

@@ -94,15 +94,31 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         background-color: var(--background);
+        position: relative;
+      }
+
+      .background-design {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.05;
+        transform: scale(1.5);
+        filter: blur(60px);
+      }
+      
+      .dark .background-design {
+        opacity: 0.1;
       }
 
       /* Enhanced Glassmorphism Effect */
       .bg-card {
-        background-color: color-mix(in srgb, var(--card) 80%, transparent);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid color-mix(in srgb, var(--border) 20%, transparent);
-        box-shadow: 0 4px 30px color-mix(in srgb, black 5%, transparent);
+        background-color: color-mix(in srgb, var(--card) 70%, transparent);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
+        box-shadow: 0 4px 30px color-mix(in srgb, black 8%, transparent);
       }
       
       .font-gothic {
@@ -171,6 +187,13 @@
     </script>
 </head>
 <body>
+    <div class="background-design">
+        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+            <g>
+                <path fill="var(--primary)" d="M1024 192v832H0v-128h96v-128H0v-128h96V448H0V320h96V192h928zM192 192v832H96v-128h96V640H96V512h96V320H96V192h96z m192 0v832h-96v-128h96V640h-96V512h96V320h-96V192h96z m192 0v832h-96v-128h96V640h-96V512h96V320h-96V192h96z m192 0v832h-96v-128h96V640h-96V512h96V320h-96V192h96z m192 0v832h-96v-128h96V640h-96V512h96V320h-96V192h96z"/>
+            </g>
+        </svg>
+    </div>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

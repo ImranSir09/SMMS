@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import { Exam } from '../types';
 import Card from '../components/Card';
-import Wizard, { WizardStepProps } from '../components/Wizard';
 import { ClipboardListIcon, ExamsIcon } from '../components/icons';
 import Modal from '../components/Modal';
 
@@ -12,63 +11,40 @@ const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
-const CreateExamStep: React.FC<WizardStepProps> = ({ data, setData }) => {
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setData({ ...data, [e.target.name]: e.target.value });
-    };
-    
-    return (
-        <div className="space-y-4">
-            <input
-                name="name"
-                type="text"
-                value={data.name || ''}
-                onChange={handleChange}
-                placeholder="Exam Name (e.g., Mid-Term)"
-                required
-                className={inputStyle}
-            />
-            <select
-                name="className"
-                value={data.className || ''}
-                onChange={handleChange}
-                required
-                className={inputStyle}
-            >
-                <option value="" disabled>-- Select Class --</option>
-                {CLASS_OPTIONS.map(cls => <option key={cls} value={cls}>{cls}</option>)}
-            </select>
-        </div>
-    );
-};
-
 const Exams: React.FC = () => {
-    const [isWizardOpen, setIsWizardOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [newExamData, setNewExamData] = useState({ name: '', className: '' });
     const exams = useLiveQuery(() => db.exams.toArray(), []);
     const navigate = useNavigate();
     
-    const examSteps = [
-        { title: 'Exam Details', content: CreateExamStep }
-    ];
+    const handleOpenCreateModal = () => {
+        setNewExamData({ name: '', className: '' });
+        setIsCreateModalOpen(true);
+    };
 
-    const handleSaveExam = async (exam: Omit<Exam, 'id'>) => {
-        const newId = await db.exams.add(exam as Exam);
-        setIsWizardOpen(false);
+    const handleSaveExam = async () => {
+        if (!newExamData.name || !newExamData.className) {
+            alert("Please provide an exam name and select a class.");
+            return;
+        }
+        const newId = await db.exams.add(newExamData as Exam);
+        setIsCreateModalOpen(false);
         navigate(`/exams/${newId}`);
     };
 
     const handleDeleteExam = async (id: number) => {
         if(window.confirm('Are you sure you want to delete this exam? This will also delete all associated marks.')) {
-            await db.transaction('rw', db.exams, db.marks, async () => {
+            await db.transaction('rw', db.exams, db.marks, db.studentExamData, async () => {
                 await db.exams.delete(id);
                 await db.marks.where('examId').equals(id).delete();
+                await db.studentExamData.where('examId').equals(id).delete();
             });
         }
     }
 
     return (
         <div className="h-full flex flex-col">
-            <button onClick={() => setIsWizardOpen(true)} className="w-full mb-3 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors">Create New Exam</button>
+            <button onClick={handleOpenCreateModal} className="w-full mb-3 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors">Create New Exam</button>
             
             <div className="flex-1 grid grid-cols-2 gap-3 overflow-y-auto">
                 {exams?.map(exam => (
@@ -98,19 +74,37 @@ const Exams: React.FC = () => {
                 </div>
             )}
 
-            {isWizardOpen && (
-                <Modal
-                    isOpen={isWizardOpen}
-                    onClose={() => setIsWizardOpen(false)}
-                    title="Create New Exam"
-                >
-                    <div className="p-4">
-                        <CreateExamStep data={{ className: '', name: '' }} setData={() => {}} />
-                        <p className="text-xs text-foreground/60 mt-4">Wizard functionality disabled in this view. Use modal form.</p>
-                        <button onClick={() => handleSaveExam({name: 'New Exam', className: '1st'})} className="mt-4 py-2 px-4 rounded-md bg-green-600 text-white">Save (Temp)</button>
+            <Modal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                title="Create New Exam"
+            >
+                <div className="p-4 space-y-4">
+                    <input
+                        name="name"
+                        type="text"
+                        value={newExamData.name}
+                        onChange={(e) => setNewExamData({...newExamData, name: e.target.value})}
+                        placeholder="Exam Name (e.g., Mid-Term)"
+                        required
+                        className={inputStyle}
+                    />
+                    <select
+                        name="className"
+                        value={newExamData.className}
+                        onChange={(e) => setNewExamData({...newExamData, className: e.target.value})}
+                        required
+                        className={inputStyle}
+                    >
+                        <option value="" disabled>-- Select Class --</option>
+                        {CLASS_OPTIONS.map(cls => <option key={cls} value={cls}>{cls}</option>)}
+                    </select>
+                     <div className="flex justify-end gap-2 pt-4">
+                        <button type="button" onClick={() => setIsCreateModalOpen(false)} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm">Cancel</button>
+                        <button type="button" onClick={handleSaveExam} className="py-2 px-4 rounded-md bg-success text-success-foreground hover:bg-success-hover text-sm">Create & Open</button>
                     </div>
-                </Modal>
-            )}
+                </div>
+            </Modal>
         </div>
     );
 };

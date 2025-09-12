@@ -71,7 +71,15 @@ const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) =
             setErrors(allErrors);
             return;
         }
-        onSave(formData as Staff);
+        
+        // Auto-derive subjects string from teaching assignments for data consistency
+        const derivedSubjects = formData.teachingAssignments 
+            ? [...new Set(formData.teachingAssignments.map(a => a.subject).filter(Boolean))].join(', ')
+            : '';
+            
+        const finalData = { ...formData, subjects: derivedSubjects };
+
+        onSave(finalData as Staff);
     };
 
     const handleAssignmentChange = (index: number, field: 'className' | 'subject', value: string) => {
@@ -141,10 +149,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) =
                             <label htmlFor="contact" className={labelStyle}>Contact No</label>
                             <input id="contact" name="contact" value={formData.contact || ''} onChange={handleChange} placeholder="Contact Number" required className={inputStyle} />
                             {errors.contact && <p className="text-red-500 text-xs mt-1">{errors.contact}</p>}
-                        </div>
-                         <div>
-                            <label htmlFor="subjects" className={labelStyle}>Subjects (comma-separated)</label>
-                            <input id="subjects" name="subjects" value={formData.subjects || ''} onChange={handleChange} placeholder="e.g., Physics, Chemistry" className={inputStyle} />
                         </div>
                     </div>
                 </section>
