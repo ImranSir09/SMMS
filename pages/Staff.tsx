@@ -2,13 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Staff } from '../types';
-import { StaffIcon, IdCardIcon } from '../components/icons';
+import { StaffIcon } from '../components/icons';
 import SlideOutPanel from '../components/SlideOutPanel';
 import StaffForm from '../components/StaffForm';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import StaffIdCard from '../components/StaffIdCard';
-
+import StaffCard from '../components/StaffCard';
 
 const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
@@ -85,44 +85,22 @@ const Staff: React.FC = () => {
                 placeholder="Search by name, ID, designation, subject..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 mb-4 bg-background border border-input rounded-md"
+                className="w-full p-2 mb-6 bg-background border border-input rounded-md"
             />
 
             {staff && staff.length > 0 ? (
-                <div className="overflow-x-auto border border-border rounded-lg">
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-background border-b border-border">
-                            <tr>
-                                <th className="p-3 font-semibold">Name</th>
-                                <th className="p-3 font-semibold">Staff ID</th>
-                                <th className="p-3 font-semibold">Designation</th>
-                                <th className="p-3 font-semibold">Contact</th>
-                                <th className="p-3 font-semibold text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredStaff.map(member => (
-                                <tr key={member.id} className="border-b border-border last:border-b-0 hover:bg-background">
-                                    <td className="p-3 font-medium">{member.name}</td>
-                                    <td className="p-3">{member.staffId}</td>
-                                    <td className="p-3">{member.designation}</td>
-                                    <td className="p-3">{member.contact}</td>
-                                    <td className="p-3 text-right">
-                                         <button 
-                                            onClick={() => handleGenerateIdCard(member)} 
-                                            disabled={!!isGeneratingPdf}
-                                            className="mr-2 text-blue-600 dark:text-blue-400 hover:underline font-semibold inline-flex items-center gap-1 disabled:opacity-50"
-                                        >
-                                            {isGeneratingPdf === member.id ? '...' : <><IdCardIcon className="w-4 h-4"/> ID Card</>}
-                                        </button>
-                                        <button onClick={() => handleEdit(member)} className="mr-2 text-primary hover:underline font-semibold">Edit</button>
-                                        <button onClick={() => handleDelete(member.id!)} className="text-red-500 hover:underline font-semibold">Delete</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    {filteredStaff.length === 0 && <p className="text-center p-6 text-foreground/60">No staff members found.</p>}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {filteredStaff.map(member => (
+                       <StaffCard
+                            key={member.id}
+                            staffMember={member}
+                            isPdfGenerating={isGeneratingPdf === member.id}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            onGenerateId={handleGenerateIdCard}
+                       />
+                    ))}
+                     {filteredStaff.length === 0 && <p className="text-center p-6 text-foreground/60 col-span-full">No staff members found matching your search.</p>}
                 </div>
             ) : (
                 <div className="text-center p-10 border-2 border-dashed border-border rounded-lg mt-6">

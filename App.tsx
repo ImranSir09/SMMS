@@ -12,7 +12,7 @@ import BottomNav from './components/BottomNav';
 import Reports from './pages/Reports';
 import Certificates from './pages/Certificates';
 import Timetable from './pages/Timetable';
-import Card from './components/Card';
+import ExamMarks from './pages/ExamMarks';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -56,20 +56,19 @@ const App: React.FC = () => {
           <div className="flex-1 flex flex-col md:ml-64">
             <Header />
             <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-6">
-                <Card className="h-full overflow-auto p-6 md:p-8">
-                    <Routes>
-                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/students" element={<Students />} />
-                        <Route path="/staff" element={<Staff />} />
-                        <Route path="/exams" element={<Exams />} />
-                        <Route path="/timetable" element={<Timetable />} />
-                        <Route path="/reports" element={<Reports />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/certificates" element={<Certificates />} />
-                        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                    </Routes>
-                </Card>
+                <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/students" element={<Students />} />
+                    <Route path="/staff" element={<Staff />} />
+                    <Route path="/exams" element={<Exams />} />
+                    <Route path="/exams/:examId" element={<ExamMarks />} />
+                    <Route path="/timetable" element={<Timetable />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/certificates" element={<Certificates />} />
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
             </main>
           </div>
         </div>

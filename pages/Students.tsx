@@ -2,14 +2,16 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Student } from '../types';
-import { UploadIcon, IdCardIcon, PrintIcon, StudentsIcon } from '../components/icons';
+import { UploadIcon, PrintIcon, StudentsIcon } from '../components/icons';
 import BulkAddStudentsModal from '../components/BulkAddStudentsModal';
 import SlideOutPanel from '../components/SlideOutPanel';
 import StudentForm from '../components/StudentForm';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
-import IdCard from '../components/IdCard';
 import RollStatement from '../components/RollStatement';
+import StudentCard from '../components/StudentCard';
+import IdCard from '../components/IdCard';
+
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 
@@ -136,7 +138,7 @@ const Students: React.FC = () => {
                 </div>
             </div>
             
-            <div className="border-b border-border mb-4">
+            <div className="border-b border-border mb-4 bg-card/80 sticky top-16 z-10 -mx-4 px-4 py-2">
                 <nav className="-mb-px flex space-x-4 overflow-x-auto" aria-label="Tabs">
                     {classTabs.map(tab => (
                         <button
@@ -173,43 +175,19 @@ const Students: React.FC = () => {
                          </button>
                      </div>
 
-                    <div className="overflow-x-auto border border-border rounded-lg">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-background border-b border-border">
-                                <tr>
-                                    <th className="p-3 font-semibold">Roll No</th>
-                                    <th className="p-3 font-semibold">Name</th>
-                                    <th className="p-3 font-semibold">Contact</th>
-                                    <th className="p-3 font-semibold text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredStudents.map((student, index) => (
-                                    <tr 
-                                        key={student.id} 
-                                        className="border-b last:border-b-0 hover:bg-background animate-fade-in-item"
-                                        style={{ animationDelay: `${index * 30}ms` }}
-                                    >
-                                        <td className="p-3 font-medium">{student.rollNo}</td>
-                                        <td className="p-3">{student.name}</td>
-                                        <td className="p-3">{student.contact}</td>
-                                        <td className="p-3 text-right">
-                                            <button 
-                                                onClick={() => handleGenerateIdCard(student)} 
-                                                disabled={!!generatingPdf} 
-                                                className="mr-2 text-blue-600 dark:text-blue-400 hover:underline font-semibold inline-flex items-center gap-1 disabled:opacity-50"
-                                            >
-                                                {generatingPdf === student.id ? '...' : <><IdCardIcon className="w-4 h-4"/> ID Card</>}
-                                            </button>
-                                            <button onClick={() => handleEdit(student)} className="mr-2 text-primary hover:underline font-semibold">Edit</button>
-                                            <button onClick={() => handleDelete(student.id!)} className="text-red-500 hover:underline font-semibold">Delete</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        {filteredStudents.length === 0 && <p className="text-center p-6 text-foreground/60">No students found for this class.</p>}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {filteredStudents.map((student) => (
+                           <StudentCard
+                                key={student.id}
+                                student={student}
+                                isPdfGenerating={generatingPdf === student.id}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onGenerateId={handleGenerateIdCard}
+                           />
+                        ))}
                     </div>
+                     {filteredStudents.length === 0 && <p className="text-center p-6 text-foreground/60 col-span-full">No students found for this class or matching your search.</p>}
                 </div>
             )}
             

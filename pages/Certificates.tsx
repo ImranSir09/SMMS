@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { db } from '../services/db';
 import { Student, Staff } from '../types';
 import Card from '../components/Card';
-import { IdCardIcon, ExamsIcon, CalendarIcon, CertificateIcon, LeavingIcon } from '../components/icons';
+import { IdCardIcon, ExamsIcon, CalendarIcon, CertificateIcon, LeavingIcon, AdmissionIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
@@ -13,6 +13,7 @@ import DutySlip from '../components/DutySlip';
 import ChargeCertificate from '../components/ChargeCertificate';
 import SchoolLeavingCertificate from '../components/SchoolLeavingCertificate';
 import DutyCertificate from '../components/DutyCertificate';
+import AdmissionCertificate from '../components/AdmissionCertificate';
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-sm font-medium text-foreground/80 mb-1";
@@ -87,6 +88,15 @@ const Certificates: React.FC = () => {
           generateDoc(
               <DobCertificate student={foundStudent} schoolDetails={schoolDetails} />,
               `DOB-Certificate-${foundStudent.admissionNo}-${foundStudent.name}`
+          );
+      }
+  };
+
+  const handleGenerateAdmissionCert = () => {
+      if (foundStudent && schoolDetails) {
+          generateDoc(
+              <AdmissionCertificate student={foundStudent} schoolDetails={schoolDetails} />,
+              `Admission-Certificate-${foundStudent.admissionNo}-${foundStudent.name}`
           );
       }
   };
@@ -201,6 +211,10 @@ const Certificates: React.FC = () => {
           <div className="border-t border-border mt-6 pt-6">
             <h3 className="font-semibold mb-4">Available Documents:</h3>
             <div className="grid grid-cols-2 gap-4">
+               <button onClick={handleGenerateAdmissionCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-teal-600 hover:bg-teal-700`}>
+                    <AdmissionIcon className="w-4 h-4"/>
+                    <span>{isGeneratingPdf ? 'Generating...' : 'Admission Cert.'}</span>
+               </button>
                <button onClick={handleGenerateStudentIdCard} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-blue-600 hover:bg-blue-700`}>
                     <IdCardIcon className="w-4 h-4"/>
                     <span>{isGeneratingPdf ? 'Generating...' : 'Generate ID Card'}</span>
@@ -209,13 +223,13 @@ const Certificates: React.FC = () => {
                     <CalendarIcon className="w-4 h-4"/>
                     <span>{isGeneratingPdf ? 'Generating...' : 'DOB Certificate'}</span>
                </button>
-               <button onClick={() => alert(`Generating NEP 2020 Marks Card for ${foundStudent.name}. Feature coming soon!`)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-green-600 hover:bg-green-700`}>
-                    <ExamsIcon className="w-4 h-4"/>
-                    <span>NEP 2020 Marks Card</span>
-               </button>
                 <button onClick={() => setIsLeavingCertModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-red-600 hover:bg-red-700`}>
                     <LeavingIcon className="w-4 h-4"/>
                     <span>School Leaving Cert.</span>
+               </button>
+               <button onClick={() => alert(`Generating NEP 2020 Marks Card for ${foundStudent.name}. Feature coming soon!`)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-green-600 hover:bg-green-700 col-span-2`}>
+                    <ExamsIcon className="w-4 h-4"/>
+                    <span>NEP 2020 Marks Card</span>
                </button>
             </div>
           </div>
