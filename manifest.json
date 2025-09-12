@@ -1,0 +1,26 @@
+
+{
+  "short_name": "Aegis",
+  "name": "Aegis School Management",
+  "icons": [
+    {
+      "src": "https://www.gstatic.com/images/branding/product/1x/google_gemini_32dp.png",
+      "type": "image/png",
+      "sizes": "32x32"
+    },
+    {
+      "src": "https://www.gstatic.com/images/branding/product/1x/google_gemini_192dp.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://www.gstatic.com/images/branding/product/1x/google_gemini_512dp.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff"
+}

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aegis School Management</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              background: 'var(--background)',
+              foreground: 'var(--foreground)',
+              // NOTE: 'card' is NOT defined here to avoid conflict with the custom .bg-card class's glassmorphism effect
+              'card-foreground': 'var(--card-foreground)',
+              primary: {
+                DEFAULT: 'var(--primary)',
+                hover: 'var(--primary-hover)',
+                foreground: 'var(--primary-foreground)',
+              },
+              accent: {
+                DEFAULT: 'var(--accent)',
+                hover: 'var(--accent-hover)',
+                foreground: 'var(--accent-foreground)',
+              },
+              success: {
+                DEFAULT: 'var(--success)',
+                hover: 'var(--success-hover)',
+                foreground: 'var(--success-foreground)',
+              },
+              input: 'var(--input)',
+              border: 'var(--border)',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              gothic: ['Cinzel', 'serif'],
+            },
+          },
+        },
+      };
+    </script>
+    
+    <style>
+      :root {
+        --background: #f8fafc; /* slate-50 */
+        --foreground: #020617; /* slate-950 */
+        --card: #ffffff;
+        --card-foreground: #020617;
+        --primary: #4338ca; /* indigo-700 */
+        --primary-hover: #3730a3; /* indigo-800 */
+        --primary-foreground: #ffffff;
+        --accent: #f97316; /* orange-500 */
+        --accent-hover: #ea580c; /* orange-600 */
+        --accent-foreground: #ffffff;
+        --success: #16a34a; /* green-600 */
+        --success-hover: #15803d; /* green-700 */
+        --success-foreground: #ffffff;
+        --input: #e2e8f0; /* slate-200 */
+        --border: #cbd5e1; /* slate-300 */
+      }
+
+      .dark {
+        --background: #0f172a; /* slate-900 */
+        --foreground: #f1f5f9; /* slate-100 */
+        --card: #1e293b; /* slate-800 */
+        --card-foreground: #f1f5f9;
+        --primary: #818cf8; /* indigo-400 */
+        --primary-hover: #6366f1; /* indigo-500 */
+        --primary-foreground: #0f172a;
+        --accent: #fb923c; /* orange-400 */
+        --accent-hover: #f97316; /* orange-500 */
+        --accent-foreground: #0f172a;
+        --success: #22c55e; /* green-500 */
+        --success-hover: #16a34a; /* green-600 */
+        --success-foreground: #0f172a;
+        --input: #334155; /* slate-700 */
+        --border: #334155; /* slate-700 */
+      }
+      
+      body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: var(--background);
+      }
+
+      .light-mode {
+        background: linear-gradient(135deg, #f0f9ff 0%, #eef2ff 100%);
+      }
+
+      .dark-mode {
+        background: linear-gradient(135deg, #0f172a 0%, #131d3b 100%);
+      }
+
+      /* Enhanced Glassmorphism Effect */
+      .bg-card {
+        background-color: color-mix(in srgb, var(--card) 80%, transparent);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+        box-shadow: 0 8px 32px 0 color-mix(in srgb, black 10%, transparent),
+                    inset 0 1px 0 0 color-mix(in srgb, white 8%, transparent);
+      }
+      
+      .font-gothic {
+        font-family: 'Cinzel', serif;
+      }
+      
+      /* Animation classes */
+      .hover-lift {
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      }
+      .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px color-mix(in srgb, black 10%, transparent), 0 4px 6px -4px color-mix(in srgb, black 10%, transparent);
+      }
+
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      
+      .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out both;
+      }
+      
+      .animate-fade-in-item {
+        animation: fadeInItem 0.5s ease-out forwards;
+      }
+
+      .animate-slide-in-right {
+        animation: slideInRight 0.3s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes slideInRight {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+      }
+      
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes fadeInItem {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://aistudiocdn.com/react@^19.1.1",
+        "react/": "https://aistudiocdn.com/react@^19.1.1/",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+        "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.8.2",
+        "dexie": "https://aistudiocdn.com/dexie@^4.2.0",
+        "dexie-react-hooks": "https://aistudiocdn.com/dexie-react-hooks@^4.2.0",
+        "html2canvas": "https://aistudiocdn.com/html2canvas@^1.4.1",
+        "jspdf": "https://aistudiocdn.com/jspdf@^3.0.2"
+      }
+    }
+    </script>
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
