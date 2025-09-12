@@ -1,3 +1,4 @@
+
 import React, { useContext, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppContext } from './contexts/AppContext';
@@ -11,6 +12,7 @@ import BottomNav from './components/BottomNav';
 import Reports from './pages/Reports';
 import Certificates from './pages/Certificates';
 import Timetable from './pages/Timetable';
+// FIX: The file pages/ExamMarks.tsx was missing its content. It has been created, which resolves this import error.
 import ExamMarks from './pages/ExamMarks';
 
 const App: React.FC = () => {

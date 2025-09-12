@@ -142,13 +142,21 @@ const Settings: React.FC = () => {
                         <label className="block text-xs font-medium text-foreground/80 mb-1">School Name</label>
                         <input name="name" value={details.name || ''} onChange={handleChange} className={inputStyle} />
                     </div>
+                     <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">Official Email</label>
+                        <input name="email" type="email" value={details.email || ''} onChange={handleChange} className={inputStyle} />
+                    </div>
+                     <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">Phone Number</label>
+                        <input name="phone" value={details.phone || ''} onChange={handleChange} className={inputStyle} />
+                    </div>
+                     <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">UDISE Code</label>
+                        <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={inputStyle} />
+                    </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Address</label>
                         <input name="address" value={details.address || ''} onChange={handleChange} className={inputStyle} />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">Contact Info</label>
-                        <input name="contact" value={details.contact || ''} onChange={handleChange} className={inputStyle} />
                     </div>
                     <div className="flex items-center gap-4">
                         <div>

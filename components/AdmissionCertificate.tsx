@@ -26,6 +26,11 @@ const AdmissionCertificate: React.FC<AdmissionCertificateProps> = ({ student, sc
                     {schoolDetails?.name || 'School Name'}
                 </h1>
                 <p className="text-md text-gray-600">{schoolDetails?.address || 'School Address'}</p>
+                 <p className="text-xs text-gray-500 mt-1">
+                  {schoolDetails?.phone && <span>Ph: {schoolDetails.phone}</span>}
+                  {schoolDetails?.email && <span className="mx-2">| Email: {schoolDetails.email}</span>}
+                  {schoolDetails?.udiseCode && <span>| UDISE: {schoolDetails.udiseCode}</span>}
+                </p>
                 <h2 className="text-2xl font-semibold tracking-widest text-gray-800 mt-10 underline">
                     STUDENT ADMISSION CERTIFICATE
                 </h2>

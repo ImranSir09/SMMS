@@ -4,14 +4,6 @@ import { Student } from '../types';
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 const CATEGORY_OPTIONS = ['General', 'SC', 'ST', 'OBC', 'Other'];
 
-const toBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-sm font-medium text-foreground/80 mb-1";
 const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors";
@@ -34,14 +26,6 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
-    };
-
-    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const base64 = await toBase64(file);
-            setFormData({ ...formData, photo: base64 });
-        }
     };
 
     const handleSaveClick = () => {
@@ -96,11 +80,6 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
                    <div className="col-span-2">
                        <label htmlFor="address" className={labelStyle}>Address</label>
                        <input id="address" name="address" value={formData.address || ''} onChange={handleChange} className={inputStyle} />
-                   </div>
-                   <div className="col-span-2">
-                       <label className={labelStyle}>Photo</label>
-                       <input type="file" onChange={handlePhotoChange} accept="image/*" className="block w-full text-sm"/>
-                       {formData.photo && <img src={formData.photo} alt="preview" className="mt-2 w-20 h-20 object-cover rounded-md"/>}
                    </div>
                 </div>
             </div>

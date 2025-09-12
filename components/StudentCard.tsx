@@ -1,34 +1,34 @@
 import React from 'react';
 import { Student } from '../types';
-import { IdCardIcon, ExamsIcon } from '../components/icons';
-import Card from './Card';
+import { EditIcon, TrashIcon, IdCardIcon } from './icons';
 
 interface StudentCardProps {
     student: Student;
+    isPdfGenerating: boolean;
     onEdit: (student: Student) => void;
     onDelete: (id: number) => void;
     onGenerateId: (student: Student) => void;
-    isPdfGenerating: boolean;
 }
 
-const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit, onDelete, onGenerateId, isPdfGenerating }) => {
+const StudentCard: React.FC<StudentCardProps> = ({ student, isPdfGenerating, onEdit, onDelete, onGenerateId }) => {
     return (
-        <Card className="p-2 flex flex-col items-center justify-center text-center">
+        <div className="bg-card text-card-foreground p-2 rounded-lg flex items-center gap-2 border border-border shadow-sm">
             {student.photo ? (
-                <img src={student.photo} alt={student.name} className="w-10 h-10 rounded-full object-cover border-2 border-border"/>
+                <img src={student.photo} alt={student.name} className="w-12 h-16 rounded-md object-cover flex-shrink-0" />
             ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
+                <div className="w-12 h-16 rounded-md bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
             )}
-            <p className="font-bold text-xs mt-1 truncate w-full">{student.name}</p>
-            <p className="text-[10px] text-foreground/70">Roll: {student.rollNo}</p>
-            <div className="mt-1 flex justify-center items-center gap-2">
-                 <button onClick={() => onGenerateId(student)} disabled={isPdfGenerating} className="disabled:opacity-50">
-                    <IdCardIcon className="w-4 h-4 text-blue-500"/>
-                </button>
-                <button onClick={() => onEdit(student)} className="text-[10px] font-semibold text-primary">Edit</button>
-                <button onClick={() => onDelete(student.id!)} className="text-[10px] font-semibold text-red-500">Del</button>
+            <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm truncate">{student.name}</p>
+                <p className="text-xs text-foreground/70">Roll: {student.rollNo}</p>
+                <p className="text-xs text-foreground/70">Adm: {student.admissionNo}</p>
             </div>
-        </Card>
+            <div className="flex flex-col gap-1">
+                <button onClick={() => onEdit(student)} className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10"><EditIcon className="w-3 h-3" /></button>
+                <button onClick={() => onGenerateId(student)} disabled={isPdfGenerating} className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 disabled:opacity-50"><IdCardIcon className="w-3 h-3" /></button>
+                <button onClick={() => onDelete(student.id!)} className="p-1.5 rounded-full text-red-500 hover:bg-red-500/10"><TrashIcon className="w-3 h-3" /></button>
+            </div>
+        </div>
     );
 };
 

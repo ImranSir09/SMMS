@@ -34,7 +34,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     id: 1,
                     name: 'My School',
                     address: '123 Education Lane',
-                    contact: '555-1234',
+                    phone: '555-1234',
+                    email: 'contact@myschool.edu',
+                    udiseCode: '12345678901',
                     logo: null,
                 });
             }

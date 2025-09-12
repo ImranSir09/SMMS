@@ -9,8 +9,10 @@ import StudentForm from '../components/StudentForm';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import RollStatement from '../components/RollStatement';
+// FIX: The file components/StudentCard.tsx was missing its content. It has been created, which resolves this import error.
 import StudentCard from '../components/StudentCard';
 import IdCard from '../components/IdCard';
+import PhotoUploadModal from '../components/PhotoUploadModal';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 
@@ -28,6 +30,7 @@ const Students: React.FC = () => {
     const [activeClass, setActiveClass] = useState<string | null>(null);
     const [generatingPdf, setGeneratingPdf] = useState<string | number | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [photoUploadTarget, setPhotoUploadTarget] = useState<Student | null>(null);
     
     const { schoolDetails } = useAppData();
     const students = useLiveQuery(() => db.students.toArray(), []);
@@ -69,8 +72,7 @@ const Students: React.FC = () => {
         setCurrentPage(1); // Reset to first page on filter change
     }, [activeClass, searchTerm]);
 
-
-    const handleGenerateIdCard = async (student: Student) => {
+    const handleActualPdfGeneration = async (student: Student) => {
         if (!schoolDetails || !student.id) return;
         setGeneratingPdf(student.id);
         await generatePdfFromComponent(
@@ -78,6 +80,26 @@ const Students: React.FC = () => {
             `ID-Card-${student.admissionNo}-${student.name}`
         );
         setGeneratingPdf(null);
+    };
+
+    const triggerIdCardGeneration = (student: Student) => {
+        if (student.photo) {
+            handleActualPdfGeneration(student);
+        } else {
+            setPhotoUploadTarget(student);
+        }
+    };
+
+    const handlePhotoSaveAndGenerate = async (photoBase64: string) => {
+        if (!photoUploadTarget || !photoUploadTarget.id) return;
+        
+        const updatedStudent = { ...photoUploadTarget, photo: photoBase64 };
+        setPhotoUploadTarget(null); // Close modal
+        
+        await handleActualPdfGeneration(updatedStudent);
+
+        // Update db in background
+        await db.students.update(photoUploadTarget.id, { photo: photoBase64 });
     };
 
     const handleAdd = () => {
@@ -142,7 +164,7 @@ const Students: React.FC = () => {
                         isPdfGenerating={generatingPdf === student.id}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
-                        onGenerateId={handleGenerateIdCard}
+                        onGenerateId={triggerIdCardGeneration}
                    />
                 ))}
             </div>
@@ -183,6 +205,13 @@ const Students: React.FC = () => {
             </Modal>
             
             <BulkAddStudentsModal isOpen={isBulkAddModalOpen} onClose={() => setIsBulkAddModalOpen(false)} />
+
+            <PhotoUploadModal
+                isOpen={!!photoUploadTarget}
+                onClose={() => setPhotoUploadTarget(null)}
+                title={`Upload Photo for ${photoUploadTarget?.name}`}
+                onSave={handlePhotoSaveAndGenerate}
+            />
         </div>
     );
 };

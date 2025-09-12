@@ -14,6 +14,9 @@ const RollStatement: React.FC<RollStatementProps> = ({ students, className, scho
         <header className="text-center mb-6">
           <h1 className="text-2xl font-bold uppercase">{schoolDetails?.name || 'School Name'}</h1>
           <p className="text-md">{schoolDetails?.address || 'School Address'}</p>
+          <p className="text-xs text-gray-600 mt-1">
+            Ph: {schoolDetails?.phone} | Email: {schoolDetails?.email} | UDISE: {schoolDetails?.udiseCode}
+          </p>
           <h2 className="text-xl font-semibold mt-4">Roll Statement - Class {className}</h2>
         </header>
         

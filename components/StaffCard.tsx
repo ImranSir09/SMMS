@@ -1,34 +1,34 @@
 import React from 'react';
 import { Staff } from '../types';
-import { IdCardIcon } from './icons';
-import Card from './Card';
+import { EditIcon, TrashIcon, IdCardIcon } from './icons';
 
 interface StaffCardProps {
     staffMember: Staff;
-    onEdit: (staffMember: Staff) => void;
-    onDelete: (id: number) => void;
-    onGenerateId: (staffMember: Staff) => void;
     isPdfGenerating: boolean;
+    onEdit: (staff: Staff) => void;
+    onDelete: (id: number) => void;
+    onGenerateId: (staff: Staff) => void;
 }
 
-const StaffCard: React.FC<StaffCardProps> = ({ staffMember, onEdit, onDelete, onGenerateId, isPdfGenerating }) => {
+const StaffCard: React.FC<StaffCardProps> = ({ staffMember, isPdfGenerating, onEdit, onDelete, onGenerateId }) => {
     return (
-        <Card className="p-2 flex flex-col items-center justify-center text-center">
+        <div className="bg-card text-card-foreground p-2 rounded-lg flex items-center gap-2 border border-border shadow-sm">
             {staffMember.photo ? (
-                <img src={staffMember.photo} alt={staffMember.name} className="w-10 h-10 rounded-full object-cover border-2 border-border"/>
+                <img src={staffMember.photo} alt={staffMember.name} className="w-12 h-16 rounded-md object-cover flex-shrink-0" />
             ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
+                <div className="w-12 h-16 rounded-md bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
             )}
-            <p className="font-bold text-xs mt-1 truncate w-full">{staffMember.name}</p>
-            <p className="text-[10px] text-foreground/70 truncate w-full">{staffMember.designation}</p>
-            <div className="mt-1 flex justify-center items-center gap-2">
-                 <button onClick={() => onGenerateId(staffMember)} disabled={isPdfGenerating} className="disabled:opacity-50">
-                    <IdCardIcon className="w-4 h-4 text-blue-500"/>
-                </button>
-                <button onClick={() => onEdit(staffMember)} className="text-[10px] font-semibold text-primary">Edit</button>
-                <button onClick={() => onDelete(staffMember.id!)} className="text-[10px] font-semibold text-red-500">Del</button>
+            <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm truncate">{staffMember.name}</p>
+                <p className="text-xs text-foreground/70">{staffMember.designation}</p>
+                <p className="text-xs text-foreground/70">ID: {staffMember.staffId}</p>
             </div>
-        </Card>
+             <div className="flex flex-col gap-1">
+                <button onClick={() => onEdit(staffMember)} className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10"><EditIcon className="w-3 h-3" /></button>
+                <button onClick={() => onGenerateId(staffMember)} disabled={isPdfGenerating} className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 disabled:opacity-50"><IdCardIcon className="w-3 h-3" /></button>
+                <button onClick={() => onDelete(staffMember.id!)} className="p-1.5 rounded-full text-red-500 hover:bg-red-500/10"><TrashIcon className="w-3 h-3" /></button>
+            </div>
+        </div>
     );
 };
 

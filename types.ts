@@ -5,7 +5,9 @@ export interface SchoolDetails {
   id: number;
   name: string;
   address: string;
-  contact: string;
+  phone: string;
+  email: string;
+  udiseCode: string;
   logo: string | null;
 }
 

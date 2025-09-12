@@ -80,3 +80,32 @@ db.version(5).stores({
         // We will just let Dexie recreate the table based on the new schema.
     });
 });
+
+db.version(6).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className',
+  staff: '++id, name, staffId, designation, subjects',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject]',
+  dailyLogs: '++id, &date',
+  timetable: '++id, &[staffId+day+period], staffId, day, period',
+  studentExamData: '++id, &[examId+studentId]'
+});
+
+db.version(7).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className',
+  staff: '++id, name, staffId, designation, subjects',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject]',
+  dailyLogs: '++id, &date',
+  timetable: '++id, &[staffId+day+period], staffId, day, period',
+  studentExamData: '++id, &[examId+studentId]'
+}).upgrade(tx => {
+    return tx.table('schoolDetails').toCollection().modify(detail => {
+        detail.phone = detail.contact || ''; // Migrate from 'contact' to 'phone'
+        detail.email = detail.email || ''; // Add new field with default value
+        detail.udiseCode = detail.udiseCode || ''; // Add new field with default value
+        delete detail.contact; // Remove old field
+    });
+});

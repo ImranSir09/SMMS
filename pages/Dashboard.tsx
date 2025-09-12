@@ -3,9 +3,10 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import Card from '../components/Card';
-import { StudentsIcon, StaffIcon, ExamsIcon } from '../components/icons';
+import { StudentsIcon, StaffIcon, ExamsIcon, SchoolIcon } from '../components/icons';
 import DoughnutChart from '../components/DoughnutChart';
 import { Student, Staff } from '../types';
+import { useAppData } from '../hooks/useAppData';
 
 type StatCardProps = {
     icon: React.ReactElement<{ className?: string }>;
@@ -28,6 +29,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, onClick }) => (
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
+    const { schoolDetails } = useAppData();
     const students = useLiveQuery(() => db.students.toArray(), []);
     const staff = useLiveQuery(() => db.staff.toArray(), []);
     const exams = useLiveQuery(() => db.exams.count(), [], 0);
@@ -67,52 +69,75 @@ const Dashboard: React.FC = () => {
     );
 
     return (
-        <div className="h-full grid grid-cols-2 grid-rows-3 gap-3 animate-fade-in">
-            {/* At a Glance */}
-            <Card className="col-span-2 p-2 space-y-2">
-                <h3 className="text-sm font-bold px-1">At a Glance</h3>
-                <div className="grid grid-cols-3 gap-2">
-                    <StatCard icon={<StudentsIcon />} label="Students" value={students?.length} onClick={() => navigate('/students')} />
-                    <StatCard icon={<StaffIcon />} label="Staff" value={staff?.length} onClick={() => navigate('/staff')} />
-                    <StatCard icon={<ExamsIcon />} label="Exams" value={exams} onClick={() => navigate('/exams')} />
+        <div className="h-full flex flex-col gap-3 animate-fade-in">
+             {/* School Header */}
+            <div className="flex-shrink-0 flex items-center gap-3 p-3 bg-card rounded-lg shadow-sm">
+                {schoolDetails?.logo ? (
+                    <img src={schoolDetails.logo} alt="School Logo" className="w-12 h-12 object-contain rounded-full border-2 border-primary/20" />
+                ) : (
+                    <div className="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full">
+                        <SchoolIcon className="w-6 h-6 text-primary" />
+                    </div>
+                )}
+                <div>
+                    <h2 className="text-xl font-gothic font-bold text-foreground">
+                        {schoolDetails?.name || 'School Name'}
+                    </h2>
+                    <p className="text-xs text-foreground/70">
+                        {schoolDetails?.phone && <span>Ph: {schoolDetails.phone}</span>}
+                        {schoolDetails?.udiseCode && <span className="ml-2">| UDISE: {schoolDetails.udiseCode}</span>}
+                    </p>
                 </div>
-            </Card>
+            </div>
             
-            {/* Class Distribution */}
-            <Card className="row-span-2 p-2 flex flex-col">
-                <h3 className="text-sm font-bold px-1 mb-1">Class Distribution</h3>
-                <div className="flex-1 flex items-center justify-center">
-                    {chartData && chartData.length > 0 ? (
-                       <DoughnutChart data={chartData} />
+            {/* Main content grid */}
+            <div className="flex-1 grid grid-cols-2 grid-rows-[auto_1fr_auto] gap-3">
+                {/* At a Glance */}
+                <Card className="col-span-2 p-2 space-y-2">
+                    <h3 className="text-sm font-bold px-1">At a Glance</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                        <StatCard icon={<StudentsIcon />} label="Students" value={students?.length} onClick={() => navigate('/students')} />
+                        <StatCard icon={<StaffIcon />} label="Staff" value={staff?.length} onClick={() => navigate('/staff')} />
+                        <StatCard icon={<ExamsIcon />} label="Exams" value={exams} onClick={() => navigate('/exams')} />
+                    </div>
+                </Card>
+                
+                {/* Class Distribution */}
+                <Card className="p-2 flex flex-col">
+                    <h3 className="text-sm font-bold px-1 mb-1">Class Distribution</h3>
+                    <div className="flex-1 flex items-center justify-center">
+                        {chartData && chartData.length > 0 ? (
+                        <DoughnutChart data={chartData} />
+                        ) : (
+                            <p className="text-foreground/60 text-xs text-center">No student data for chart.</p>
+                        )}
+                    </div>
+                </Card>
+
+                {/* Recently Added Staff */}
+                <Card className="p-2 flex flex-col">
+                    <h3 className="text-sm font-bold px-1 mb-1">Recent Staff</h3>
+                    {recentStaff.length > 0 ? (
+                        <ul className="space-y-1 overflow-y-auto">
+                            {recentStaff.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={s.designation} />)}
+                        </ul>
                     ) : (
-                        <p className="text-foreground/60 text-xs text-center">No student data for chart.</p>
+                        <p className="text-center text-xs text-foreground/60 pt-2">No staff added yet.</p>
                     )}
-                </div>
-            </Card>
+                </Card>
 
-            {/* Recently Added Staff */}
-            <Card className="p-2 flex flex-col">
-                <h3 className="text-sm font-bold px-1 mb-1">Recent Staff</h3>
-                {recentStaff.length > 0 ? (
-                     <ul className="space-y-1 overflow-y-auto">
-                        {recentStaff.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={s.designation} />)}
-                    </ul>
-                ) : (
-                     <p className="text-center text-xs text-foreground/60 pt-2">No staff added yet.</p>
-                )}
-            </Card>
-
-            {/* Recently Added Students */}
-            <Card className="col-span-2 p-2">
-                <h3 className="text-sm font-bold px-1 mb-1">Recent Students</h3>
-                 {recentStudents.length > 0 ? (
-                    <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
-                        {recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} />)}
-                    </ul>
-                ) : (
-                    <p className="text-center text-xs text-foreground/60 py-2">No students added yet.</p>
-                )}
-            </Card>
+                {/* Recently Added Students */}
+                <Card className="col-span-2 p-2">
+                    <h3 className="text-sm font-bold px-1 mb-1">Recent Students</h3>
+                    {recentStudents.length > 0 ? (
+                        <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
+                            {recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} />)}
+                        </ul>
+                    ) : (
+                        <p className="text-center text-xs text-foreground/60 py-2">No students added yet.</p>
+                    )}
+                </Card>
+            </div>
         </div>
     );
 };

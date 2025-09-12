@@ -50,6 +50,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ student, marks, schoolDetai
     <div id="progress-card" className="w-[210mm] h-[297mm] bg-white p-4 font-sans text-black">
         <div className="w-full h-full border-2 border-black p-2 flex flex-col">
             <header className="text-center border-b-2 border-black pb-1">
+                <p className="text-xs">UDISE: {schoolDetails.udiseCode}</p>
                 <h1 className="text-xl font-bold">OFFICE OF THE {schoolDetails.name.toUpperCase()}</h1>
                 <h2 className="text-lg font-bold">HOLISTIC PROGRESS CARD FOR THE YEAR {new Date().getFullYear()}</h2>
             </header>

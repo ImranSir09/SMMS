@@ -8,14 +8,6 @@ const SUBJECT_OPTIONS = [
     'Urdu', 'Kashmiri', 'Computer Science', 'Art & Craft', 'Music', 'Physical Education', 'General Knowledge'
 ];
 
-const toBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-  });
-  
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-sm font-medium text-foreground/80 mb-1";
 const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors";
@@ -59,26 +51,15 @@ interface StaffFormProps {
 const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) => {
     const [formData, setFormData] = useState<Partial<Staff>>({ teachingAssignments: [], ...staffToEdit });
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
     useEffect(() => {
         setFormData({ teachingAssignments: [], ...staffToEdit });
-        setPhotoPreview(staffToEdit.photo || null);
         setErrors({});
     }, [staffToEdit]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
-    };
-
-    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const base64 = await toBase64(file);
-            setFormData({ ...formData, photo: base64 });
-            setPhotoPreview(base64);
-        }
     };
     
     const handleSaveClick = () => {
@@ -206,17 +187,6 @@ const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) =
                     >
                         <PlusIcon className="w-4 h-4" /> Add Assignment
                     </button>
-                </section>
-                
-                 <section>
-                    <h3 className="text-md font-semibold text-foreground border-b border-border pb-2 mb-4">Photo</h3>
-                    <div className="grid grid-cols-1">
-                        <div>
-                            <label className={labelStyle}>Staff Photo</label>
-                            <input type="file" onChange={handlePhotoChange} accept="image/*" className="block w-full text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors"/>
-                            {photoPreview && <img src={photoPreview} alt="preview" className="mt-2 w-24 h-24 object-cover rounded-md border border-border"/>}
-                        </div>
-                    </div>
                 </section>
             </main>
 
