@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { db } from '../services/db';
@@ -59,7 +60,7 @@ const Settings: React.FC = () => {
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `aegis-school-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `sms-mobile-backup-${new Date().toISOString().split('T')[0]}.json`;
             
             document.body.appendChild(link);
             link.click();
@@ -133,9 +134,17 @@ const Settings: React.FC = () => {
         reader.readAsText(file);
     };
 
+    const getAutoVersion = () => {
+        const d = new Date();
+        const year = d.getFullYear().toString().slice(-2);
+        const month = d.getMonth() + 1;
+        const day = d.getDate();
+        return `v${year}.${month}.${day}`;
+    };
+
     return (
         <div className="h-full flex flex-col gap-4 animate-fade-in">
-            <Card className="p-3 flex-1">
+            <Card className="p-3">
                 <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">School Details</h2>
                 <div className="space-y-3">
                     <div>
@@ -163,7 +172,7 @@ const Settings: React.FC = () => {
                             <label className="block text-xs font-medium text-foreground/80 mb-1">Logo</label>
                             <input type="file" onChange={handleLogoChange} accept="image/*" className="block w-full text-xs text-foreground file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
                         </div>
-                        {logoPreview && <img src={logoPreview} alt="Logo Preview" className="w-12 h-12 object-cover rounded-full border-2 border-border shadow-sm" />}
+                        {logoPreview && <img src={logoPreview} alt="Logo Preview" className="w-12 h-12 object-contain rounded-md border border-border" />}
                     </div>
                     <button onClick={handleSaveDetails} className={`${primaryButtonStyle} w-full`}>Save Details</button>
                 </div>
@@ -179,6 +188,10 @@ const Settings: React.FC = () => {
                     </label>
                 </div>
             </Card>
+
+            <div className="text-center text-xs text-foreground/50 mt-auto py-2">
+                Version {getAutoVersion()}
+            </div>
         </div>
     );
 };

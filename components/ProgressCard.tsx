@@ -11,194 +11,178 @@ interface ProgressCardProps {
   examName: string;
 }
 
-const cellStyle = "border border-black p-1 text-center align-middle text-xs";
-const headerCellStyle = `${cellStyle} font-semibold bg-gray-200`;
+const cellStyle = "border border-slate-500 p-1 text-center align-middle";
+const headerCellStyle = `${cellStyle} font-semibold bg-slate-100`;
 const labelCellStyle = `${cellStyle} font-semibold text-left`;
 
-const getGrade = (percentage: number): string => {
-    if (percentage > 85) return 'A+';
-    if (percentage > 70) return 'A';
-    if (percentage > 55) return 'B';
-    if (percentage > 40) return 'C';
-    if (percentage >= 33) return 'D';
-    return 'E';
+const getGradeAndColor = (percentage: number): { grade: string; color: string } => {
+    if (percentage > 85) return { grade: 'A+', color: 'bg-green-600' };
+    if (percentage > 70) return { grade: 'A', color: 'bg-green-500' };
+    if (percentage > 55) return { grade: 'B', color: 'bg-blue-500' };
+    if (percentage > 40) return { grade: 'C', color: 'bg-yellow-500' };
+    if (percentage >= 33) return { grade: 'D', color: 'bg-orange-500' };
+    return { grade: 'E', color: 'bg-red-500' };
 };
 
 const ProgressCard: React.FC<ProgressCardProps> = ({ student, marks, schoolDetails, studentExamData, examName }) => {
     
+    const SUBJECT_ORDER = ['English', 'Math', 'Science', 'Social Science', 'Urdu', 'Kashmiri'];
+    const displayedSubjects = marks.length > 0 ? SUBJECT_ORDER.filter(s => marks.some(m => m.subject === s)) : [];
+
     let grandTotalObtained = 0;
     const maxMarksPerSubject = 100;
-    const grandMaxMarks = marks.length * maxMarksPerSubject;
+    let grandMaxMarks = 0;
 
-    const processedMarks = marks.map(mark => {
-        const faTotal = (mark.fa1 || 0) + (mark.fa2 || 0) + (mark.fa3 || 0) + (mark.fa4 || 0) + (mark.fa5 || 0) + (mark.fa6 || 0);
-        const total100 = faTotal + (mark.coCurricular || 0) + (mark.summative || 0);
-        grandTotalObtained += total100;
-        return {
-            ...mark,
-            faTotal,
-            total100,
-            grade: getGrade(total100),
-        };
-    });
+    const processedMarks = displayedSubjects.map(subjectName => {
+        const mark = marks.find(m => m.subject === subjectName);
+        if (mark) {
+            grandMaxMarks += maxMarksPerSubject;
+            const faTotal = (mark.fa1 || 0) + (mark.fa2 || 0) + (mark.fa3 || 0) + (mark.fa4 || 0) + (mark.fa5 || 0) + (mark.fa6 || 0);
+            const total100 = faTotal + (mark.coCurricular || 0) + (mark.summative || 0);
+            grandTotalObtained += total100;
+            const { grade } = getGradeAndColor(total100);
+            return {
+                id: mark.id,
+                subject: mark.subject,
+                fa1: mark.fa1, fa2: mark.fa2, fa3: mark.fa3, fa4: mark.fa4, fa5: mark.fa5, fa6: mark.fa6,
+                faTotal,
+                coCurricular: mark.coCurricular,
+                summative: mark.summative,
+                total100,
+                grade,
+            };
+        }
+        return null; 
+    }).filter(Boolean) as (NonNullable<ReturnType<typeof processedMarks[number]>>)[];
     
     const overallPercentage = grandMaxMarks > 0 ? (grandTotalObtained / grandMaxMarks) * 100 : 0;
-    const overallGrade = getGrade(overallPercentage);
+    const { grade: overallGrade } = getGradeAndColor(overallPercentage);
     const result = overallPercentage >= 33 ? 'Passed' : 'Failed';
 
+    const DetailItem: React.FC<{ label: string; value: string | undefined }> = ({ label, value }) => (
+        <>
+            <span className="font-semibold text-slate-600">{label}:</span>
+            <span className="font-bold text-slate-800">{value}</span>
+        </>
+    );
+
     return (
-    <div id="progress-card" className="w-[210mm] h-[297mm] bg-white p-4 font-sans text-black">
-        <div className="w-full h-full border-2 border-black p-2 flex flex-col">
-            <header className="text-center border-b-2 border-black pb-1">
-                <p className="text-xs">UDISE: {schoolDetails.udiseCode}</p>
-                <h1 className="text-xl font-bold">OFFICE OF THE {schoolDetails.name.toUpperCase()}</h1>
-                <h2 className="text-lg font-bold">HOLISTIC PROGRESS CARD FOR THE YEAR {new Date().getFullYear()}</h2>
+    <div id="progress-card" className="w-[210mm] h-[297mm] bg-white p-4 font-sans text-slate-900">
+        <div className="w-full h-full border-2 border-slate-800 p-3 flex flex-col relative">
+            <div className="absolute inset-2 border border-slate-400"></div>
+
+            <header className="text-center mb-2 z-10">
+                {schoolDetails.logo && <img src={schoolDetails.logo} alt="School Logo" className="h-16 w-16 mx-auto object-contain mb-1" />}
+                <h1 className="text-2xl font-bold font-gothic tracking-wide">{schoolDetails.name.toUpperCase()}</h1>
+                <p className="text-xs">{schoolDetails.address}</p>
             </header>
 
-            {/* Student Details */}
-            <table className="w-full my-1 border-collapse text-xs">
-                <tbody>
-                    <tr>
-                        <td className="font-bold p-1 w-1/5">Student Name:</td>
-                        <td className="border-b border-black w-2/5">{student.name}</td>
-                        <td className="font-bold p-1 w-1/5 text-right">Adm. No:</td>
-                        <td className="border-b border-black w-1/5">{student.admissionNo}</td>
-                    </tr>
-                    <tr>
-                        <td className="font-bold p-1">Father's Name:</td>
-                        <td className="border-b border-black">{student.guardianInfo.split(',')[0]}</td>
-                        <td className="font-bold p-1 text-right">D.O.B:</td>
-                        <td className="border-b border-black">{formatDateLong(student.dob)}</td>
-                    </tr>
-                    <tr>
-                        <td className="font-bold p-1">Mother's Name:</td>
-                        <td className="border-b border-black"></td>
-                        <td className="font-bold p-1 text-right">Class:</td>
-                        <td className="border-b border-black">{student.className}</td>
-                    </tr>
-                     <tr>
-                        <td className="font-bold p-1">Academic Session:</td>
-                        <td className="border-b border-black">{examName}</td>
-                        <td className="font-bold p-1 text-right">Roll No:</td>
-                        <td className="border-b border-black">{student.rollNo}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div className="text-center border-y-2 border-slate-800 py-1 mb-2 z-10">
+                <h2 className="text-lg font-semibold tracking-widest">ACADEMIC PROGRESS REPORT</h2>
+                <p className="text-sm">SESSION 2024-25 ({examName})</p>
+            </div>
 
-            {/* Marks Table */}
-            <table className="w-full border-collapse border border-black">
-                <thead>
-                    <tr className="bg-blue-100">
+            <div className="grid grid-cols-4 gap-x-4 gap-y-1 text-xs mb-2 z-10">
+                <DetailItem label="Student's Name" value={student.name} />
+                <DetailItem label="Admission No." value={student.admissionNo} />
+                <DetailItem label="Father's Name" value={student.fathersName} />
+                <DetailItem label="Roll No." value={student.rollNo} />
+                <DetailItem label="Class & Section" value={`${student.className} '${student.section}'`} />
+                <DetailItem label="Date of Birth" value={formatDateLong(student.dob)} />
+            </div>
+
+            <table className="w-full border-collapse border border-slate-500 text-xs z-10">
+                <thead className="bg-slate-100">
+                    <tr>
                         <th className={headerCellStyle} rowSpan={2}>Subject</th>
-                        <th className={headerCellStyle} colSpan={6}>Formative Assessment</th>
-                        <th className={headerCellStyle} rowSpan={2}>Total<br/>(30)</th>
-                        <th className={headerCellStyle} rowSpan={2}>Co-Curricular<br/>Activities (20)</th>
-                        <th className={headerCellStyle} rowSpan={2}>Summative<br/>Assessment (50)</th>
-                        <th className={headerCellStyle} rowSpan={2}>Total<br/>(FA+CCA+SA)<br/>(100)</th>
+                        <th className={headerCellStyle} colSpan={6}>Formative Assessment (out of 5 each)</th>
+                        <th className={headerCellStyle} rowSpan={2}>Total FA (30)</th>
+                        <th className={headerCellStyle} rowSpan={2}>Co-Curricular (20)</th>
+                        <th className={headerCellStyle} rowSpan={2}>Summative (50)</th>
+                        <th className={headerCellStyle} rowSpan={2}>Total (100)</th>
                         <th className={headerCellStyle} rowSpan={2}>Grade</th>
-                        <th className={headerCellStyle} rowSpan={2}>Proficiency Level<br/>(Stream/Mountain/Sky)</th>
                     </tr>
-                    <tr className="bg-blue-100">
-                        <th className={headerCellStyle}>FA1<br/>(5)</th>
-                        <th className={headerCellStyle}>FA2<br/>(5)</th>
-                        <th className={headerCellStyle}>FA3<br/>(5)</th>
-                        <th className={headerCellStyle}>FA4<br/>(5)</th>
-                        <th className={headerCellStyle}>FA5<br/>(5)</th>
-                        <th className={headerCellStyle}>FA6<br/>(5)</th>
+                    <tr className="bg-slate-50">
+                        {[1,2,3,4,5,6].map(i => <th key={i} className={`${headerCellStyle} font-medium`}>FA{i}</th>)}
                     </tr>
                 </thead>
                 <tbody>
                     {processedMarks.map(m => (
                         <tr key={m.id}>
                             <td className={labelCellStyle}>{m.subject}</td>
-                            <td className={cellStyle}>{m.fa1 ?? ''}</td>
-                            <td className={cellStyle}>{m.fa2 ?? ''}</td>
-                            <td className={cellStyle}>{m.fa3 ?? ''}</td>
-                            <td className={cellStyle}>{m.fa4 ?? ''}</td>
-                            <td className={cellStyle}>{m.fa5 ?? ''}</td>
-                            <td className={cellStyle}>{m.fa6 ?? ''}</td>
-                            <td className={cellStyle}>{m.faTotal}</td>
-                            <td className={cellStyle}>{m.coCurricular ?? ''}</td>
-                            <td className={cellStyle}>{m.summative ?? ''}</td>
-                            <td className={cellStyle}>{m.total100}</td>
-                            <td className={cellStyle}>{m.grade}</td>
-                            <td className={cellStyle}>
-                                {m.grade === 'A+' ? studentExamData.proficiencyLevel : ''}
-                            </td>
+                            <td className={cellStyle}>{m.fa1 ?? '-'}</td><td className={cellStyle}>{m.fa2 ?? '-'}</td>
+                            <td className={cellStyle}>{m.fa3 ?? '-'}</td><td className={cellStyle}>{m.fa4 ?? '-'}</td>
+                            <td className={cellStyle}>{m.fa5 ?? '-'}</td><td className={cellStyle}>{m.fa6 ?? '-'}</td>
+                            <td className={`${cellStyle} font-semibold`}>{m.faTotal ?? '-'}</td>
+                            <td className={cellStyle}>{m.coCurricular ?? '-'}</td>
+                            <td className={cellStyle}>{m.summative ?? '-'}</td>
+                            <td className={`${cellStyle} font-bold bg-slate-50`}>{m.total100 ?? '-'}</td>
+                            <td className={`${cellStyle} font-bold`}>{m.grade ?? '-'}</td>
                         </tr>
                     ))}
-                    <tr className="bg-blue-200 font-bold">
-                        <td colSpan={10} className={`${cellStyle} text-xl italic text-right pr-4`}>Grand Total</td>
-                        <td className={cellStyle}>{grandTotalObtained}</td>
-                        <td className={cellStyle}></td>
-                        <td className={cellStyle}></td>
-                    </tr>
+                     {Array.from({ length: Math.max(0, 6 - processedMarks.length) }).map((_, i) => (
+                        <tr key={`empty-${i}`}><td className={labelCellStyle}>&nbsp;</td>{Array.from({ length: 11 }).map((_, j) => <td key={j} className={cellStyle}></td>)}</tr>
+                    ))}
                 </tbody>
             </table>
             
-            {/* Bottom Section */}
-            <div className="flex-grow mt-2 grid grid-cols-3 gap-2 text-xs">
-                {/* Left Side */}
-                <div className="col-span-1 space-y-2">
-                    <table className="w-full border-collapse border border-black">
-                         <thead className="bg-green-100"><tr ><th colSpan={2} className={headerCellStyle}>Percentage/Grade Key</th></tr></thead>
+            <div className="flex-grow mt-2 grid grid-cols-2 gap-x-4 text-xs z-10">
+                <div className="flex flex-col gap-y-2">
+                    <table className="w-full border-collapse border border-slate-500">
                          <tbody>
-                            <tr><td className={labelCellStyle}>&gt;85% to 100%</td><td className={cellStyle}>A+</td></tr>
-                            <tr><td className={labelCellStyle}>&gt;70% to 85%</td><td className={cellStyle}>A</td></tr>
-                            <tr><td className={labelCellStyle}>&gt;55% to 70%</td><td className={cellStyle}>B</td></tr>
-                            <tr><td className={labelCellStyle}>&gt;40% to 55%</td><td className={cellStyle}>C</td></tr>
-                            <tr><td className={labelCellStyle}>&gt;33% to 40%</td><td className={cellStyle}>D</td></tr>
+                            <tr><td className={labelCellStyle}>Total Marks Obtained</td><td className={`${cellStyle} font-bold`}>{grandTotalObtained} / {grandMaxMarks}</td></tr>
+                            <tr><td className={labelCellStyle}>Overall Percentage</td><td className={`${cellStyle} font-bold`}>{overallPercentage.toFixed(2)}%</td></tr>
+                            <tr><td className={labelCellStyle}>Overall Grade</td><td className={`${cellStyle} font-bold`}>{overallGrade}</td></tr>
+                            <tr><td className={labelCellStyle}>Result</td><td className={`${cellStyle} font-bold text-base`}>{result}</td></tr>
                          </tbody>
                     </table>
-                     <table className="w-full border-collapse border border-black">
-                         <thead className="bg-green-100"><tr><th colSpan={3} className={headerCellStyle}>Level of Proficiency</th></tr></thead>
-                         <tbody>
-                            <tr>
-                                <td className={labelCellStyle}>Stream</td>
-                                <td className={`${cellStyle} w-1/3`}><StreamIcon className="w-8 h-8 mx-auto"/></td>
-                                <td className={`${cellStyle} w-1/6`}>{studentExamData.proficiencyLevel === 'Stream' ? '✔️' : ''}</td>
-                            </tr>
-                             <tr>
-                                <td className={labelCellStyle}>Mountain</td>
-                                <td className={cellStyle}><MountainIcon className="w-8 h-8 mx-auto"/></td>
-                                <td className={cellStyle}>{studentExamData.proficiencyLevel === 'Mountain' ? '✔️' : ''}</td>
-                            </tr>
-                             <tr>
-                                <td className={labelCellStyle}>Sky</td>
-                                <td className={cellStyle}><SkyIcon className="w-8 h-8 mx-auto"/></td>
-                                <td className={cellStyle}>{studentExamData.proficiencyLevel === 'Sky' ? '✔️' : ''}</td>
-                            </tr>
-                         </tbody>
-                    </table>
+                     <div className="flex-grow border border-slate-500 p-1">
+                        <p className="font-semibold">Teacher's Remarks:</p>
+                        <p className="pt-1">{studentExamData.remarks || '...'}</p>
+                    </div>
                 </div>
-
-                {/* Right Side */}
-                <div className="col-span-2 space-y-2">
-                     <table className="w-full border-collapse border border-black">
+                <div className="flex flex-col gap-y-2">
+                    <table className="w-full border-collapse border border-slate-500">
+                         <thead><tr><th colSpan={2} className={headerCellStyle}>Grade Key</th></tr></thead>
                          <tbody>
-                            <tr><td className={labelCellStyle}>Total Marks Obtained</td><td className={`${cellStyle} bg-green-100`}>{grandTotalObtained}</td></tr>
-                            <tr><td className={labelCellStyle}>Max. Marks</td><td className={`${cellStyle} bg-yellow-100`}>{grandMaxMarks}</td></tr>
-                            <tr><td className={labelCellStyle}>Overall Percentage</td><td className={`${cellStyle} bg-green-100`}>{overallPercentage.toFixed(2)}%</td></tr>
-                            <tr><td className={labelCellStyle}>Overall Grade</td><td className={`${cellStyle} bg-green-100`}>{overallGrade}</td></tr>
-                            <tr><td className={labelCellStyle}>Result</td><td className={`${cellStyle} font-bold bg-blue-100`}>{result}</td></tr>
+                            <tr><td className={labelCellStyle}>&gt;85% : A+ (Excellent)</td><td className={labelCellStyle}>&gt;70% : A (Very Good)</td></tr>
+                            <tr><td className={labelCellStyle}>&gt;55% : B (Good)</td><td className={labelCellStyle}>&gt;40% : C (Fair)</td></tr>
+                            <tr><td className={labelCellStyle}>&gt;33% : D (Satisfactory)</td><td className={labelCellStyle}>&lt;33% : E (Needs Improvement)</td></tr>
                          </tbody>
                     </table>
-                    <table className="w-full h-24 border-collapse border border-black">
-                         <tbody>
-                            <tr><td className={`${labelCellStyle} w-2/5`}>Form Teacher Remarks</td><td className={cellStyle}>{studentExamData.remarks}</td></tr>
-                         </tbody>
-                    </table>
-                     <table className="w-full flex-grow border-collapse border border-black">
-                         <tbody>
-                            <tr><td className={`${labelCellStyle} h-8`}>Sign. Class Teacher:</td></tr>
-                            <tr><td className={`${labelCellStyle} h-8`}>Sign. Exam I/C:</td></tr>
-                            <tr><td className={`${labelCellStyle} h-8`}>Parents Signature:</td></tr>
-                         </tbody>
-                    </table>
+                     <div className="border border-slate-500 p-1">
+                        <p className="font-semibold text-center bg-slate-100">Proficiency Level Achieved</p>
+                        <div className="flex justify-around items-center pt-2">
+                            <div className="flex flex-col items-center gap-1">
+                                <StreamIcon className={`w-6 h-6 ${studentExamData.proficiencyLevel === 'Stream' ? 'text-blue-600' : 'text-slate-300'}`} />
+                                <p className={studentExamData.proficiencyLevel === 'Stream' ? 'font-bold' : ''}>Stream</p>
+                            </div>
+                            <div className="flex flex-col items-center gap-1">
+                                <MountainIcon className={`w-6 h-6 ${studentExamData.proficiencyLevel === 'Mountain' ? 'text-blue-600' : 'text-slate-300'}`} />
+                                <p className={studentExamData.proficiencyLevel === 'Mountain' ? 'font-bold' : ''}>Mountain</p>
+                            </div>
+                            <div className="flex flex-col items-center gap-1">
+                                <SkyIcon className={`w-6 h-6 ${studentExamData.proficiencyLevel === 'Sky' ? 'text-blue-600' : 'text-slate-300'}`} />
+                                <p className={studentExamData.proficiencyLevel === 'Sky' ? 'font-bold' : ''}>Sky</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <footer className="mt-auto text-right font-semibold italic text-sm pt-1">
-                Seal & Signature of HOI
+
+            <footer className="mt-auto flex justify-between items-end z-10 pt-4 text-xs">
+                <div className="text-left">
+                    <p className="font-semibold">Date of Issue:</p>
+                    <p>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                </div>
+                <div className="text-center">
+                    <div className="border-t-2 border-slate-600 w-40 mt-8 mb-1"></div>
+                    <p className="font-semibold">Class Teacher</p>
+                </div>
+                 <div className="text-center">
+                    <div className="border-t-2 border-slate-600 w-40 mt-8 mb-1"></div>
+                    <p className="font-semibold">Principal / Headmaster</p>
+                </div>
             </footer>
         </div>
     </div>

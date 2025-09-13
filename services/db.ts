@@ -109,3 +109,26 @@ db.version(7).stores({
         delete detail.contact; // Remove old field
     });
 });
+
+db.version(8).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className',
+  staff: '++id, name, staffId, designation, subjects',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject]',
+  dailyLogs: '++id, &date',
+  timetable: '++id, &[staffId+day+period], staffId, day, period',
+  studentExamData: '++id, &[examId+studentId]'
+}).upgrade(tx => {
+    return tx.table('students').toCollection().modify((student: any) => {
+        if (typeof student.guardianInfo !== 'undefined') {
+            student.fathersName = student.guardianInfo;
+            delete student.guardianInfo;
+        } else if (typeof student.fathersName === 'undefined') {
+            student.fathersName = '';
+        }
+        if (typeof student.mothersName === 'undefined') {
+            student.mothersName = '';
+        }
+    });
+});

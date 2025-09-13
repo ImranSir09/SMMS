@@ -11,7 +11,8 @@ const STUDENT_FIELDS: { key: keyof Student; label: string; required: boolean }[]
     { key: 'admissionNo', label: 'Admission No', required: true },
     { key: 'dob', label: 'Date of Birth (YYYY-MM-DD)', required: true },
     { key: 'gender', label: 'Gender (Male/Female/Other)', required: true },
-    { key: 'guardianInfo', label: 'Guardian Info', required: true },
+    // FIX: The `Student` type no longer has a 'guardianInfo' property. Replaced with 'fathersName' to match the current data model.
+    { key: 'fathersName', label: "Father's Name", required: true },
     { key: 'contact', label: 'Contact', required: true },
     { key: 'address', label: 'Address', required: true },
     { key: 'className', label: 'Class (e.g., 1st, Balvatika)', required: true },

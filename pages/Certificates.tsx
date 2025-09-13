@@ -14,6 +14,7 @@ import ChargeCertificate from '../components/ChargeCertificate';
 import SchoolLeavingCertificate from '../components/SchoolLeavingCertificate';
 import DutyCertificate from '../components/DutyCertificate';
 import AdmissionCertificate from '../components/AdmissionCertificate';
+import PhotoUploadModal from '../components/PhotoUploadModal';
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs transition-colors";
 const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
@@ -39,6 +40,7 @@ const Certificates: React.FC = () => {
   const [leavingCertDetails, setLeavingCertDetails] = useState({ leavingDate: '', reasonForLeaving: '' });
   const [isDutyCertModalOpen, setIsDutyCertModalOpen] = useState(false);
   const [dutyCertDetails, setDutyCertDetails] = useState({ description: '', date: '' });
+  const [photoUploadTarget, setPhotoUploadTarget] = useState<Student | Staff | null>(null);
 
   const handleSearch = async () => {
     setError('');
@@ -69,7 +71,13 @@ const Certificates: React.FC = () => {
   };
 
   const handleGenerateStudentIdCard = () => {
-      if (foundStudent) generateDoc(<IdCard student={foundStudent} schoolDetails={schoolDetails} />, `ID-Card-${foundStudent.admissionNo}`);
+      if (foundStudent) {
+        if (foundStudent.photo) {
+          generateDoc(<IdCard student={foundStudent} schoolDetails={schoolDetails} />, `ID-Card-${foundStudent.admissionNo}`);
+        } else {
+          setPhotoUploadTarget(foundStudent);
+        }
+      }
   };
   
   const handleGenerateDobCert = () => {
@@ -88,7 +96,13 @@ const Certificates: React.FC = () => {
   };
 
   const handleGenerateStaffIdCard = () => {
-      if (foundStaff) generateDoc(<StaffIdCard staff={foundStaff} schoolDetails={schoolDetails} />, `ID-Card-${foundStaff.staffId}`);
+      if (foundStaff) {
+          if (foundStaff.photo) {
+              generateDoc(<StaffIdCard staff={foundStaff} schoolDetails={schoolDetails} />, `ID-Card-${foundStaff.staffId}`);
+          } else {
+              setPhotoUploadTarget(foundStaff);
+          }
+      }
   };
 
   const handleGenerateDutySlip = () => {
@@ -111,18 +125,57 @@ const Certificates: React.FC = () => {
       setIsDutyCertModalOpen(false);
     }
   };
+  
+  const handlePhotoSaveAndGenerate = async (photoBase64: string) => {
+    if (!photoUploadTarget || !photoUploadTarget.id || !schoolDetails) return;
 
-  const renderModalForm = (title: string, details: any, setDetails: any, onSubmit: any, fields: {id: string, label: string, type: string, placeholder?: string}[]) => (
-    <Modal isOpen={true} onClose={() => setDetails(null)} title={title}>
+    const isStudent = 'admissionNo' in photoUploadTarget;
+    const updatedEntity = { ...photoUploadTarget, photo: photoBase64 };
+    setPhotoUploadTarget(null); // Close modal
+
+    if (isStudent) {
+      const studentEntity = updatedEntity as Student;
+      generateDoc(<IdCard student={studentEntity} schoolDetails={schoolDetails} />, `ID-Card-${studentEntity.admissionNo}`);
+      await db.students.update(studentEntity.id, { photo: photoBase64 });
+      if (foundStudent?.id === studentEntity.id) {
+        setFoundStudent(studentEntity);
+      }
+    } else {
+      const staffEntity = updatedEntity as Staff;
+      generateDoc(<StaffIdCard staff={staffEntity} schoolDetails={schoolDetails} />, `ID-Card-${staffEntity.staffId}`);
+      await db.staff.update(staffEntity.id, { photo: photoBase64 });
+      if (foundStaff?.id === staffEntity.id) {
+          setFoundStaff(staffEntity);
+      }
+    }
+  };
+
+  const renderModalForm = (
+    title: string, 
+    details: any, 
+    setDetailsState: (details: any) => void, 
+    setModalOpen: (isOpen: boolean) => void, 
+    onSubmit: () => void, 
+    fields: {id: string, label: string, type: string, placeholder?: string, required?: boolean}[]
+  ) => (
+    <Modal isOpen={true} onClose={() => setModalOpen(false)} title={title}>
         <form onSubmit={e => { e.preventDefault(); onSubmit(); }} className="p-4 space-y-4">
             {fields.map(field => (
                 <div key={field.id}>
                     <label htmlFor={field.id} className={labelStyle}>{field.label}</label>
-                    <input id={field.id} type={field.type} value={details[field.id] || ''} onChange={e => setDetails({...details, [field.id]: e.target.value})} className={inputStyle} required={field.type !== 'text'} placeholder={field.placeholder}/>
+                    <input 
+                        id={field.id} 
+                        type={field.type} 
+                        value={details[field.id] || ''} 
+                        onChange={e => setDetailsState({...details, [field.id]: e.target.value})} 
+                        className={inputStyle} 
+                        required={field.required !== false} 
+                        placeholder={field.placeholder}
+                    />
                 </div>
             ))}
             <div className="flex justify-end gap-2 pt-4">
-                <button type="button" onClick={() => setDetails(null)} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm">Cancel</button>
+                <button type="button" onClick={() => setModalOpen(false)} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm">Cancel</button>
                 <button type="submit" disabled={isGeneratingPdf} className="py-2 px-4 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground text-sm disabled:opacity-60">{isGeneratingPdf ? 'Generating...' : 'Generate'}</button>
             </div>
         </form>
@@ -180,10 +233,17 @@ const Certificates: React.FC = () => {
         </Card>
       )}
 
-       {isDutySlipModalOpen && renderModalForm("Create Duty Slip", dutySlipDetails, setIsDutySlipModalOpen, handleGenerateDutySlip, [{id: 'description', label: 'Duty Description', type: 'text'}, {id: 'date', label: 'Date of Duty', type: 'date'}])}
-       {isChargeModalOpen && renderModalForm("Create Charge Certificate", chargeDetails, setIsChargeModalOpen, handleGenerateChargeCertificate, [{id: 'chargeName', label: 'Name of Charge', type: 'text'}, {id: 'date', label: 'Date of Handover', type: 'date'}])}
-       {isLeavingCertModalOpen && renderModalForm("Create Leaving Certificate", leavingCertDetails, setIsLeavingCertModalOpen, handleGenerateLeavingCertificate, [{id: 'leavingDate', label: 'Date of Leaving', type: 'date'}, {id: 'reasonForLeaving', label: 'Reason for Leaving (Optional)', type: 'text', placeholder: "Parent's Transfer"}])}
-       {isDutyCertModalOpen && renderModalForm("Create Duty Certificate", dutyCertDetails, setIsDutyCertModalOpen, handleGenerateDutyCertificate, [{id: 'description', label: 'Duty Description', type: 'text'}, {id: 'date', label: 'Date of Duty', type: 'date'}])}
+       {isDutySlipModalOpen && renderModalForm("Create Duty Slip", dutySlipDetails, setDutySlipDetails, setIsDutySlipModalOpen, handleGenerateDutySlip, [{id: 'description', label: 'Duty Description', type: 'text', required: true}, {id: 'date', label: 'Date of Duty', type: 'date', required: true}])}
+       {isChargeModalOpen && renderModalForm("Create Charge Certificate", chargeDetails, setChargeDetails, setIsChargeModalOpen, handleGenerateChargeCertificate, [{id: 'chargeName', label: 'Name of Charge', type: 'text', required: true}, {id: 'date', label: 'Date of Handover', type: 'date', required: true}])}
+       {isLeavingCertModalOpen && renderModalForm("Create Leaving Certificate", leavingCertDetails, setLeavingCertDetails, setIsLeavingCertModalOpen, handleGenerateLeavingCertificate, [{id: 'leavingDate', label: 'Date of Leaving', type: 'date', required: true}, {id: 'reasonForLeaving', label: 'Reason for Leaving (Optional)', type: 'text', placeholder: "Parent's Transfer", required: false}])}
+       {isDutyCertModalOpen && renderModalForm("Create Duty Certificate", dutyCertDetails, setDutyCertDetails, setIsDutyCertModalOpen, handleGenerateDutyCertificate, [{id: 'description', label: 'Duty Description', type: 'text', required: true}, {id: 'date', label: 'Date of Duty', type: 'date', required: true}])}
+       
+       <PhotoUploadModal
+            isOpen={!!photoUploadTarget}
+            onClose={() => setPhotoUploadTarget(null)}
+            title={`Upload Photo for ${photoUploadTarget?.name}`}
+            onSave={handlePhotoSaveAndGenerate}
+        />
     </div>
   );
 };

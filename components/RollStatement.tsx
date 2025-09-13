@@ -27,7 +27,7 @@ const RollStatement: React.FC<RollStatementProps> = ({ students, className, scho
                 <th className="border border-gray-400 p-2 font-semibold">Roll No</th>
                 <th className="border border-gray-400 p-2 font-semibold">Admission No</th>
                 <th className="border border-gray-400 p-2 font-semibold text-left">Student Name</th>
-                <th className="border border-gray-400 p-2 font-semibold text-left">Guardian Info</th>
+                <th className="border border-gray-400 p-2 font-semibold text-left">Father's Name</th>
                 <th className="border border-gray-400 p-2 font-semibold">D.O.B</th>
               </tr>
             </thead>
@@ -37,7 +37,7 @@ const RollStatement: React.FC<RollStatementProps> = ({ students, className, scho
                   <td className="border border-gray-400 p-2 text-center">{student.rollNo}</td>
                   <td className="border border-gray-400 p-2 text-center">{student.admissionNo}</td>
                   <td className="border border-gray-400 p-2 text-left">{student.name}</td>
-                  <td className="border border-gray-400 p-2 text-left">{student.guardianInfo}</td>
+                  <td className="border border-gray-400 p-2 text-left">{student.fathersName}</td>
                   <td className="border border-gray-400 p-2 text-center">{student.dob}</td>
                 </tr>
               ))}

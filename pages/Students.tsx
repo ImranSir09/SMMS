@@ -1,23 +1,18 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Student } from '../types';
-import { UploadIcon, PrintIcon, StudentsIcon } from '../components/icons';
+import { StudentsIcon } from '../components/icons';
 import BulkAddStudentsModal from '../components/BulkAddStudentsModal';
 import Modal from '../components/Modal';
 import StudentForm from '../components/StudentForm';
-import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
-import RollStatement from '../components/RollStatement';
-// FIX: The file components/StudentCard.tsx was missing its content. It has been created, which resolves this import error.
+import { useNavigate } from 'react-router-dom';
 import StudentCard from '../components/StudentCard';
-import IdCard from '../components/IdCard';
-import PhotoUploadModal from '../components/PhotoUploadModal';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 
 const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors disabled:opacity-60";
-const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground hover:bg-primary-hover`;
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
 
 const STUDENTS_PER_PAGE = 8;
@@ -28,12 +23,10 @@ const Students: React.FC = () => {
     const [editingStudent, setEditingStudent] = useState<Partial<Student> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeClass, setActiveClass] = useState<string | null>(null);
-    const [generatingPdf, setGeneratingPdf] = useState<string | number | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [photoUploadTarget, setPhotoUploadTarget] = useState<Student | null>(null);
     
-    const { schoolDetails } = useAppData();
     const students = useLiveQuery(() => db.students.toArray(), []);
+    const navigate = useNavigate();
 
     const classTabs = useMemo(() => {
         if (!students) return [];
@@ -60,7 +53,6 @@ const Students: React.FC = () => {
         );
     }, [activeClass, students, searchTerm]);
     
-    // Pagination logic
     const totalPages = Math.ceil((filteredStudents?.length || 0) / STUDENTS_PER_PAGE);
     const paginatedStudents = useMemo(() => {
         if (!filteredStudents) return [];
@@ -69,53 +61,12 @@ const Students: React.FC = () => {
     }, [filteredStudents, currentPage]);
     
     useEffect(() => {
-        setCurrentPage(1); // Reset to first page on filter change
+        setCurrentPage(1); 
     }, [activeClass, searchTerm]);
-
-    const handleActualPdfGeneration = async (student: Student) => {
-        if (!schoolDetails || !student.id) return;
-        setGeneratingPdf(student.id);
-        await generatePdfFromComponent(
-            <IdCard student={student} schoolDetails={schoolDetails} />,
-            `ID-Card-${student.admissionNo}-${student.name}`
-        );
-        setGeneratingPdf(null);
-    };
-
-    const triggerIdCardGeneration = (student: Student) => {
-        if (student.photo) {
-            handleActualPdfGeneration(student);
-        } else {
-            setPhotoUploadTarget(student);
-        }
-    };
-
-    const handlePhotoSaveAndGenerate = async (photoBase64: string) => {
-        if (!photoUploadTarget || !photoUploadTarget.id) return;
-        
-        const updatedStudent = { ...photoUploadTarget, photo: photoBase64 };
-        setPhotoUploadTarget(null); // Close modal
-        
-        await handleActualPdfGeneration(updatedStudent);
-
-        // Update db in background
-        await db.students.update(photoUploadTarget.id, { photo: photoBase64 });
-    };
 
     const handleAdd = () => {
         setEditingStudent({ gender: 'Male', photo: null, className: activeClass || '', section: 'A' });
         setIsFormOpen(true);
-    };
-
-    const handleEdit = (student: Student) => {
-        setEditingStudent(student);
-        setIsFormOpen(true);
-    };
-
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this student?')) {
-            await db.students.delete(id);
-        }
     };
     
     const handleSave = async (studentData: Student) => {
@@ -133,9 +84,12 @@ const Students: React.FC = () => {
         setEditingStudent(null);
     }
 
+    const handleCardClick = (studentId: number) => {
+        navigate(`/student/${studentId}`);
+    };
+
     return (
         <div className="h-full flex flex-col">
-            {/* Header */}
             <div className="flex-shrink-0 flex items-center justify-between gap-2 mb-2">
                 <select 
                     value={activeClass || ''} 
@@ -155,16 +109,12 @@ const Students: React.FC = () => {
                 className="p-2 text-sm bg-background border border-input rounded-md w-full mb-2"
             />
 
-            {/* Content Area */}
             <div className="flex-1 grid grid-cols-2 grid-rows-4 gap-2">
                 {paginatedStudents.map((student) => (
                    <StudentCard
                         key={student.id}
                         student={student}
-                        isPdfGenerating={generatingPdf === student.id}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onGenerateId={triggerIdCardGeneration}
+                        onClick={() => handleCardClick(student.id!)}
                    />
                 ))}
             </div>
@@ -185,7 +135,6 @@ const Students: React.FC = () => {
                 </div>
             )}
 
-            {/* Footer / Pagination */}
             <div className="flex-shrink-0 flex items-center justify-center gap-4 pt-2 text-sm">
                 <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="font-semibold disabled:opacity-50">Prev</button>
                 <span className="text-foreground/80">Page {currentPage} of {totalPages || 1}</span>
@@ -205,13 +154,6 @@ const Students: React.FC = () => {
             </Modal>
             
             <BulkAddStudentsModal isOpen={isBulkAddModalOpen} onClose={() => setIsBulkAddModalOpen(false)} />
-
-            <PhotoUploadModal
-                isOpen={!!photoUploadTarget}
-                onClose={() => setPhotoUploadTarget(null)}
-                title={`Upload Photo for ${photoUploadTarget?.name}`}
-                onSave={handlePhotoSaveAndGenerate}
-            />
         </div>
     );
 };

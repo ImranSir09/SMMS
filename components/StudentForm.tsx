@@ -29,7 +29,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
     };
 
     const handleSaveClick = () => {
-        if (!formData.name || !formData.rollNo || !formData.admissionNo || !formData.className || !formData.section || !formData.dob) {
+        if (!formData.name || !formData.rollNo || !formData.admissionNo || !formData.className || !formData.section || !formData.dob || !formData.fathersName) {
             alert('Please fill all required fields.');
             return;
         }
@@ -73,9 +73,13 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
                        <label htmlFor="section" className={labelStyle}>Section</label>
                        <input id="section" name="section" value={formData.section || ''} onChange={handleChange} className={inputStyle} />
                    </div>
-                   <div className="col-span-2">
-                       <label htmlFor="guardianInfo" className={labelStyle}>Guardian Info</label>
-                       <input id="guardianInfo" name="guardianInfo" value={formData.guardianInfo || ''} onChange={handleChange} className={inputStyle} />
+                   <div>
+                       <label htmlFor="fathersName" className={labelStyle}>Father's Name</label>
+                       <input id="fathersName" name="fathersName" value={formData.fathersName || ''} onChange={handleChange} className={inputStyle} />
+                   </div>
+                   <div>
+                       <label htmlFor="mothersName" className={labelStyle}>Mother's Name</label>
+                       <input id="mothersName" name="mothersName" value={formData.mothersName || ''} onChange={handleChange} className={inputStyle} />
                    </div>
                    <div className="col-span-2">
                        <label htmlFor="address" className={labelStyle}>Address</label>

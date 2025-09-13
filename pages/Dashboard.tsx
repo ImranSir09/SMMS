@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
@@ -73,7 +74,7 @@ const Dashboard: React.FC = () => {
              {/* School Header */}
             <div className="flex-shrink-0 flex items-center gap-3 p-3 bg-card rounded-lg shadow-sm">
                 {schoolDetails?.logo ? (
-                    <img src={schoolDetails.logo} alt="School Logo" className="w-12 h-12 object-contain rounded-full border-2 border-primary/20" />
+                    <img src={schoolDetails.logo} alt="School Logo" className="w-12 h-12 object-contain rounded-md" />
                 ) : (
                     <div className="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full">
                         <SchoolIcon className="w-6 h-6 text-primary" />

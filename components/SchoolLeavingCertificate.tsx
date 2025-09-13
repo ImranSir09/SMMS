@@ -46,8 +46,8 @@ const SchoolLeavingCertificate: React.FC<SchoolLeavingCertificateProps> = ({ stu
                     <span className="font-semibold">Student Name:</span>
                     <span className="border-b border-dotted border-gray-500 font-bold">{student.name}</span>
 
-                    <span className="font-semibold">Guardian's Name:</span>
-                    <span className="border-b border-dotted border-gray-500">{student.guardianInfo}</span>
+                    <span className="font-semibold">Father's Name:</span>
+                    <span className="border-b border-dotted border-gray-500">{student.fathersName}</span>
                     
                     <span className="font-semibold">Date of Birth:</span>
                     <span className="border-b border-dotted border-gray-500">{formatDateLong(student.dob)}</span>

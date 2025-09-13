@@ -1,7 +1,6 @@
-
 {
-  "short_name": "Aegis",
-  "name": "Aegis School Management",
+  "short_name": "SMS Mobile",
+  "name": "School Management System Mobile",
   "icons": [
     {
       "src": "https://www.gstatic.com/images/branding/product/1x/google_gemini_32dp.png",

@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -5,12 +7,8 @@ import { Staff } from '../types';
 import { StaffIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import StaffForm from '../components/StaffForm';
-import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
-import StaffIdCard from '../components/StaffIdCard';
-// FIX: The file components/StaffCard.tsx was missing its content. It has been created, which resolves this import error.
+import { useNavigate } from 'react-router-dom';
 import StaffCard from '../components/StaffCard';
-import PhotoUploadModal from '../components/PhotoUploadModal';
 
 const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
@@ -21,12 +19,10 @@ const Staff: React.FC = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingStaff, setEditingStaff] = useState<Partial<Staff> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isGeneratingPdf, setIsGeneratingPdf] = useState<number | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [photoUploadTarget, setPhotoUploadTarget] = useState<Staff | null>(null);
     
-    const { schoolDetails } = useAppData();
     const staff = useLiveQuery(() => db.staff.toArray(), []);
+    const navigate = useNavigate();
 
     const filteredStaff = useMemo(() => {
         if (!staff) return [];
@@ -36,7 +32,6 @@ const Staff: React.FC = () => {
         );
     }, [staff, searchTerm]);
 
-    // Pagination logic
     const totalPages = Math.ceil((filteredStaff?.length || 0) / STAFF_PER_PAGE);
     const paginatedStaff = useMemo(() => {
         if (!filteredStaff) return [];
@@ -45,62 +40,21 @@ const Staff: React.FC = () => {
     }, [filteredStaff, currentPage]);
     
     useEffect(() => {
-        setCurrentPage(1); // Reset to first page on search
+        setCurrentPage(1);
     }, [searchTerm]);
-    
-    const handleActualPdfGeneration = async (staffMember: Staff) => {
-        if (!schoolDetails || !staffMember.id) return;
-        setIsGeneratingPdf(staffMember.id);
-        await generatePdfFromComponent(
-            <StaffIdCard staff={staffMember} schoolDetails={schoolDetails} />,
-            `ID-Card-${staffMember.staffId}-${staffMember.name}`
-        );
-        setIsGeneratingPdf(null);
-    };
-
-    const triggerIdCardGeneration = (staffMember: Staff) => {
-        if (staffMember.photo) {
-            handleActualPdfGeneration(staffMember);
-        } else {
-            setPhotoUploadTarget(staffMember);
-        }
-    };
-    
-    const handlePhotoSaveAndGenerate = async (photoBase64: string) => {
-        if (!photoUploadTarget || !photoUploadTarget.id) return;
-
-        const updatedStaff = { ...photoUploadTarget, photo: photoBase64 };
-        setPhotoUploadTarget(null); // Close modal
-
-        await handleActualPdfGeneration(updatedStaff);
-
-        // Update db in background
-        await db.staff.update(photoUploadTarget.id, { photo: photoBase64 });
-    };
 
     const handleAdd = () => {
         setEditingStaff({ photo: null, teachingAssignments: [] });
         setIsFormOpen(true);
     };
-
-    const handleEdit = (staffMember: Staff) => {
-        setEditingStaff(staffMember);
-        setIsFormOpen(true);
-    };
-
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Are you sure you want to delete this staff member? This action cannot be undone.')) {
-            await db.staff.delete(id);
-        }
-    };
     
     const handleSave = async (staffMember: Staff) => {
         const staffToSave = { ...staffMember, teachingAssignments: staffMember.teachingAssignments || [] };
-        if (staffToSave.id) {
-            await db.staff.update(staffToSave.id, staffToSave);
-        } else {
-            await db.staff.add(staffToSave);
-        }
+        // FIX: Replaced the conditional add/update logic with `db.staff.put`.
+        // `put` handles both creating new records and updating existing ones, simplifying the code.
+        // This also resolves a latent TypeScript error similar to the one in StaffProfile,
+        // caused by Dexie's `update` typings with nested arrays.
+        await db.staff.put(staffToSave);
         handleCloseForm();
     };
 
@@ -109,9 +63,12 @@ const Staff: React.FC = () => {
         setEditingStaff(null);
     }
 
+    const handleCardClick = (staffId: number) => {
+        navigate(`/staff/${staffId}`);
+    };
+
     return (
         <div className="h-full flex flex-col">
-            {/* Header */}
             <div className="flex-shrink-0 flex items-center gap-2 mb-2">
                 <input
                     type="text"
@@ -123,16 +80,12 @@ const Staff: React.FC = () => {
                 <button onClick={handleAdd} className={accentButtonStyle}>Add</button>
             </div>
 
-            {/* Content Area */}
             <div className="flex-1 grid grid-cols-2 grid-rows-4 gap-2">
                 {paginatedStaff.map(member => (
                    <StaffCard
                         key={member.id}
                         staffMember={member}
-                        isPdfGenerating={isGeneratingPdf === member.id}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        onGenerateId={triggerIdCardGeneration}
+                        onClick={() => handleCardClick(member.id!)}
                    />
                 ))}
             </div>
@@ -153,7 +106,6 @@ const Staff: React.FC = () => {
                 </div>
             )}
             
-            {/* Footer / Pagination */}
             <div className="flex-shrink-0 flex items-center justify-center gap-4 pt-2 text-sm">
                 <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="font-semibold disabled:opacity-50">Prev</button>
                 <span className="text-foreground/80">Page {currentPage} of {totalPages || 1}</span>
@@ -171,13 +123,6 @@ const Staff: React.FC = () => {
                     onClose={handleCloseForm}
                 />
             </Modal>
-
-            <PhotoUploadModal
-                isOpen={!!photoUploadTarget}
-                onClose={() => setPhotoUploadTarget(null)}
-                title={`Upload Photo for ${photoUploadTarget?.name}`}
-                onSave={handlePhotoSaveAndGenerate}
-            />
         </div>
     );
 };

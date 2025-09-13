@@ -24,7 +24,8 @@ export interface Student {
   category?: string;
   admissionDate?: string;
   bloodGroup?: string;
-  guardianInfo: string;
+  fathersName: string;
+  mothersName: string;
   contact: string;
   address: string;
 }
