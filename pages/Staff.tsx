@@ -74,7 +74,7 @@ const Staff: React.FC = () => {
     };
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="flex flex-col">
             <div className="flex-shrink-0 flex items-center gap-2 mb-2">
                 <input
                     type="text"
@@ -86,7 +86,7 @@ const Staff: React.FC = () => {
                 <button onClick={handleAdd} className={accentButtonStyle}>Add</button>
             </div>
 
-            <div className="flex-1 grid grid-cols-2 grid-rows-4 gap-2">
+            <div className="flex-1 grid grid-cols-2 gap-2">
                 {paginatedStaff.map(member => (
                    <StaffCard
                         key={member.id}

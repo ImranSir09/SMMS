@@ -36,7 +36,7 @@ const Timetable: React.FC = () => {
   const teachingStaff = staff as Staff[];
 
   return (
-    <div className="h-full flex flex-col animate-fade-in">
+    <div className="flex flex-col animate-fade-in">
       <div className="flex-shrink-0 grid grid-cols-4 gap-1 mb-2">
           {DAYS.slice(0, 4).map(day => (
               <button key={day} onClick={() => setSelectedDay(day)} className={`p-2 text-xs font-semibold rounded-md transition-colors ${selectedDay === day ? 'bg-primary text-primary-foreground' : 'bg-card'}`}>

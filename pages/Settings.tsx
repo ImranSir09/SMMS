@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { db } from '../services/db';
@@ -89,7 +88,6 @@ const Settings: React.FC = () => {
                 allData[table.name] = await table.toArray();
             }
             
-            // Using Blob for more robust file handling
             const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -124,20 +122,17 @@ const Settings: React.FC = () => {
                 
                 const data = JSON.parse(text);
 
-                // Define table order to respect dependencies
                 const tableOrder = [
                     'schoolDetails', 'students', 'staff', 'exams', 'dailyLogs',
                     'marks', 'studentExamData', 'timetable'
                 ];
                 
-                // Validate that the backup file contains expected table data
                 const backupTables = Object.keys(data);
                 if (!backupTables.length || !db.tables.some(t => backupTables.includes(t.name))) {
                     throw new Error("This does not appear to be a valid backup file.");
                 }
 
                 await db.transaction('rw', db.tables, async () => {
-                    // Clear all tables first, in reverse dependency order.
                     // @ts-ignore
                     const tablesToClear = tableOrder.filter(name => db[name]).reverse();
                     for (const tableName of tablesToClear) {
@@ -145,7 +140,6 @@ const Settings: React.FC = () => {
                         await db[tableName].clear();
                     }
 
-                    // Import data in dependency order using bulkPut to preserve IDs.
                     for (const tableName of tableOrder) {
                         // @ts-ignore
                         if (data[tableName] && db[tableName]) {
@@ -156,16 +150,35 @@ const Settings: React.FC = () => {
                 });
 
                 alert('Data restored successfully! The application will now reload.');
-                refreshSchoolDetails(); // Refresh context data
-                window.location.reload(); // Reload to reflect changes everywhere
+                refreshSchoolDetails();
+                window.location.reload();
             } catch (error: any) {
                 console.error("Restore failed:", error);
                 alert(`Restore failed: ${error.message}. Make sure it's a valid backup file for this application.`);
             } finally {
-                if (event.target) event.target.value = ''; // Reset file input
+                if (event.target) event.target.value = '';
             }
         };
         reader.readAsText(file);
+    };
+
+    const handleResetData = async () => {
+        if (window.confirm("DANGER: This will permanently delete ALL data. Are you absolutely sure?")) {
+            if (window.confirm("Please confirm again. This action is irreversible and will erase everything.")) {
+                try {
+                    await db.transaction('rw', db.tables, async () => {
+                        for (const table of db.tables) {
+                            await table.clear();
+                        }
+                    });
+                    alert('All data has been reset. The application will now reload.');
+                    window.location.reload();
+                } catch (error) {
+                    console.error("Failed to reset data:", error);
+                    alert("An error occurred while resetting the data. See console for details.");
+                }
+            }
+        }
     };
 
     const getAutoVersion = () => {
@@ -177,7 +190,7 @@ const Settings: React.FC = () => {
     };
 
     return (
-        <div className="h-full flex flex-col gap-4 animate-fade-in">
+        <div className="flex flex-col gap-4 animate-fade-in">
             <Card className="p-3">
                 <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">School Details</h2>
                 <div className="space-y-3">
@@ -191,12 +204,12 @@ const Settings: React.FC = () => {
                         <input name="email" type="email" value={details.email || ''} onChange={handleChange} className={inputStyle} />
                         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
-                     <div>
+                    <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Phone Number</label>
-                        <input name="phone" value={details.phone || ''} onChange={handleChange} className={inputStyle} />
+                        <input name="phone" type="tel" value={details.phone || ''} onChange={handleChange} className={inputStyle} />
                         {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                     </div>
-                     <div>
+                    <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">UDISE Code</label>
                         <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={inputStyle} />
                         {errors.udiseCode && <p className="text-red-500 text-xs mt-1">{errors.udiseCode}</p>}
@@ -206,12 +219,16 @@ const Settings: React.FC = () => {
                         <input name="address" value={details.address || ''} onChange={handleChange} className={inputStyle} />
                         {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div>
-                            <label className="block text-xs font-medium text-foreground/80 mb-1">Logo</label>
-                            <input type="file" onChange={handleLogoChange} accept="image/*" className="block w-full text-xs text-foreground file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
+                    <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">School Logo</label>
+                        <div className="flex items-center gap-4">
+                            {logoPreview ? (
+                                <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 object-contain rounded-md border border-border p-1" />
+                            ) : (
+                                <div className="w-16 h-16 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Logo</div>
+                            )}
+                            <input type="file" accept="image/png, image/jpeg" onChange={handleLogoChange} className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
                         </div>
-                        {logoPreview && <img src={logoPreview} alt="Logo Preview" className="w-12 h-12 object-contain rounded-md border border-border" />}
                     </div>
                     <button onClick={handleSaveDetails} className={`${primaryButtonStyle} w-full`}>Save Details</button>
                 </div>
@@ -220,17 +237,33 @@ const Settings: React.FC = () => {
             <Card className="p-3">
                 <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Data Management</h2>
                 <div className="grid grid-cols-2 gap-2">
-                    <button onClick={handleBackup} className={`${buttonStyle} bg-green-600 hover:bg-green-700 text-white`}>Backup</button>
-                    <label className={`${buttonStyle} bg-yellow-600 hover:bg-yellow-700 text-white block text-center cursor-pointer`}>
-                        Restore
-                        <input type="file" onChange={handleRestore} accept=".json" className="hidden" />
+                    <button onClick={handleBackup} className={`${buttonStyle} bg-blue-600 text-white`}>Backup Data</button>
+                     <label className={`${buttonStyle} bg-green-600 text-white text-center cursor-pointer`}>
+                        Restore Data
+                        <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
                     </label>
                 </div>
             </Card>
 
-            <div className="text-center text-xs text-foreground/50 mt-auto py-2">
-                Version {getAutoVersion()}
-            </div>
+            <Card className="p-3 border-red-500/50 bg-red-500/5">
+                <h2 className="text-md font-semibold mb-2 border-b border-red-500/20 pb-1 text-red-600 dark:text-red-400">Danger Zone</h2>
+                <div>
+                    <p className="font-semibold text-sm">Reset All Application Data</p>
+                    <p className="text-xs text-foreground/80 mt-1 mb-3">
+                        This action will permanently delete all data, including students, staff, exams, and settings. This action is irreversible.
+                    </p>
+                    <button
+                        onClick={handleResetData}
+                        className="w-full py-2 px-4 rounded-md text-sm font-semibold transition-colors bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                        Reset All Data
+                    </button>
+                </div>
+            </Card>
+
+             <Card className="p-3 text-center">
+                <p className="text-xs text-foreground/60">App Version: {getAutoVersion()}</p>
+             </Card>
         </div>
     );
 };

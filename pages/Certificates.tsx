@@ -168,20 +168,13 @@ const Certificates: React.FC = () => {
     const updatedEntity = { ...photoUploadTarget, photo: photoBase64 };
     setPhotoUploadTarget(null); // Close modal
 
+    // The uploaded photo is used for one-time generation and is not saved to the database.
     if (isStudent) {
       const studentEntity = updatedEntity as Student;
       generateDoc(<IdCard student={studentEntity} schoolDetails={schoolDetails} />, `ID-Card-${studentEntity.admissionNo}`);
-      await db.students.update(studentEntity.id, { photo: photoBase64 });
-      if (foundStudent?.id === studentEntity.id) {
-        setFoundStudent(studentEntity);
-      }
     } else {
       const staffEntity = updatedEntity as Staff;
       generateDoc(<StaffIdCard staff={staffEntity} schoolDetails={schoolDetails} />, `ID-Card-${staffEntity.staffId}`);
-      await db.staff.update(staffEntity.id, { photo: photoBase64 });
-      if (foundStaff?.id === staffEntity.id) {
-          setFoundStaff(staffEntity);
-      }
     }
   };
 
@@ -218,7 +211,7 @@ const Certificates: React.FC = () => {
   );
 
   return (
-    <div className="h-full flex flex-col gap-4 animate-fade-in">
+    <div className="flex flex-col gap-4 animate-fade-in">
       <Card className="p-3">
         <div className="flex items-center gap-2 mb-2">
             <div className="flex rounded-md bg-background border border-input p-1 text-xs">

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
@@ -94,7 +93,7 @@ const Reports: React.FC = () => {
     };
 
     return (
-        <div className="h-full flex flex-col gap-4 animate-fade-in">
+        <div className="flex flex-col gap-4 animate-fade-in">
             <Card className="p-3">
                 <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Exam Reports</h2>
                 <div className="space-y-3">

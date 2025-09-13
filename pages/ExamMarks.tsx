@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -165,7 +164,7 @@ const ExamMarks: React.FC = () => {
     if (!exam) return <div className="p-4 text-center">Loading exam data...</div>;
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="flex flex-col">
             <div className="flex-shrink-0 mb-2 flex justify-between items-center">
                  <h2 className="font-semibold">{exam.name} - Class {exam.className}</h2>
                  <div className="text-xs font-medium">{getSaveStatusIndicator()}</div>

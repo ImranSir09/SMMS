@@ -8,7 +8,6 @@ const BottomNav: React.FC = () => {
     { to: "/students", icon: <StudentsIcon className="w-5 h-5" />, label: "Students" },
     { to: "/staff", icon: <StaffIcon className="w-5 h-5" />, label: "Staff" },
     { to: "/timetable", icon: <TimetableIcon className="w-5 h-5" />, label: "Timetable" },
-    { to: "/certificates", icon: <CertificateIcon className="w-5 h-5" />, label: "Certs" },
     { to: "/settings", icon: <SettingsIcon className="w-5 h-5" />, label: "Settings" },
   ];
 

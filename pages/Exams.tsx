@@ -48,7 +48,7 @@ const Exams: React.FC = () => {
     }
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="flex flex-col">
             <button onClick={handleOpenCreateModal} className="w-full mb-3 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors">Create New Exam</button>
             
             <div className="flex-1 grid grid-cols-2 gap-3 overflow-y-auto">

@@ -31,8 +31,11 @@ const Students: React.FC = () => {
 
     const classTabs = useMemo(() => {
         if (!students) return [];
-        const classes = new Set(students.map(s => s.className));
-        return CLASS_OPTIONS.filter(c => classes.has(c));
+        const classSet = new Set(students.map(s => s.className));
+        // Create tabs from all unique classes found in the DB and sort them naturally.
+        return Array.from(classSet).sort((a, b) => 
+            a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+        );
     }, [students]);
 
     useEffect(() => {
@@ -96,7 +99,7 @@ const Students: React.FC = () => {
     };
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="flex flex-col">
             <div className="flex-shrink-0 flex items-center justify-between gap-2 mb-2">
                 <select 
                     value={activeClass || ''} 
@@ -119,7 +122,7 @@ const Students: React.FC = () => {
                 className="p-2 text-sm bg-background border border-input rounded-md w-full mb-2"
             />
 
-            <div className="flex-1 grid grid-cols-2 grid-rows-4 gap-2">
+            <div className="flex-1 grid grid-cols-2 gap-2">
                 {paginatedStudents.map((student) => (
                    <StudentCard
                         key={student.id}

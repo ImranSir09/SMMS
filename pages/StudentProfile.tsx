@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -77,7 +76,7 @@ const StudentProfile: React.FC = () => {
     }
 
     return (
-        <div className="h-full flex flex-col gap-3 animate-fade-in">
+        <div className="flex flex-col gap-3 animate-fade-in">
             {/* Profile Header */}
             <Card className="flex-shrink-0 flex items-center gap-3 p-3">
                 {student.photo ? (

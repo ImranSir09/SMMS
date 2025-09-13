@@ -70,7 +70,7 @@ const Dashboard: React.FC = () => {
     );
 
     return (
-        <div className="h-full flex flex-col gap-3 animate-fade-in">
+        <div className="flex flex-col gap-3 animate-fade-in">
              {/* School Header */}
             <div className="flex-shrink-0 flex items-center gap-3 p-3 bg-card rounded-lg shadow-sm">
                 {schoolDetails?.logo ? (
