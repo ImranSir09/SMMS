@@ -132,3 +132,8 @@ db.version(8).stores({
         }
     });
 });
+
+db.version(9).stores({
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  studentExamData: '++id, &[examId+studentId], studentId'
+});

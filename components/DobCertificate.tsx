@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 
@@ -20,7 +21,7 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
                     {/* Background Logo */}
                     {schoolDetails?.logo && (
                         <div className="absolute inset-0 flex items-center justify-center z-0">
-                            <img src={schoolDetails.logo} alt="Logo" className="w-1/2 h-1/2 object-contain opacity-10" />
+                            <img src={schoolDetails.logo} alt="Logo" className="w-1/2 max-h-1/2 object-contain opacity-10" />
                         </div>
                     )}
 
@@ -51,8 +52,12 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
                                 )}
                             </div>
                         </div>
-                        <h2 className="text-2xl font-semibold font-gothic text-center my-4 underline underline-offset-4">
-                            Birth Certificate
+                        <div className="flex justify-between items-center z-10 text-sm mt-2">
+                            <span>Certificate No: ............</span>
+                            <span>Date of Issue: {new Date().toLocaleDateString('en-GB')}</span>
+                        </div>
+                        <h2 className="text-2xl font-semibold font-gothic text-center my-2 underline underline-offset-4">
+                            Date of Birth Certificate
                         </h2>
                     </header>
 
@@ -79,18 +84,24 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
                                 <span className="font-semibold border-b border-black flex-grow text-center mx-2">{student.admissionNo}</span>
                             </p>
                             <p className="flex items-end flex-wrap">
-                                According to the school record, his/her date of birth is
+                                According to the school admission record, his/her date of birth is
                                 <span className="font-semibold border-b border-black w-16 text-center mx-2">{day}</span>
                                 <span className="font-semibold border-b border-black w-32 text-center mx-2">{month}</span>
                                 <span className="font-semibold border-b border-black w-24 text-center mx-2">{year}</span>
                             </p>
+                            <p className="mt-8">
+                                His/Her character and conduct as per school records are satisfactory.
+                            </p>
                         </div>
                     </main>
 
-                    <footer className="mt-auto flex justify-end items-end z-10 pt-16 pb-2">
+                    <footer className="mt-auto flex justify-between items-end z-10 pt-16 pb-2">
+                        <div className="text-center text-gray-600">
+                            <p className="font-semibold">(Official Seal)</p>
+                        </div>
                         <div className="text-center">
                             <div className="border-t border-black w-56 mb-1"></div>
-                            <p className="font-semibold text-sm">Managing Director Signature</p>
+                            <p className="font-semibold text-sm">Signature of Principal</p>
                         </div>
                     </footer>
                 </div>

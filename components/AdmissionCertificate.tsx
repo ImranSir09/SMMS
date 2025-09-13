@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -14,7 +15,7 @@ const AdmissionCertificate: React.FC<AdmissionCertificateProps> = ({ student, sc
         {/* Watermark Logo */}
         {schoolDetails?.logo && (
             <div className="absolute inset-0 flex items-center justify-center z-0">
-                <img src={schoolDetails.logo} alt="Logo" className="w-2/3 h-2/3 object-contain opacity-10" />
+                <img src={schoolDetails.logo} alt="Logo" className="w-2/3 max-h-2/3 object-contain opacity-10" />
             </div>
         )}
         <div className="w-full h-full border-4 border-double border-gray-800 p-6 flex flex-col z-10">
@@ -34,6 +35,7 @@ const AdmissionCertificate: React.FC<AdmissionCertificateProps> = ({ student, sc
                 <h2 className="text-2xl font-semibold tracking-widest text-gray-800 mt-10 underline">
                     STUDENT ADMISSION CERTIFICATE
                 </h2>
+                <p className="text-sm mt-1">Academic Year: 2024-25</p>
             </header>
 
             <main className="flex-1 text-lg leading-relaxed">
@@ -58,13 +60,13 @@ const AdmissionCertificate: React.FC<AdmissionCertificateProps> = ({ student, sc
                     <span>{formatDateLong(student.dob)}</span>
                 </div>
                 
-                <p className="mt-8">We welcome the student and wish them a successful and enriching learning journey with us.</p>
+                <p className="mt-8">The school administration extends a warm welcome to the student and looks forward to a fruitful association. We are committed to providing a nurturing and challenging environment for their holistic development.</p>
             </main>
 
             <footer className="mt-auto flex justify-between items-end pt-8 pb-2">
-                <div className="text-left text-sm text-gray-600">
-                    <p>Place: {schoolDetails?.address.split(',').pop()?.trim() || 'School City'}</p>
-                    <p>Date of Issue: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                <div className="text-center">
+                    <div className="border-t-2 border-gray-500 w-56 mt-16 mb-2"></div>
+                    <p className="font-semibold">Guardian's Signature</p>
                 </div>
                 <div className="text-center">
                     <div className="border-t-2 border-gray-500 w-56 mt-16 mb-2"></div>

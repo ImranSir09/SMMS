@@ -32,7 +32,9 @@ const Students: React.FC = () => {
         if (!students) return [];
         const classSet = new Set(students.map(s => s.className));
         // Create tabs from all unique classes found in the DB and sort them naturally.
-        return Array.from(classSet).sort((a, b) => 
+        // FIX: Explicitly type 'a' and 'b' as strings to resolve a TypeScript inference issue
+        // where they were being treated as 'unknown', which caused cascading errors.
+        return Array.from(classSet).sort((a: string, b: string) => 
             a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
         );
     }, [students]);

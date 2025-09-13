@@ -28,7 +28,9 @@ const Reports: React.FC = () => {
     const classOptions = useMemo(() => {
         if (!students) return [];
         const classNames = students.map(s => s.className);
-        return [...new Set(classNames)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+        // FIX: Explicitly type 'a' and 'b' as strings to resolve a TypeScript inference issue
+        // where they were being treated as 'unknown', which caused cascading errors.
+        return [...new Set(classNames)].sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true }));
     }, [students]);
 
     const handleGenerateTopperList = async () => {

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Staff, SchoolDetails } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -15,7 +16,7 @@ const DutyCertificate: React.FC<DutyCertificateProps> = ({ staff, schoolDetails,
         {/* Watermark Logo */}
         {schoolDetails?.logo && (
             <div className="absolute inset-0 flex items-center justify-center z-0">
-                <img src={schoolDetails.logo} alt="Logo" className="w-1/2 h-1/2 object-contain opacity-10" />
+                <img src={schoolDetails.logo} alt="Logo" className="w-1/2 max-h-1/2 object-contain opacity-10" />
             </div>
         )}
         <header className="text-center mb-12 z-10">
@@ -32,7 +33,10 @@ const DutyCertificate: React.FC<DutyCertificateProps> = ({ staff, schoolDetails,
         </header>
 
         <main className="flex-1 text-lg leading-loose z-10">
-            <p className="text-right mb-10">Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+            <div className="flex justify-between items-center mb-10">
+                <span>Certificate No: ............</span>
+                <span>Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+            </div>
             
             <h2 className="text-2xl font-bold text-center underline decoration-double underline-offset-4 mb-10">
                 DUTY CERTIFICATE
@@ -47,7 +51,7 @@ const DutyCertificate: React.FC<DutyCertificateProps> = ({ staff, schoolDetails,
             </p>
             
             <p className="mt-8 indent-8">
-                This certificate is issued upon his/her request for official purposes.
+                This certificate is issued in appreciation of his/her contribution and may be used for all official purposes.
             </p>
         </main>
         
@@ -56,7 +60,7 @@ const DutyCertificate: React.FC<DutyCertificateProps> = ({ staff, schoolDetails,
                  <div className="border-t-2 border-gray-600 w-64 mb-2"></div>
                  <p className="font-semibold">(Signature)</p>
                  <p className="font-bold">Principal / Head of Institution</p>
-                 <p>{schoolDetails?.name || 'School Name'}</p>
+                 <p className="text-sm">{schoolDetails?.name || 'School Name'}</p>
             </div>
         </footer>
       </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails, Mark, StudentExamData } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -96,7 +97,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ student, marks, schoolDetai
                     <tr>
                         <th className={headerCellStyle} rowSpan={2}>Subject</th>
                         <th className={headerCellStyle} colSpan={6}>Formative Assessment (out of 5 each)</th>
-                        <th className={headerCellStyle} rowSpan={2}>Total FA (30)</th>
+                        <th className="border-r border-slate-500" />
                         <th className={headerCellStyle} rowSpan={2}>Co-Curricular (20)</th>
                         <th className={headerCellStyle} rowSpan={2}>Summative (50)</th>
                         <th className={headerCellStyle} rowSpan={2}>Total (100)</th>
@@ -104,6 +105,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ student, marks, schoolDetai
                     </tr>
                     <tr className="bg-slate-50">
                         {[1,2,3,4,5,6].map(i => <th key={i} className={`${headerCellStyle} font-medium`}>FA{i}</th>)}
+                        <th className={`${headerCellStyle} font-semibold`}>Total FA (30)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -133,6 +135,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ student, marks, schoolDetai
                             <tr><td className={labelCellStyle}>Total Marks Obtained</td><td className={`${cellStyle} font-bold`}>{grandTotalObtained} / {grandMaxMarks}</td></tr>
                             <tr><td className={labelCellStyle}>Overall Percentage</td><td className={`${cellStyle} font-bold`}>{overallPercentage.toFixed(2)}%</td></tr>
                             <tr><td className={labelCellStyle}>Overall Grade</td><td className={`${cellStyle} font-bold`}>{overallGrade}</td></tr>
+                            <tr><td className={labelCellStyle}>Attendance</td><td className={`${cellStyle} font-semibold`}>___ / ___</td></tr>
                             <tr><td className={labelCellStyle}>Result</td><td className={`${cellStyle} font-bold text-base`}>{result}</td></tr>
                          </tbody>
                     </table>

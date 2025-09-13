@@ -42,7 +42,7 @@ const Certificates: React.FC = () => {
   const [isChargeModalOpen, setIsChargeModalOpen] = useState(false);
   const [chargeDetails, setChargeDetails] = useState({ chargeName: '', date: '' });
   const [isLeavingCertModalOpen, setIsLeavingCertModalOpen] = useState(false);
-  const [leavingCertDetails, setLeavingCertDetails] = useState({ leavingDate: '', reasonForLeaving: '' });
+  const [leavingCertDetails, setLeavingCertDetails] = useState({ leavingDate: '', reasonForLeaving: '', conduct: 'Good', promotionGranted: 'Yes' as 'Yes' | 'No' | 'N/A' });
   const [isDutyCertModalOpen, setIsDutyCertModalOpen] = useState(false);
   const [dutyCertDetails, setDutyCertDetails] = useState({ description: '', date: '' });
   const [photoUploadTarget, setPhotoUploadTarget] = useState<Student | Staff | null>(null);
@@ -105,8 +105,8 @@ const Certificates: React.FC = () => {
 
   const handleGenerateLeavingCertificate = () => {
     if (foundStudent) {
-        if (!leavingCertDetails.leavingDate) {
-            alert('Please select a Date of Leaving.');
+        if (!leavingCertDetails.leavingDate || !leavingCertDetails.conduct || !leavingCertDetails.promotionGranted) {
+            alert('Please fill all required fields.');
             return;
         }
         if (foundStudent.admissionDate && new Date(leavingCertDetails.leavingDate) < new Date(foundStudent.admissionDate)) {
@@ -264,7 +264,42 @@ const Certificates: React.FC = () => {
 
        {isDutySlipModalOpen && renderModalForm("Create Duty Slip", dutySlipDetails, setDutySlipDetails, setIsDutySlipModalOpen, handleGenerateDutySlip, [{id: 'description', label: 'Duty Description', type: 'text', required: true}, {id: 'date', label: 'Date of Duty', type: 'date', required: true}])}
        {isChargeModalOpen && renderModalForm("Create Charge Certificate", chargeDetails, setChargeDetails, setIsChargeModalOpen, handleGenerateChargeCertificate, [{id: 'chargeName', label: 'Name of Charge', type: 'text', required: true}, {id: 'date', label: 'Date of Handover', type: 'date', required: true}])}
-       {isLeavingCertModalOpen && renderModalForm("Create Leaving Certificate", leavingCertDetails, setLeavingCertDetails, setIsLeavingCertModalOpen, handleGenerateLeavingCertificate, [{id: 'leavingDate', label: 'Date of Leaving', type: 'date', required: true}, {id: 'reasonForLeaving', label: 'Reason for Leaving (Optional)', type: 'text', placeholder: "Parent's Transfer", required: false}])}
+       
+       {isLeavingCertModalOpen && (
+            <Modal isOpen={true} onClose={() => setIsLeavingCertModalOpen(false)} title="Create Leaving Certificate">
+                <form onSubmit={e => { e.preventDefault(); handleGenerateLeavingCertificate(); }} className="p-4 space-y-4">
+                    <div>
+                        <label htmlFor="leavingDate" className={labelStyle}>Date of Leaving</label>
+                        <input id="leavingDate" type="date" value={leavingCertDetails.leavingDate} onChange={e => setLeavingCertDetails({...leavingCertDetails, leavingDate: e.target.value})} className={inputStyle} required />
+                    </div>
+                    <div>
+                        <label htmlFor="conduct" className={labelStyle}>General Conduct</label>
+                        <select id="conduct" value={leavingCertDetails.conduct} onChange={e => setLeavingCertDetails({...leavingCertDetails, conduct: e.target.value})} className={inputStyle} required>
+                            <option>Good</option>
+                            <option>Satisfactory</option>
+                            <option>Excellent</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor="promotionGranted" className={labelStyle}>Qualified for Promotion</label>
+                        <select id="promotionGranted" value={leavingCertDetails.promotionGranted} onChange={e => setLeavingCertDetails({...leavingCertDetails, promotionGranted: e.target.value as any})} className={inputStyle} required>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                            <option value="N/A">N/A (e.g., mid-session)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor="reasonForLeaving" className={labelStyle}>Reason for Leaving (Optional)</label>
+                        <input id="reasonForLeaving" type="text" placeholder="Parent's Transfer" value={leavingCertDetails.reasonForLeaving} onChange={e => setLeavingCertDetails({...leavingCertDetails, reasonForLeaving: e.target.value})} className={inputStyle} />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-4">
+                        <button type="button" onClick={() => setIsLeavingCertModalOpen(false)} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm">Cancel</button>
+                        <button type="submit" disabled={isGeneratingPdf} className="py-2 px-4 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground text-sm disabled:opacity-60">{isGeneratingPdf ? 'Generating...' : 'Generate'}</button>
+                    </div>
+                </form>
+            </Modal>
+        )}
+
        {isDutyCertModalOpen && renderModalForm("Create Duty Certificate", dutyCertDetails, setDutyCertDetails, setIsDutyCertModalOpen, handleGenerateDutyCertificate, [{id: 'description', label: 'Duty Description', type: 'text', required: true}, {id: 'date', label: 'Date of Duty', type: 'date', required: true}])}
        
        <PhotoUploadModal

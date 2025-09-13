@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 
@@ -24,7 +25,7 @@ const SubjectTopperList: React.FC<SubjectTopperListProps> = ({ toppers, examName
         {/* Watermark Logo */}
         {schoolDetails?.logo && (
             <div className="absolute inset-0 flex items-center justify-center z-0">
-                <img src={schoolDetails.logo} alt="Logo" className="w-1/2 h-1/2 object-contain opacity-10" />
+                <img src={schoolDetails.logo} alt="Logo" className="w-1/2 max-h-1/2 object-contain opacity-10" />
             </div>
         )}
 
@@ -35,12 +36,12 @@ const SubjectTopperList: React.FC<SubjectTopperListProps> = ({ toppers, examName
                 )}
               <h1 className="text-3xl font-bold font-gothic text-blue-900 tracking-wider">{schoolDetails.name}</h1>
               <p className="text-md text-gray-700">{schoolDetails.address}</p>
-              <h2 className="text-2xl font-semibold mt-8 text-gray-800">Certificate of Achievement</h2>
+              <h2 className="text-2xl font-semibold mt-8 text-gray-800">Certificate of Academic Excellence</h2>
             </header>
 
             <main className="flex-1 flex flex-col items-center">
-                <p className="text-lg mb-2">Presented to the top performers in</p>
-                <p className="text-3xl font-bold text-blue-800">{subjectName}</p>
+                <p className="text-lg mb-2 text-center max-w-2xl mx-auto">This certificate is proudly awarded in recognition of outstanding academic performance and dedication demonstrated by the following student(s).</p>
+                <p className="text-3xl font-bold text-blue-800 mt-4">{subjectName}</p>
                 <p className="text-lg mt-1">for the <span className="font-semibold">{examName}</span> examination.</p>
                 
                 <table className="w-4/5 mt-8 border-collapse text-lg">
@@ -65,8 +66,9 @@ const SubjectTopperList: React.FC<SubjectTopperListProps> = ({ toppers, examName
             
             <footer className="mt-auto pt-16 flex justify-between items-end">
                 <div className="text-center text-sm">
-                     <div className="border-t-2 border-gray-500 w-48 mb-1"></div>
-                     <p className="font-semibold">Class Teacher</p>
+                    <p>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                    <div className="border-t-2 border-gray-500 w-48 mb-1 mt-1"></div>
+                    <p className="font-semibold">Date</p>
                 </div>
                  <div className="text-center text-sm">
                      <div className="border-t-2 border-gray-500 w-48 mb-1"></div>

@@ -16,7 +16,7 @@ const DutySlip: React.FC<DutySlipProps> = ({ staff, schoolDetails, dutyDetails }
         {/* Watermark Logo */}
         {schoolDetails?.logo && (
             <div className="absolute inset-0 flex items-center justify-center z-0">
-                <img src={schoolDetails.logo} alt="Logo" className="w-1/2 h-1/2 object-contain opacity-10" />
+                <img src={schoolDetails.logo} alt="Logo" className="w-1/2 max-h-1/2 object-contain opacity-10" />
             </div>
         )}
         <header className="text-center mb-10 z-10">
@@ -34,18 +34,24 @@ const DutySlip: React.FC<DutySlipProps> = ({ staff, schoolDetails, dutyDetails }
         </header>
 
         <main className="flex-1 text-lg leading-relaxed z-10">
-            <p className="mb-6">Date: {formatDateLong(new Date().toISOString().split('T')[0])}</p>
-            <p className="mb-4">This is to certify that <strong className="font-bold">{staff.name}</strong>, {staff.designation}, is assigned the following duty:</p>
+            <div className="flex justify-between items-center mb-10 z-10">
+                <span>Ref. No.: ............</span>
+                <span>Date: {formatDateLong(new Date().toISOString().split('T')[0])}</span>
+            </div>
+            <p className="mb-4">This is to certify that <strong className="font-bold">{staff.name}</strong>, {staff.designation}, is hereby deputed for the following official duty:</p>
             
             <div className="my-6 p-4 border-2 border-dashed border-gray-400">
                 <p><strong className="font-semibold">Duty:</strong> {dutyDetails.description}</p>
                 <p><strong className="font-semibold">Date of Duty:</strong> {formatDateLong(dutyDetails.date)}</p>
             </div>
 
-            <p>He/She is requested to perform the above-mentioned duty with utmost sincerity and diligence.</p>
+            <p>He/She is requested to perform the above-mentioned duty with utmost sincerity and diligence. This slip serves as official permission to be away from his/her regular duties for the specified purpose.</p>
         </main>
         
-        <footer className="mt-auto pt-24 text-right z-10">
+        <footer className="mt-auto pt-24 flex justify-between items-end z-10">
+            <div className="text-center text-gray-600">
+                <p className="font-semibold">(Official Seal)</p>
+            </div>
             <div className="inline-block text-center">
                  <div className="border-t-2 border-gray-600 w-56 mb-2"></div>
                  <p className="font-semibold">Signature of Head of Institution</p>

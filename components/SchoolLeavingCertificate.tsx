@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -5,7 +6,12 @@ import { formatDateLong } from '../utils/formatters';
 interface SchoolLeavingCertificateProps {
   student: Student;
   schoolDetails: SchoolDetails | null;
-  leavingDetails: { leavingDate: string; reasonForLeaving: string };
+  leavingDetails: { 
+    leavingDate: string; 
+    reasonForLeaving: string;
+    conduct: string;
+    promotionGranted: 'Yes' | 'No' | 'N/A';
+  };
 }
 
 const SchoolLeavingCertificate: React.FC<SchoolLeavingCertificateProps> = ({ student, schoolDetails, leavingDetails }) => {
@@ -15,7 +21,7 @@ const SchoolLeavingCertificate: React.FC<SchoolLeavingCertificateProps> = ({ stu
         {/* Watermark Logo */}
         {schoolDetails?.logo && (
             <div className="absolute inset-0 flex items-center justify-center z-0">
-                <img src={schoolDetails.logo} alt="Logo" className="w-2/3 h-2/3 object-contain opacity-10" />
+                <img src={schoolDetails.logo} alt="Logo" className="w-2/3 max-h-2/3 object-contain opacity-10" />
             </div>
         )}
         <div className="w-full h-full border-4 border-double border-gray-800 p-6 flex flex-col z-10">
@@ -52,11 +58,20 @@ const SchoolLeavingCertificate: React.FC<SchoolLeavingCertificateProps> = ({ stu
                     <span className="font-semibold">Date of Birth:</span>
                     <span className="border-b border-dotted border-gray-500">{formatDateLong(student.dob)}</span>
                     
+                    <span className="font-semibold">Nationality:</span>
+                    <span className="border-b border-dotted border-gray-500">Indian</span>
+                    
                     <span className="font-semibold">Date of Admission:</span>
                     <span className="border-b border-dotted border-gray-500">{student.admissionDate ? formatDateLong(student.admissionDate) : 'N/A'}</span>
                     
                     <span className="font-semibold">Class Last Attended:</span>
                     <span className="border-b border-dotted border-gray-500">{student.className}</span>
+
+                    <span className="font-semibold">General Conduct:</span>
+                    <span className="border-b border-dotted border-gray-500">{leavingDetails.conduct}</span>
+
+                    <span className="font-semibold">Qualified for Promotion:</span>
+                    <span className="border-b border-dotted border-gray-500">{leavingDetails.promotionGranted}</span>
 
                     <span className="font-semibold">Date of Leaving:</span>
                     <span className="border-b border-dotted border-gray-500">{formatDateLong(leavingDetails.leavingDate)}</span>
@@ -64,7 +79,7 @@ const SchoolLeavingCertificate: React.FC<SchoolLeavingCertificateProps> = ({ stu
                     <span className="font-semibold">Reason for Leaving:</span>
                     <span className="border-b border-dotted border-gray-500">{leavingDetails.reasonForLeaving || 'Personal'}</span>
                 </div>
-                 <p className="mt-8">This certificate is issued upon the request of the guardian.</p>
+                 <p className="mt-8">This certificate is issued upon the request of the guardian. All dues have been cleared as per school records.</p>
                  <p className="mt-2">I wish the student all the best in their future endeavors.</p>
             </main>
 
