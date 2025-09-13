@@ -44,7 +44,9 @@ const DailyLogModal: React.FC<DailyLogModalProps> = ({ isOpen, onClose, date, ex
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: Number(value) < 0 ? 0 : Number(value) }));
+    const numValue = parseFloat(value);
+    const sanitizedValue = isNaN(numValue) || numValue < 0 ? 0 : numValue;
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,45 +66,47 @@ const DailyLogModal: React.FC<DailyLogModalProps> = ({ isOpen, onClose, date, ex
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Entry for ${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <h3 className="font-semibold mb-2">Student Attendance</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="attendanceBalvatika" className={labelStyle}>Balvatika</label>
-              <input type="number" id="attendanceBalvatika" name="attendanceBalvatika" value={formData.attendanceBalvatika} onChange={handleChange} className={inputStyle} min="0"/>
+      <div className="p-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <h3 className="font-semibold mb-2">Student Attendance</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="attendanceBalvatika" className={labelStyle}>Balvatika</label>
+                <input type="number" id="attendanceBalvatika" name="attendanceBalvatika" value={formData.attendanceBalvatika} onChange={handleChange} className={inputStyle} min="0"/>
+              </div>
+              <div>
+                <label htmlFor="attendancePrimary" className={labelStyle}>Primary</label>
+                <input type="number" id="attendancePrimary" name="attendancePrimary" value={formData.attendancePrimary} onChange={handleChange} className={inputStyle} min="0"/>
+              </div>
+              <div>
+                <label htmlFor="attendanceMiddle" className={labelStyle}>Middle</label>
+                <input type="number" id="attendanceMiddle" name="attendanceMiddle" value={formData.attendanceMiddle} onChange={handleChange} className={inputStyle} min="0"/>
+              </div>
             </div>
-            <div>
-              <label htmlFor="attendancePrimary" className={labelStyle}>Primary</label>
-              <input type="number" id="attendancePrimary" name="attendancePrimary" value={formData.attendancePrimary} onChange={handleChange} className={inputStyle} min="0"/>
-            </div>
-            <div>
-              <label htmlFor="attendanceMiddle" className={labelStyle}>Middle</label>
-              <input type="number" id="attendanceMiddle" name="attendanceMiddle" value={formData.attendanceMiddle} onChange={handleChange} className={inputStyle} min="0"/>
+            <p className="text-right text-sm font-semibold mt-2">Total Attendance: {totalAttendance}</p>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-2">Consumption & Expenditure</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="expenditure" className={labelStyle}>Total Expenditure (₹)</label>
+                <input type="number" id="expenditure" name="expenditure" value={formData.expenditure} onChange={handleChange} className={inputStyle} min="0" step="0.01"/>
+              </div>
+              <div>
+                <label htmlFor="riceConsumed" className={labelStyle}>Total Rice (kg)</label>
+                <input type="number" id="riceConsumed" name="riceConsumed" value={formData.riceConsumed} onChange={handleChange} className={inputStyle} min="0" step="0.001"/>
+              </div>
             </div>
           </div>
-           <p className="text-right text-sm font-semibold mt-2">Total Attendance: {totalAttendance}</p>
-        </div>
-        
-        <div>
-          <h3 className="font-semibold mb-2">Consumption & Expenditure</h3>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="expenditure" className={labelStyle}>Total Expenditure (₹)</label>
-              <input type="number" id="expenditure" name="expenditure" value={formData.expenditure} onChange={handleChange} className={inputStyle} min="0" step="0.01"/>
-            </div>
-            <div>
-              <label htmlFor="riceConsumed" className={labelStyle}>Total Rice (kg)</label>
-              <input type="number" id="riceConsumed" name="riceConsumed" value={formData.riceConsumed} onChange={handleChange} className={inputStyle} min="0" step="0.001"/>
-            </div>
-          </div>
-        </div>
 
-        <div className="flex justify-end gap-2 pt-4">
-          <button type="button" onClick={onClose} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white transition-colors">Cancel</button>
-          <button type="submit" className="py-2 px-4 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground transition-colors">Save Entry</button>
-        </div>
-      </form>
+          <div className="flex justify-end gap-2 pt-4">
+            <button type="button" onClick={onClose} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white transition-colors">Cancel</button>
+            <button type="submit" className="py-2 px-4 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground transition-colors">Save Entry</button>
+          </div>
+        </form>
+      </div>
     </Modal>
   );
 };
