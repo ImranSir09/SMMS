@@ -13,13 +13,17 @@ const buttonStyle = "py-2 px-3 text-xs font-semibold rounded-md flex items-cente
 
 const StudentProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const studentId = Number(id);
     const navigate = useNavigate();
+
+    const studentId = useMemo(() => {
+        const numId = Number(id);
+        return isNaN(numId) ? null : numId;
+    }, [id]);
 
     const [isFormOpen, setIsFormOpen] = useState(false);
     
-    const student = useLiveQuery(() => db.students.get(studentId), [studentId]);
-    const marks = useLiveQuery(() => db.marks.where('studentId').equals(studentId).toArray(), [studentId]);
+    const student = useLiveQuery(() => studentId ? db.students.get(studentId) : undefined, [studentId]);
+    const marks = useLiveQuery(() => studentId ? db.marks.where('studentId').equals(studentId).toArray() : [], [studentId]);
     const exams = useLiveQuery(() => db.exams.toArray(), []);
 
     const performanceData = useMemo(() => {
@@ -56,12 +60,14 @@ const StudentProfile: React.FC = () => {
     };
 
     const handleSave = async (studentData: Student) => {
-        await db.students.update(studentId, studentData);
-        setIsFormOpen(false);
+        if (studentId) {
+            await db.students.update(studentId, studentData);
+            setIsFormOpen(false);
+        }
     };
 
     const handleDelete = async () => {
-        if (student && window.confirm(`Are you sure you want to delete ${student.name}? This will also delete all associated marks and cannot be undone.`)) {
+        if (student && studentId && window.confirm(`Are you sure you want to delete ${student.name}? This will also delete all associated marks and cannot be undone.`)) {
             await db.transaction('rw', db.students, db.marks, db.studentExamData, async () => {
                 await db.marks.where('studentId').equals(studentId).delete();
                 await db.studentExamData.where('studentId').equals(studentId).delete();

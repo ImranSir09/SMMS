@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -13,13 +13,17 @@ const buttonStyle = "py-2 px-3 text-xs font-semibold rounded-md flex items-cente
 
 const StaffProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const staffId = Number(id);
     const navigate = useNavigate();
+
+    const staffId = useMemo(() => {
+        const numId = Number(id);
+        return isNaN(numId) ? null : numId;
+    }, [id]);
     
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const staff = useLiveQuery(() => db.staff.get(staffId), [staffId]);
-    const timetable = useLiveQuery(() => db.timetable.where({ staffId }).toArray(), [staffId]);
+    const staff = useLiveQuery(() => staffId ? db.staff.get(staffId) : undefined, [staffId]);
+    const timetable = useLiveQuery(() => staffId ? db.timetable.where({ staffId }).toArray() : [], [staffId]);
 
     const handleEdit = () => {
         setIsFormOpen(true);
@@ -29,12 +33,14 @@ const StaffProfile: React.FC = () => {
         // FIX: Replaced `db.staff.update` with `db.staff.put`. The `update` method's TypeScript
         // typings can conflict when an object contains a nested array like `teachingAssignments`.
         // `put` is simpler for full-object updates and avoids this type issue.
-        await db.staff.put(staffData);
-        setIsFormOpen(false);
+        if (staffId) {
+            await db.staff.put(staffData);
+            setIsFormOpen(false);
+        }
     };
 
     const handleDelete = async () => {
-        if (staff && window.confirm(`Are you sure you want to delete ${staff.name}? This will also delete their timetable assignments and cannot be undone.`)) {
+        if (staff && staffId && window.confirm(`Are you sure you want to delete ${staff.name}? This will also delete their timetable assignments and cannot be undone.`)) {
             await db.transaction('rw', db.staff, db.timetable, async () => {
                 await db.timetable.where('staffId').equals(staffId).delete();
                 await db.staff.delete(staffId);
