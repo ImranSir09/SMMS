@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -61,6 +60,9 @@ const SchoolLeavingCertificate: React.FC<SchoolLeavingCertificateProps> = ({ stu
                     <span className="font-semibold">Nationality:</span>
                     <span className="border-b border-dotted border-gray-500">Indian</span>
                     
+                    <span className="font-semibold">Category:</span>
+                    <span className="border-b border-dotted border-gray-500">{student.category || 'N/A'}</span>
+
                     <span className="font-semibold">Date of Admission:</span>
                     <span className="border-b border-dotted border-gray-500">{student.admissionDate ? formatDateLong(student.admissionDate) : 'N/A'}</span>
                     

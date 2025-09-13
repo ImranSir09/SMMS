@@ -28,6 +28,9 @@ export interface Student {
   mothersName: string;
   contact: string;
   address: string;
+  aadharNo?: string;
+  accountNo?: string;
+  ifscCode?: string;
 }
 
 export interface Staff {

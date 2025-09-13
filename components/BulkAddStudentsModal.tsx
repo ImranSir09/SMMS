@@ -11,12 +11,18 @@ const STUDENT_FIELDS: { key: keyof Student; label: string; required: boolean }[]
     { key: 'admissionNo', label: 'Admission No', required: true },
     { key: 'dob', label: 'Date of Birth (YYYY-MM-DD)', required: true },
     { key: 'gender', label: 'Gender (Male/Female/Other)', required: true },
-    // FIX: The `Student` type no longer has a 'guardianInfo' property. Replaced with 'fathersName' to match the current data model.
     { key: 'fathersName', label: "Father's Name", required: true },
+    { key: 'mothersName', label: "Mother's Name", required: true },
     { key: 'contact', label: 'Contact', required: true },
     { key: 'address', label: 'Address', required: true },
     { key: 'className', label: 'Class (e.g., 1st, Balvatika)', required: true },
     { key: 'section', label: 'Section', required: true },
+    { key: 'admissionDate', label: 'Admission Date (YYYY-MM-DD)', required: false },
+    { key: 'category', label: 'Category', required: false },
+    { key: 'bloodGroup', label: 'Blood Group', required: false },
+    { key: 'aadharNo', label: 'Aadhar Number', required: false },
+    { key: 'accountNo', label: 'Bank Account Number', required: false },
+    { key: 'ifscCode', label: 'IFSC Code', required: false },
 ];
 
 type Step = 'upload' | 'map' | 'preview' | 'result';

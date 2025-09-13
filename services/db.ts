@@ -133,7 +133,32 @@ db.version(8).stores({
     });
 });
 
+// v9: Correctly redefine the ENTIRE schema while adding new indexes
 db.version(9).stores({
-  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
-  studentExamData: '++id, &[examId+studentId], studentId'
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className',
+  staff: '++id, name, staffId, designation, subjects',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId', // <-- Index added
+  dailyLogs: '++id, &date',
+  timetable: '++id, &[staffId+day+period], staffId, day, period',
+  studentExamData: '++id, &[examId+studentId], studentId' // <-- Index added
+});
+
+// v10: Data migration only, no schema change. Omit .stores()
+db.version(10).upgrade(tx => {
+    return tx.table('students').toCollection().modify((student: any) => {
+        student.aadharNo = student.aadharNo || '';
+        student.accountNo = student.accountNo || '';
+        student.ifscCode = student.ifscCode || '';
+    });
+});
+
+// v11: Data migration only, no schema change. Omit .stores()
+db.version(11).upgrade(tx => {
+    return tx.table('students').toCollection().modify((student: any) => {
+        student.admissionDate = student.admissionDate || '';
+        student.category = student.category || '';
+        student.bloodGroup = student.bloodGroup || '';
+    });
 });

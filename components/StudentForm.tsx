@@ -4,6 +4,7 @@ import { Student } from '../types';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 const CATEGORY_OPTIONS = ['General', 'SC', 'ST', 'OBC', 'Other'];
+const BLOOD_GROUP_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-sm font-medium text-foreground/80 mb-1";
@@ -44,6 +45,10 @@ const validateStudent = (student: Partial<Student>): { [key: string]: string } =
     }
 
     if (!student.address?.trim()) errors.address = "Address is required.";
+
+    if (student.aadharNo && !/^\d{12}$/.test(student.aadharNo)) errors.aadharNo = "Aadhar must be 12 digits.";
+    if (student.accountNo && !/^\d{9,18}$/.test(student.accountNo)) errors.accountNo = "Account No. must be 9-18 digits.";
+    if (student.ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(student.ifscCode.toUpperCase())) errors.ifscCode = "Invalid IFSC code format.";
     
     return errors;
 };
@@ -121,12 +126,12 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
                        <input id="section" name="section" value={formData.section || ''} onChange={handleChange} className={inputStyle} />
                        {errors.section && <p className="text-red-500 text-xs mt-1">{errors.section}</p>}
                    </div>
-                   <div>
+                   <div className="col-span-2">
                        <label htmlFor="fathersName" className={labelStyle}>Father's Name</label>
                        <input id="fathersName" name="fathersName" value={formData.fathersName || ''} onChange={handleChange} className={inputStyle} />
                        {errors.fathersName && <p className="text-red-500 text-xs mt-1">{errors.fathersName}</p>}
                    </div>
-                   <div>
+                   <div className="col-span-2">
                        <label htmlFor="mothersName" className={labelStyle}>Mother's Name</label>
                        <input id="mothersName" name="mothersName" value={formData.mothersName || ''} onChange={handleChange} className={inputStyle} />
                        {errors.mothersName && <p className="text-red-500 text-xs mt-1">{errors.mothersName}</p>}
@@ -141,6 +146,43 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
                        <input id="address" name="address" value={formData.address || ''} onChange={handleChange} className={inputStyle} />
                        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
                    </div>
+                </div>
+                
+                <h3 className="text-md font-semibold text-foreground border-b border-border pb-1 mt-4">Additional Details</h3>
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div>
+                        <label htmlFor="admissionDate" className={labelStyle}>Admission Date</label>
+                        <input id="admissionDate" name="admissionDate" type="date" value={formData.admissionDate || ''} onChange={handleChange} className={inputStyle} />
+                    </div>
+                    <div>
+                        <label htmlFor="category" className={labelStyle}>Category</label>
+                        <select id="category" name="category" value={formData.category || ''} onChange={handleChange} className={inputStyle}>
+                           <option value="">-- Select --</option>
+                           {CATEGORY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                       </select>
+                    </div>
+                    <div>
+                        <label htmlFor="bloodGroup" className={labelStyle}>Blood Group</label>
+                        <select id="bloodGroup" name="bloodGroup" value={formData.bloodGroup || ''} onChange={handleChange} className={inputStyle}>
+                           <option value="">-- Select --</option>
+                           {BLOOD_GROUP_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                       </select>
+                    </div>
+                    <div className="col-span-2">
+                        <label htmlFor="aadharNo" className={labelStyle}>Aadhar No (Optional)</label>
+                        <input id="aadharNo" name="aadharNo" value={formData.aadharNo || ''} onChange={handleChange} className={inputStyle} placeholder="12-digit Aadhar Number" />
+                        {errors.aadharNo && <p className="text-red-500 text-xs mt-1">{errors.aadharNo}</p>}
+                    </div>
+                    <div className="col-span-2">
+                        <label htmlFor="accountNo" className={labelStyle}>Account No (Optional)</label>
+                        <input id="accountNo" name="accountNo" value={formData.accountNo || ''} onChange={handleChange} className={inputStyle} placeholder="Bank Account Number" />
+                        {errors.accountNo && <p className="text-red-500 text-xs mt-1">{errors.accountNo}</p>}
+                    </div>
+                    <div className="col-span-2">
+                        <label htmlFor="ifscCode" className={labelStyle}>IFSC Code (Optional)</label>
+                        <input id="ifscCode" name="ifscCode" value={formData.ifscCode || ''} onChange={handleChange} className={`${inputStyle} uppercase`} placeholder="Bank IFSC Code" />
+                        {errors.ifscCode && <p className="text-red-500 text-xs mt-1">{errors.ifscCode}</p>}
+                    </div>
                 </div>
             </div>
             <footer className="flex-shrink-0 flex items-center justify-end p-4 border-t border-border gap-2 bg-card">

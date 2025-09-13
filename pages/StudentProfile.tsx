@@ -90,6 +90,12 @@ const StudentProfile: React.FC = () => {
     if (!student) {
         return <div className="p-4 text-center">Loading student profile...</div>;
     }
+    
+    const InfoItem: React.FC<{ label: string; value: string | undefined | null; fullWidth?: boolean }> = ({ label, value, fullWidth }) => (
+        <div className={fullWidth ? 'col-span-2' : ''}>
+            <strong className="font-medium text-foreground/70">{label}:</strong> {value || 'N/A'}
+        </div>
+    );
 
     return (
         <div className="flex flex-col gap-3 animate-fade-in">
@@ -124,24 +130,33 @@ const StudentProfile: React.FC = () => {
             </Card>
 
             <Card className="p-3">
-                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Personal Information</h3>
+                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Personal & Academic Information</h3>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                    <span><strong className="font-medium text-foreground/70">Admission No:</strong> {student.admissionNo}</span>
-                    <span><strong className="font-medium text-foreground/70">Gender:</strong> {student.gender}</span>
-                    <span><strong className="font-medium text-foreground/70">Date of Birth:</strong> {student.dob}</span>
-                    <span><strong className="font-medium text-foreground/70">Category:</strong> {student.category || 'N/A'}</span>
-                    <span><strong className="font-medium text-foreground/70">Blood Group:</strong> {student.bloodGroup || 'N/A'}</span>
-                    <span><strong className="font-medium text-foreground/70">Admission Date:</strong> {student.admissionDate || 'N/A'}</span>
+                    <InfoItem label="Admission No" value={student.admissionNo} />
+                    <InfoItem label="Gender" value={student.gender} />
+                    <InfoItem label="Date of Birth" value={student.dob} />
+                    <InfoItem label="Admission Date" value={student.admissionDate} />
+                    <InfoItem label="Category" value={student.category} />
+                    <InfoItem label="Blood Group" value={student.bloodGroup} />
                 </div>
             </Card>
 
             <Card className="p-3">
                 <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Parent & Contact Information</h3>
                 <div className="grid grid-cols-1 gap-y-2 text-sm">
-                    <span><strong className="font-medium text-foreground/70">Father's Name:</strong> {student.fathersName}</span>
-                    <span><strong className="font-medium text-foreground/70">Mother's Name:</strong> {student.mothersName}</span>
-                    <span><strong className="font-medium text-foreground/70">Contact:</strong> {student.contact}</span>
-                    <span><strong className="font-medium text-foreground/70">Address:</strong> {student.address}</span>
+                    <InfoItem label="Father's Name" value={student.fathersName} />
+                    <InfoItem label="Mother's Name" value={student.mothersName} />
+                    <InfoItem label="Contact" value={student.contact} />
+                    <InfoItem label="Address" value={student.address} fullWidth />
+                </div>
+            </Card>
+            
+            <Card className="p-3">
+                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Financial & Identity</h3>
+                <div className="grid grid-cols-1 gap-y-2 text-sm">
+                    <InfoItem label="Aadhar No" value={student.aadharNo} />
+                    <InfoItem label="Account No" value={student.accountNo} />
+                    <InfoItem label="IFSC Code" value={student.ifscCode} />
                 </div>
             </Card>
             
