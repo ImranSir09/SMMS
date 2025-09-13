@@ -7,7 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
 import Staff from './pages/Staff';
 import Exams from './pages/Exams';
-import Settings from './pages/Settings';
+import Settings from './services/Settings';
 import BottomNav from './components/BottomNav';
 import Reports from './pages/Reports';
 import Certificates from './pages/Certificates';
