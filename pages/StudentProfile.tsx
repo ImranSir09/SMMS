@@ -98,38 +98,36 @@ const StudentProfile: React.FC = () => {
             </div>
             
             {/* Details Cards */}
-            <div className="flex-1 flex flex-col gap-3 overflow-y-auto">
-                <Card className="p-3">
-                    <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Academic Performance</h3>
-                    {performanceData.length > 0 ? (
-                        <LineChart data={performanceData} title="Overall Percentage per Exam" />
-                    ) : (
-                        <p className="text-sm text-center text-foreground/60 py-4">No exam data available to show trends.</p>
-                    )}
-                </Card>
+            <Card className="p-3">
+                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Academic Performance</h3>
+                {performanceData.length > 0 ? (
+                    <LineChart data={performanceData} title="Overall Percentage per Exam" />
+                ) : (
+                    <p className="text-sm text-center text-foreground/60 py-4">No exam data available to show trends.</p>
+                )}
+            </Card>
 
-                <Card className="p-3">
-                    <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Personal Information</h3>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                        <span><strong className="font-medium text-foreground/70">Admission No:</strong> {student.admissionNo}</span>
-                        <span><strong className="font-medium text-foreground/70">Gender:</strong> {student.gender}</span>
-                        <span><strong className="font-medium text-foreground/70">Date of Birth:</strong> {student.dob}</span>
-                        <span><strong className="font-medium text-foreground/70">Category:</strong> {student.category || 'N/A'}</span>
-                        <span><strong className="font-medium text-foreground/70">Blood Group:</strong> {student.bloodGroup || 'N/A'}</span>
-                        <span><strong className="font-medium text-foreground/70">Admission Date:</strong> {student.admissionDate || 'N/A'}</span>
-                    </div>
-                </Card>
+            <Card className="p-3">
+                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Personal Information</h3>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <span><strong className="font-medium text-foreground/70">Admission No:</strong> {student.admissionNo}</span>
+                    <span><strong className="font-medium text-foreground/70">Gender:</strong> {student.gender}</span>
+                    <span><strong className="font-medium text-foreground/70">Date of Birth:</strong> {student.dob}</span>
+                    <span><strong className="font-medium text-foreground/70">Category:</strong> {student.category || 'N/A'}</span>
+                    <span><strong className="font-medium text-foreground/70">Blood Group:</strong> {student.bloodGroup || 'N/A'}</span>
+                    <span><strong className="font-medium text-foreground/70">Admission Date:</strong> {student.admissionDate || 'N/A'}</span>
+                </div>
+            </Card>
 
-                <Card className="p-3">
-                    <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Parent & Contact Information</h3>
-                    <div className="grid grid-cols-1 gap-y-2 text-sm">
-                        <span><strong className="font-medium text-foreground/70">Father's Name:</strong> {student.fathersName}</span>
-                        <span><strong className="font-medium text-foreground/70">Mother's Name:</strong> {student.mothersName}</span>
-                        <span><strong className="font-medium text-foreground/70">Contact:</strong> {student.contact}</span>
-                        <span><strong className="font-medium text-foreground/70">Address:</strong> {student.address}</span>
-                    </div>
-                </Card>
-            </div>
+            <Card className="p-3">
+                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Parent & Contact Information</h3>
+                <div className="grid grid-cols-1 gap-y-2 text-sm">
+                    <span><strong className="font-medium text-foreground/70">Father's Name:</strong> {student.fathersName}</span>
+                    <span><strong className="font-medium text-foreground/70">Mother's Name:</strong> {student.mothersName}</span>
+                    <span><strong className="font-medium text-foreground/70">Contact:</strong> {student.contact}</span>
+                    <span><strong className="font-medium text-foreground/70">Address:</strong> {student.address}</span>
+                </div>
+            </Card>
             
              <Modal
                 isOpen={isFormOpen}

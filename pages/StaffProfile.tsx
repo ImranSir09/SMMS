@@ -69,24 +69,22 @@ const StaffProfile: React.FC = () => {
                 <button onClick={handleDelete} className={`${buttonStyle} bg-red-600 text-white`}><TrashIcon className="w-3 h-3" /> Delete</button>
             </div>
             
-            <div className="flex-1 flex flex-col gap-3 overflow-y-auto">
-                <Card className="p-3">
-                    <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Weekly Timetable</h3>
-                    <StaffTimetable slots={timetable || []} />
-                </Card>
+            <Card className="p-3">
+                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Weekly Timetable</h3>
+                <StaffTimetable slots={timetable || []} />
+            </Card>
 
-                <Card className="p-3">
-                    <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Professional Details</h3>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                        <span><strong className="font-medium text-foreground/70">Staff ID:</strong> {staff.staffId}</span>
-                        <span><strong className="font-medium text-foreground/70">CPIS Code:</strong> {staff.cpisCode || 'N/A'}</span>
-                        <span><strong className="font-medium text-foreground/70">Qualification:</strong> {staff.qualification}</span>
-                        <span><strong className="font-medium text-foreground/70">Joining Date:</strong> {staff.joiningDate}</span>
-                        <span><strong className="font-medium text-foreground/70">Contact:</strong> {staff.contact}</span>
-                        <span><strong className="font-medium text-foreground/70">Subjects:</strong> {staff.subjects || 'N/A'}</span>
-                    </div>
-                </Card>
-            </div>
+            <Card className="p-3">
+                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Professional Details</h3>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <span><strong className="font-medium text-foreground/70">Staff ID:</strong> {staff.staffId}</span>
+                    <span><strong className="font-medium text-foreground/70">CPIS Code:</strong> {staff.cpisCode || 'N/A'}</span>
+                    <span><strong className="font-medium text-foreground/70">Qualification:</strong> {staff.qualification}</span>
+                    <span><strong className="font-medium text-foreground/70">Joining Date:</strong> {staff.joiningDate}</span>
+                    <span><strong className="font-medium text-foreground/70">Contact:</strong> {staff.contact}</span>
+                    <span><strong className="font-medium text-foreground/70">Subjects:</strong> {staff.subjects || 'N/A'}</span>
+                </div>
+            </Card>
             
             <Modal
                 isOpen={isFormOpen}
