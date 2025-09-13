@@ -14,6 +14,7 @@ const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5
 
 const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors disabled:opacity-60";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
+const secondaryButtonStyle = `${buttonStyle} bg-gray-500/80 hover:bg-gray-500 text-white`;
 
 const STUDENTS_PER_PAGE = 8;
 
@@ -70,6 +71,12 @@ const Students: React.FC = () => {
     };
     
     const handleSave = async (studentData: Student) => {
+        const existingStudent = await db.students.where('admissionNo').equals(studentData.admissionNo).first();
+        if (existingStudent && existingStudent.id !== studentData.id) {
+            alert(`Admission number '${studentData.admissionNo}' is already taken.`);
+            return;
+        }
+
         if (studentData.id) {
             await db.students.update(studentData.id, studentData);
         } else {
@@ -99,7 +106,10 @@ const Students: React.FC = () => {
                     <option value="" disabled>-- Select a Class --</option>
                     {classTabs.map(c => <option key={c} value={c}>Class {c}</option>)}
                 </select>
-                <button onClick={handleAdd} className={accentButtonStyle}>Add</button>
+                <div className="flex-shrink-0 flex items-center gap-2">
+                    <button onClick={() => setIsBulkAddModalOpen(true)} className={secondaryButtonStyle}>Bulk</button>
+                    <button onClick={handleAdd} className={accentButtonStyle}>Add</button>
+                </div>
             </div>
              <input
                 type="text"

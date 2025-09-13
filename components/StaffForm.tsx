@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Staff } from '../types';
 import { CloseIcon, PlusIcon } from './icons';
@@ -38,6 +39,8 @@ const validateStaffProfessionalDetails = (data: Partial<Staff>): { [key: string]
     }
     if (!data.joiningDate) {
         errors.joiningDate = "Joining Date is required.";
+    } else if (new Date(data.joiningDate) > new Date()) {
+        errors.joiningDate = "Joining Date cannot be in the future.";
     }
     return errors;
 };
@@ -60,6 +63,13 @@ const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) =
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
+        if (errors[name]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
     
     const handleSaveClick = () => {

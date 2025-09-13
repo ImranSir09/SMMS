@@ -15,6 +15,7 @@ import Timetable from './pages/Timetable';
 import ExamMarks from './pages/ExamMarks';
 import StudentProfile from './pages/StudentProfile';
 import StaffProfile from './pages/StaffProfile';
+import PrintRollStatement from './pages/PrintRollStatement';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -49,7 +50,7 @@ const App: React.FC = () => {
       )}
       <div className={`relative z-10 h-screen flex flex-col ${backgroundStyle}`}>
         <Header />
-        <main className="flex-1 p-3 pb-20 overflow-y-auto">
+        <main className="flex-1 p-3 pb-24 overflow-y-auto">
             <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -63,6 +64,7 @@ const App: React.FC = () => {
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/certificates" element={<Certificates />} />
+                <Route path="/print/roll-statement/:className" element={<PrintRollStatement />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
         </main>

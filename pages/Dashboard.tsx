@@ -55,8 +55,8 @@ const Dashboard: React.FC = () => {
 
     }, [students, staff]);
 
-    const QuickListItem: React.FC<{ photo: string | null; name: string; detail: string; }> = ({ photo, name, detail }) => (
-        <li className="flex items-center gap-2 p-1 rounded-md">
+    const QuickListItem: React.FC<{ photo: string | null; name: string; detail: string; onClick: () => void; }> = ({ photo, name, detail, onClick }) => (
+        <li onClick={onClick} className="flex items-center gap-2 p-1 rounded-md cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
             {photo ? (
                 <img src={photo} alt={name} className="w-8 h-8 rounded-full object-cover"/>
             ) : (
@@ -117,10 +117,13 @@ const Dashboard: React.FC = () => {
 
                 {/* Recently Added Staff */}
                 <Card className="p-2 flex flex-col">
-                    <h3 className="text-sm font-bold px-1 mb-1">Recent Staff</h3>
+                    <div className="flex justify-between items-center px-1 mb-1">
+                        <h3 className="text-sm font-bold">Recent Staff</h3>
+                        <span onClick={() => navigate('/staff')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>
+                    </div>
                     {recentStaff.length > 0 ? (
                         <ul className="space-y-1 overflow-y-auto">
-                            {recentStaff.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={s.designation} />)}
+                            {recentStaff.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={s.designation} onClick={() => navigate(`/staff/${s.id}`)} />)}
                         </ul>
                     ) : (
                         <p className="text-center text-xs text-foreground/60 pt-2">No staff added yet.</p>
@@ -129,10 +132,13 @@ const Dashboard: React.FC = () => {
 
                 {/* Recently Added Students */}
                 <Card className="col-span-2 p-2">
-                    <h3 className="text-sm font-bold px-1 mb-1">Recent Students</h3>
+                     <div className="flex justify-between items-center px-1 mb-1">
+                        <h3 className="text-sm font-bold">Recent Students</h3>
+                        <span onClick={() => navigate('/students')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>
+                    </div>
                     {recentStudents.length > 0 ? (
                         <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
-                            {recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} />)}
+                            {recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} onClick={() => navigate(`/student/${s.id}`)} />)}
                         </ul>
                     ) : (
                         <p className="text-center text-xs text-foreground/60 py-2">No students added yet.</p>

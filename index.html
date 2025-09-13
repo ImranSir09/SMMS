@@ -49,14 +49,14 @@
     <style>
       :root {
         --background: #f8fafc; /* slate-50 */
-        --foreground: #020617; /* slate-950 */
+        --foreground: #1e293b; /* slate-800 */
         --card: #ffffff;
-        --card-foreground: #020617;
-        --primary: #4338ca; /* indigo-700 */
-        --primary-hover: #3730a3; /* indigo-800 */
+        --card-foreground: #1e293b;
+        --primary: #2563eb; /* blue-600 */
+        --primary-hover: #1d4ed8; /* blue-700 */
         --primary-foreground: #ffffff;
-        --accent: #f97316; /* orange-500 */
-        --accent-hover: #ea580c; /* orange-600 */
+        --accent: #16a34a; /* green-600 */
+        --accent-hover: #15803d; /* green-700 */
         --accent-foreground: #ffffff;
         --success: #16a34a; /* green-600 */
         --success-hover: #15803d; /* green-700 */
@@ -67,14 +67,14 @@
 
       .dark {
         --background: #0f172a; /* slate-900 */
-        --foreground: #f1f5f9; /* slate-100 */
+        --foreground: #e2e8f0; /* slate-200 */
         --card: #1e293b; /* slate-800 */
-        --card-foreground: #f1f5f9;
-        --primary: #818cf8; /* indigo-400 */
-        --primary-hover: #6366f1; /* indigo-500 */
+        --card-foreground: #e2e8f0;
+        --primary: #60a5fa; /* blue-400 */
+        --primary-hover: #3b82f6; /* blue-500 */
         --primary-foreground: #0f172a;
-        --accent: #fb923c; /* orange-400 */
-        --accent-hover: #f97316; /* orange-500 */
+        --accent: #22c55e; /* green-500 */
+        --accent-hover: #16a34a; /* green-600 */
         --accent-foreground: #0f172a;
         --success: #22c55e; /* green-500 */
         --success-hover: #16a34a; /* green-600 */
@@ -115,6 +115,8 @@
       /* Enhanced Glassmorphism Effect */
       .bg-card {
         background-color: color-mix(in srgb, var(--card) 70%, transparent);
+        background-image: radial-gradient(color-mix(in srgb, var(--border) 50%, transparent) 0.5px, transparent 0.5px);
+        background-size: 5px 5px;
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
@@ -188,9 +190,13 @@
 </head>
 <body>
     <div class="background-design">
-        <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-            <g>
-                <path fill="var(--primary)" d="M1024 192v832H0v-128h96v-128H0v-128h96V448H0V320h96V192h928zM192 192v832H96v-128h96V640H96V512h96V320H96V192h96z m192 0v832h-96v-128h96V640h-96V512h96V320h-96V192h96z m192 0v832h-96v-128h96V640h-96V512h96V320h-96V192h96z m192 0v832h-96v-128h96V640h-96V512h96V320h-96V192h96z m192 0v832h-96v-128h96V640h-96V512h96V320h-96V192h96z"/>
+        <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+            <g fill="var(--primary)" stroke="var(--primary)">
+                <path d="M779 400c0 209.3-169.7 379-379 379S21 609.3 21 400 190.7 21 400 21s379 169.7 379 379zM400 800c220.9 0 400-179.1 400-400S620.9 0 400 0 0 179.1 0 400s179.1 400 400 400z" opacity=".2"></path>
+                <path d="M400 709.3c170.8 0 309.3-138.5 309.3-309.3S570.8 90.7 400 90.7 90.7 229.2 90.7 400s138.5 309.3 309.3 309.3zM400 730c182.3 0 330-147.7 330-330S582.3 70 400 70 70 217.7 70 400s147.7 330 330 330z" opacity=".2"></path>
+                <path d="M400 640c132.5 0 240-107.5 240-240S532.5 160 400 160 160 267.5 160 400s107.5 240 240 240zM400 660.7c144 0 260.7-116.7 260.7-260.7S544 139.3 400 139.3 139.3 256 139.3 400s116.7 260.7 260.7 260.7z" opacity=".2"></path>
+                <path d="M400 560c88.4 0 160-71.6 160-160s-71.6-160-160-160-160 71.6-160 160 71.6 160 160 160zM400 580c99.4 0 180-80.6 180-180s-80.6-180-180-180-180 80.6-180 180 80.6 180 180 180z" opacity=".2"></path>
+                <path d="M400 480c44.2 0 80-35.8 80-80s-35.8-80-80-80-80 35.8-80 80 35.8 80 80 80zM400 500c55.2 0 100-44.8 100-100s-44.8-100-100-100-100 44.8-100 100 44.8 100 100 100z" opacity=".2"></path>
             </g>
         </svg>
     </div>

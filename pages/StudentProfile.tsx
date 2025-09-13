@@ -94,7 +94,7 @@ const StudentProfile: React.FC = () => {
             {/* Action Buttons */}
             <div className="grid grid-cols-3 gap-2">
                 <button onClick={handleEdit} className={`${buttonStyle} bg-blue-600 text-white`}><EditIcon className="w-3 h-3" /> Edit</button>
-                <button onClick={() => navigate('/certificates')} className={`${buttonStyle} bg-green-600 text-white`}><IdCardIcon className="w-3 h-3" /> Certificates</button>
+                <button onClick={() => navigate('/certificates', { state: { searchId: student.admissionNo, searchType: 'student' } })} className={`${buttonStyle} bg-green-600 text-white`}><IdCardIcon className="w-3 h-3" /> Certificates</button>
                 <button onClick={handleDelete} className={`${buttonStyle} bg-red-600 text-white`}><TrashIcon className="w-3 h-3" /> Delete</button>
             </div>
             

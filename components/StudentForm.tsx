@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Student } from '../types';
 
@@ -16,21 +17,62 @@ interface StudentFormProps {
     onClose: () => void;
 }
 
+const validateStudent = (student: Partial<Student>): { [key: string]: string } => {
+    const errors: { [key: string]: string } = {};
+    if (!student.name?.trim()) errors.name = "Name is required.";
+    else if (student.name.trim().length < 3) errors.name = "Name must be at least 3 characters.";
+
+    if (!student.rollNo?.trim()) errors.rollNo = "Roll No is required.";
+    if (!student.admissionNo?.trim()) errors.admissionNo = "Admission No is required.";
+    
+    if (!student.dob) errors.dob = "Date of Birth is required.";
+    else if (new Date(student.dob) >= new Date()) errors.dob = "Date of Birth must be in the past.";
+
+    if (!student.className) errors.className = "Class is required.";
+    if (!student.section?.trim()) errors.section = "Section is required.";
+
+    if (!student.fathersName?.trim()) errors.fathersName = "Father's Name is required.";
+    else if (student.fathersName.trim().length < 3) errors.fathersName = "Name must be at least 3 characters.";
+    
+    if (!student.mothersName?.trim()) errors.mothersName = "Mother's Name is required.";
+    else if (student.mothersName.trim().length < 3) errors.mothersName = "Name must be at least 3 characters.";
+
+    if (!student.contact?.trim()) {
+        errors.contact = "Contact number is required.";
+    } else if (!/^\d{10}$/.test(student.contact.trim())) {
+        errors.contact = "Contact must be exactly 10 digits.";
+    }
+
+    if (!student.address?.trim()) errors.address = "Address is required.";
+    
+    return errors;
+};
+
 const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClose }) => {
     const [formData, setFormData] = useState<Partial<Student>>({});
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
     
     useEffect(() => {
         setFormData(studentToEdit);
+        setErrors({});
     }, [studentToEdit]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
+        if (errors[name]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
 
     const handleSaveClick = () => {
-        if (!formData.name || !formData.rollNo || !formData.admissionNo || !formData.className || !formData.section || !formData.dob || !formData.fathersName) {
-            alert('Please fill all required fields.');
+        const validationErrors = validateStudent(formData);
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
             return;
         }
         onSave(formData as Student);
@@ -43,18 +85,22 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
                    <div className="col-span-2">
                        <label htmlFor="name" className={labelStyle}>Name</label>
                        <input id="name" name="name" value={formData.name || ''} onChange={handleChange} className={inputStyle} />
+                       {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                    </div>
                     <div>
                         <label htmlFor="rollNo" className={labelStyle}>Roll No</label>
                         <input id="rollNo" name="rollNo" value={formData.rollNo || ''} onChange={handleChange} className={inputStyle} />
+                        {errors.rollNo && <p className="text-red-500 text-xs mt-1">{errors.rollNo}</p>}
                     </div>
                     <div>
                         <label htmlFor="admissionNo" className={labelStyle}>Admission No</label>
                         <input id="admissionNo" name="admissionNo" value={formData.admissionNo || ''} onChange={handleChange} className={inputStyle} />
+                        {errors.admissionNo && <p className="text-red-500 text-xs mt-1">{errors.admissionNo}</p>}
                     </div>
                     <div>
                         <label htmlFor="dob" className={labelStyle}>D.O.B</label>
                         <input id="dob" name="dob" type="date" value={formData.dob || ''} onChange={handleChange} className={inputStyle} />
+                        {errors.dob && <p className="text-red-500 text-xs mt-1">{errors.dob}</p>}
                     </div>
                     <div>
                         <label htmlFor="gender" className={labelStyle}>Gender</label>
@@ -68,22 +114,32 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
                            <option value="">-- Select --</option>
                            {CLASS_OPTIONS.map(cls => <option key={cls} value={cls}>{cls}</option>)}
                        </select>
+                       {errors.className && <p className="text-red-500 text-xs mt-1">{errors.className}</p>}
                    </div>
                    <div>
                        <label htmlFor="section" className={labelStyle}>Section</label>
                        <input id="section" name="section" value={formData.section || ''} onChange={handleChange} className={inputStyle} />
+                       {errors.section && <p className="text-red-500 text-xs mt-1">{errors.section}</p>}
                    </div>
                    <div>
                        <label htmlFor="fathersName" className={labelStyle}>Father's Name</label>
                        <input id="fathersName" name="fathersName" value={formData.fathersName || ''} onChange={handleChange} className={inputStyle} />
+                       {errors.fathersName && <p className="text-red-500 text-xs mt-1">{errors.fathersName}</p>}
                    </div>
                    <div>
                        <label htmlFor="mothersName" className={labelStyle}>Mother's Name</label>
                        <input id="mothersName" name="mothersName" value={formData.mothersName || ''} onChange={handleChange} className={inputStyle} />
+                       {errors.mothersName && <p className="text-red-500 text-xs mt-1">{errors.mothersName}</p>}
+                   </div>
+                   <div className="col-span-2">
+                       <label htmlFor="contact" className={labelStyle}>Contact</label>
+                       <input id="contact" name="contact" value={formData.contact || ''} onChange={handleChange} className={inputStyle} />
+                       {errors.contact && <p className="text-red-500 text-xs mt-1">{errors.contact}</p>}
                    </div>
                    <div className="col-span-2">
                        <label htmlFor="address" className={labelStyle}>Address</label>
                        <input id="address" name="address" value={formData.address || ''} onChange={handleChange} className={inputStyle} />
+                       {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
                    </div>
                 </div>
             </div>

@@ -14,6 +14,7 @@ const Settings: React.FC = () => {
     const { schoolDetails, refreshSchoolDetails } = useAppData();
     const [details, setDetails] = useState<Partial<SchoolDetails>>({});
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
     useEffect(() => {
         if (schoolDetails) {
@@ -25,6 +26,13 @@ const Settings: React.FC = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setDetails(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[name];
+                return newErrors;
+            });
+        }
     };
 
     const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,8 +47,34 @@ const Settings: React.FC = () => {
             reader.readAsDataURL(file);
         }
     };
+    
+    const validateDetails = () => {
+        const newErrors: { [key: string]: string } = {};
+        if (!details.name?.trim()) newErrors.name = "School Name is required.";
+        if (!details.email?.trim()) {
+            newErrors.email = "Email is required.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email)) {
+            newErrors.email = "Invalid email format.";
+        }
+        if (!details.phone?.trim()) {
+            newErrors.phone = "Phone number is required.";
+        } else if (!/^\+?\d{10,}$/.test(details.phone.replace(/[\s-()]/g, ''))) {
+            newErrors.phone = "Invalid phone number format.";
+        }
+        if (!details.udiseCode?.trim()) {
+            newErrors.udiseCode = "UDISE Code is required.";
+        } else if (!/^\d{11}$/.test(details.udiseCode.trim())) {
+            newErrors.udiseCode = "UDISE Code must be 11 digits.";
+        }
+        if (!details.address?.trim()) newErrors.address = "Address is required.";
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
 
     const handleSaveDetails = async () => {
+        if (!validateDetails()) return;
         if (details.id) {
             await db.schoolDetails.update(details.id, details);
             alert('School details updated!');
@@ -150,22 +184,27 @@ const Settings: React.FC = () => {
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">School Name</label>
                         <input name="name" value={details.name || ''} onChange={handleChange} className={inputStyle} />
+                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                     </div>
                      <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Official Email</label>
                         <input name="email" type="email" value={details.email || ''} onChange={handleChange} className={inputStyle} />
+                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
                      <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Phone Number</label>
                         <input name="phone" value={details.phone || ''} onChange={handleChange} className={inputStyle} />
+                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                     </div>
                      <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">UDISE Code</label>
                         <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={inputStyle} />
+                        {errors.udiseCode && <p className="text-red-500 text-xs mt-1">{errors.udiseCode}</p>}
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Address</label>
                         <input name="address" value={details.address || ''} onChange={handleChange} className={inputStyle} />
+                        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
                     </div>
                     <div className="flex items-center gap-4">
                         <div>

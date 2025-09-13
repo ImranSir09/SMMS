@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student, Staff } from '../types';
 import Card from '../components/Card';
-import { IdCardIcon, ExamsIcon, CalendarIcon, CertificateIcon, LeavingIcon, AdmissionIcon } from '../components/icons';
+import { IdCardIcon, ExamsIcon, CalendarIcon, CertificateIcon, LeavingIcon, AdmissionIcon, BonafideIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
@@ -15,6 +17,7 @@ import SchoolLeavingCertificate from '../components/SchoolLeavingCertificate';
 import DutyCertificate from '../components/DutyCertificate';
 import AdmissionCertificate from '../components/AdmissionCertificate';
 import PhotoUploadModal from '../components/PhotoUploadModal';
+import BonafideCertificate from '../components/BonafideCertificate';
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs transition-colors";
 const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
@@ -23,8 +26,10 @@ const docButtonStyle = "flex items-center justify-center gap-1 py-2 px-1 rounded
 type SearchType = 'student' | 'staff';
 
 const Certificates: React.FC = () => {
-  const [searchId, setSearchId] = useState('');
-  const [searchType, setSearchType] = useState<SearchType>('student');
+  const location = useLocation();
+  
+  const [searchId, setSearchId] = useState(location.state?.searchId || '');
+  const [searchType, setSearchType] = useState<SearchType>(location.state?.searchType || 'student');
   const [foundStudent, setFoundStudent] = useState<Student | null>(null);
   const [foundStaff, setFoundStaff] = useState<Staff | null>(null);
   const [error, setError] = useState('');
@@ -42,7 +47,7 @@ const Certificates: React.FC = () => {
   const [dutyCertDetails, setDutyCertDetails] = useState({ description: '', date: '' });
   const [photoUploadTarget, setPhotoUploadTarget] = useState<Student | Staff | null>(null);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     setError('');
     setFoundStudent(null);
     setFoundStaff(null);
@@ -61,8 +66,14 @@ const Certificates: React.FC = () => {
         if (result) setFoundStaff(result);
         else setError('No staff member found.');
     }
-  };
+  }, [searchId, searchType]);
   
+  useEffect(() => {
+    if (location.state?.searchId) {
+        handleSearch();
+    }
+  }, [location.state, handleSearch]);
+
   const generateDoc = async (component: React.ReactElement, fileName: string) => {
       if (!schoolDetails) return;
       setIsGeneratingPdf(true);
@@ -83,6 +94,10 @@ const Certificates: React.FC = () => {
   const handleGenerateDobCert = () => {
       if (foundStudent) generateDoc(<DobCertificate student={foundStudent} schoolDetails={schoolDetails} />, `DOB-Cert-${foundStudent.admissionNo}`);
   };
+  
+  const handleGenerateBonafideCert = () => {
+      if (foundStudent) generateDoc(<BonafideCertificate student={foundStudent} schoolDetails={schoolDetails} />, `Bonafide-Cert-${foundStudent.admissionNo}`);
+  };
 
   const handleGenerateAdmissionCert = () => {
       if (foundStudent) generateDoc(<AdmissionCertificate student={foundStudent} schoolDetails={schoolDetails} />, `Admission-Cert-${foundStudent.admissionNo}`);
@@ -90,6 +105,14 @@ const Certificates: React.FC = () => {
 
   const handleGenerateLeavingCertificate = () => {
     if (foundStudent) {
+        if (!leavingCertDetails.leavingDate) {
+            alert('Please select a Date of Leaving.');
+            return;
+        }
+        if (foundStudent.admissionDate && new Date(leavingCertDetails.leavingDate) < new Date(foundStudent.admissionDate)) {
+            alert('Leaving date cannot be before the admission date.');
+            return;
+        }
         generateDoc(<SchoolLeavingCertificate student={foundStudent} schoolDetails={schoolDetails} leavingDetails={leavingCertDetails} />, `Leaving-Cert-${foundStudent.admissionNo}`);
         setIsLeavingCertModalOpen(false);
     }
@@ -107,6 +130,10 @@ const Certificates: React.FC = () => {
 
   const handleGenerateDutySlip = () => {
     if (foundStaff) {
+      if (!dutySlipDetails.description.trim() || !dutySlipDetails.date) {
+            alert('Please fill all required fields.');
+            return;
+      }
       generateDoc(<DutySlip staff={foundStaff} schoolDetails={schoolDetails} dutyDetails={dutySlipDetails} />, `Duty-Slip-${foundStaff.staffId}`);
       setIsDutySlipModalOpen(false);
     }
@@ -114,6 +141,10 @@ const Certificates: React.FC = () => {
   
   const handleGenerateChargeCertificate = () => {
     if (foundStaff) {
+      if (!chargeDetails.chargeName.trim() || !chargeDetails.date) {
+            alert('Please fill all required fields.');
+            return;
+      }
       generateDoc(<ChargeCertificate staff={foundStaff} schoolDetails={schoolDetails} chargeDetails={chargeDetails} />, `Charge-Cert-${foundStaff.staffId}`);
       setIsChargeModalOpen(false);
     }
@@ -121,6 +152,10 @@ const Certificates: React.FC = () => {
 
   const handleGenerateDutyCertificate = () => {
     if (foundStaff) {
+      if (!dutyCertDetails.description.trim() || !dutyCertDetails.date) {
+            alert('Please fill all required fields.');
+            return;
+      }
       generateDoc(<DutyCertificate staff={foundStaff} schoolDetails={schoolDetails} dutyDetails={dutyCertDetails} />, `Duty-Cert-${foundStaff.staffId}`);
       setIsDutyCertModalOpen(false);
     }
@@ -209,8 +244,9 @@ const Certificates: React.FC = () => {
                <button onClick={handleGenerateAdmissionCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-teal-600`}>Adm. Cert</button>
                <button onClick={handleGenerateStudentIdCard} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-blue-600`}>ID Card</button>
                <button onClick={handleGenerateDobCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-purple-600`}>DOB Cert</button>
+               <button onClick={handleGenerateBonafideCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-pink-600`}>Bonafide</button>
                <button onClick={() => setIsLeavingCertModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-red-600`}>Leaving Cert</button>
-               <button disabled className={`${docButtonStyle} bg-green-600 col-span-2`}>NEP Marks Card</button>
+               <button disabled className={`${docButtonStyle} bg-green-600`}>NEP Marks Card</button>
           </div>
         </Card>
       )}

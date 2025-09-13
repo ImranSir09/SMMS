@@ -49,6 +49,12 @@ const Staff: React.FC = () => {
     };
     
     const handleSave = async (staffMember: Staff) => {
+        const existingStaff = await db.staff.where('staffId').equals(staffMember.staffId).first();
+        if (existingStaff && existingStaff.id !== staffMember.id) {
+            alert(`Staff ID '${staffMember.staffId}' is already taken.`);
+            return;
+        }
+
         const staffToSave = { ...staffMember, teachingAssignments: staffMember.teachingAssignments || [] };
         // FIX: Replaced the conditional add/update logic with `db.staff.put`.
         // `put` handles both creating new records and updating existing ones, simplifying the code.

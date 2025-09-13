@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
@@ -12,20 +14,31 @@ const inputStyle = "p-2 w-full bg-background border border-input rounded-md focu
 
 const Reports: React.FC = () => {
     const { schoolDetails } = useAppData();
+    const navigate = useNavigate();
+
     const exams = useLiveQuery(() => db.exams.toArray(), []);
+    const students = useLiveQuery(() => db.students.toArray(), []);
     
     const [selectedExamId, setSelectedExamId] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('');
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [error, setError] = useState('');
+    const [isGeneratingTopperList, setIsGeneratingTopperList] = useState(false);
+    const [topperListError, setTopperListError] = useState('');
+
+    const [selectedClass, setSelectedClass] = useState('');
+
+    const classOptions = useMemo(() => {
+        if (!students) return [];
+        const classNames = students.map(s => s.className);
+        return [...new Set(classNames)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    }, [students]);
 
     const handleGenerateTopperList = async () => {
         if (!selectedExamId || !selectedSubject) {
-            setError('Please select both an exam and a subject.');
+            setTopperListError('Please select both an exam and a subject.');
             return;
         }
-        setError('');
-        setIsGenerating(true);
+        setTopperListError('');
+        setIsGeneratingTopperList(true);
 
         try {
             const examId = Number(selectedExamId);
@@ -35,14 +48,14 @@ const Reports: React.FC = () => {
             const marksForSubject = await db.marks.where({ examId, subject: selectedSubject }).toArray();
             
             if (marksForSubject.length === 0) {
-                setError(`No marks found for ${selectedSubject} in ${exam.name}.`);
-                setIsGenerating(false);
+                setTopperListError(`No marks found for ${selectedSubject} in ${exam.name}.`);
+                setIsGeneratingTopperList(false);
                 return;
             }
 
             const studentIds = marksForSubject.map(m => m.studentId);
-            const students = await db.students.where('id').anyOf(studentIds).toArray();
-            const studentsMap = new Map<number, Student>(students.map(s => [s.id!, s]));
+            const studentsData = await db.students.where('id').anyOf(studentIds).toArray();
+            const studentsMap = new Map<number, Student>(studentsData.map(s => [s.id!, s]));
 
             const rankedStudents = marksForSubject.map(mark => {
                 const faTotal = (mark.fa1 || 0) + (mark.fa2 || 0) + (mark.fa3 || 0) + (mark.fa4 || 0) + (mark.fa5 || 0) + (mark.fa6 || 0);
@@ -68,16 +81,22 @@ const Reports: React.FC = () => {
 
         } catch (err: any) {
             console.error("Failed to generate topper list:", err);
-            setError(err.message || 'An unexpected error occurred.');
+            setTopperListError(err.message || 'An unexpected error occurred.');
         } finally {
-            setIsGenerating(false);
+            setIsGeneratingTopperList(false);
+        }
+    };
+
+    const handleGenerateRollStatement = () => {
+        if (selectedClass) {
+            navigate(`/print/roll-statement/${selectedClass}`);
         }
     };
 
     return (
         <div className="h-full flex flex-col gap-4 animate-fade-in">
             <Card className="p-3">
-                <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Generate Reports</h2>
+                <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Exam Reports</h2>
                 <div className="space-y-3">
                     <h3 className="text-sm font-semibold text-primary">Subject Topper List</h3>
                     <div>
@@ -94,13 +113,34 @@ const Reports: React.FC = () => {
                             {SUBJECTS.map(subject => <option key={subject} value={subject}>{subject}</option>)}
                         </select>
                     </div>
-                    {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+                    {topperListError && <p className="text-red-500 text-xs text-center">{topperListError}</p>}
                     <button 
                         onClick={handleGenerateTopperList} 
-                        disabled={isGenerating}
+                        disabled={isGeneratingTopperList}
                         className="w-full py-2 px-4 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
                     >
-                        {isGenerating ? 'Generating...' : 'Generate PDF'}
+                        {isGeneratingTopperList ? 'Generating...' : 'Generate Topper List PDF'}
+                    </button>
+                </div>
+            </Card>
+            
+            <Card className="p-3">
+                <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Class Reports</h2>
+                <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-primary">Class Roll Statement</h3>
+                    <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">Select Class</label>
+                        <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className={inputStyle}>
+                            <option value="">-- Choose Class --</option>
+                            {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
+                    <button 
+                        onClick={handleGenerateRollStatement} 
+                        disabled={!selectedClass}
+                        className="w-full py-2 px-4 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
+                    >
+                        Generate Roll Statement PDF
                     </button>
                 </div>
             </Card>
