@@ -49,19 +49,24 @@ const Staff: React.FC = () => {
     };
     
     const handleSave = async (staffMember: Staff) => {
-        const existingStaff = await db.staff.where('staffId').equals(staffMember.staffId).first();
-        if (existingStaff && existingStaff.id !== staffMember.id) {
-            alert(`Staff ID '${staffMember.staffId}' is already taken.`);
-            return;
+        try {
+            const existingStaff = await db.staff.where('staffId').equals(staffMember.staffId).first();
+            if (existingStaff && existingStaff.id !== staffMember.id) {
+                alert(`Staff ID '${staffMember.staffId}' is already taken.`);
+                return;
+            }
+    
+            const staffToSave = { ...staffMember, teachingAssignments: staffMember.teachingAssignments || [] };
+            // FIX: Replaced the conditional add/update logic with `db.staff.put`.
+            // `put` handles both creating new records and updating existing ones, simplifying the code.
+            // This also resolves a latent TypeScript error similar to the one in StaffProfile,
+            // caused by Dexie's `update` typings with nested arrays.
+            await db.staff.put(staffToSave);
+            handleCloseForm();
+        } catch (error) {
+            console.error("Failed to save staff member:", error);
+            alert("An error occurred while saving the staff member. Please check the console for details.");
         }
-
-        const staffToSave = { ...staffMember, teachingAssignments: staffMember.teachingAssignments || [] };
-        // FIX: Replaced the conditional add/update logic with `db.staff.put`.
-        // `put` handles both creating new records and updating existing ones, simplifying the code.
-        // This also resolves a latent TypeScript error similar to the one in StaffProfile,
-        // caused by Dexie's `update` typings with nested arrays.
-        await db.staff.put(staffToSave);
-        handleCloseForm();
     };
 
      const handleCloseForm = () => {

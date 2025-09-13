@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -74,19 +73,24 @@ const Students: React.FC = () => {
     };
     
     const handleSave = async (studentData: Student) => {
-        const existingStudent = await db.students.where('admissionNo').equals(studentData.admissionNo).first();
-        if (existingStudent && existingStudent.id !== studentData.id) {
-            alert(`Admission number '${studentData.admissionNo}' is already taken.`);
-            return;
+        try {
+            const existingStudent = await db.students.where('admissionNo').equals(studentData.admissionNo).first();
+            if (existingStudent && existingStudent.id !== studentData.id) {
+                alert(`Admission number '${studentData.admissionNo}' is already taken.`);
+                return;
+            }
+    
+            if (studentData.id) {
+                await db.students.update(studentData.id, studentData);
+            } else {
+                await db.students.add(studentData);
+            }
+            handleCloseForm();
+            setActiveClass(studentData.className);
+        } catch (error) {
+            console.error("Failed to save student:", error);
+            alert("An error occurred while saving the student. Please check the console for details.");
         }
-
-        if (studentData.id) {
-            await db.students.update(studentData.id, studentData);
-        } else {
-            await db.students.add(studentData);
-        }
-        handleCloseForm();
-        setActiveClass(studentData.className);
     };
 
     const handleCloseForm = () => {

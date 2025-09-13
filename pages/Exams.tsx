@@ -26,24 +26,34 @@ const Exams: React.FC = () => {
     };
 
     const handleSaveExam = async () => {
-        const examNameToSave = newExamData.name === 'Other' ? customExamName.trim() : newExamData.name;
-
-        if (!examNameToSave || !newExamData.className) {
-            alert("Please provide an exam name and select a class.");
-            return;
+        try {
+            const examNameToSave = newExamData.name === 'Other' ? customExamName.trim() : newExamData.name;
+    
+            if (!examNameToSave || !newExamData.className) {
+                alert("Please provide an exam name and select a class.");
+                return;
+            }
+            const newId = await db.exams.add({ name: examNameToSave, className: newExamData.className });
+            setIsCreateModalOpen(false);
+            navigate(`/exams/${newId}`);
+        } catch (error) {
+            console.error("Failed to save exam:", error);
+            alert("An error occurred while creating the exam.");
         }
-        const newId = await db.exams.add({ name: examNameToSave, className: newExamData.className });
-        setIsCreateModalOpen(false);
-        navigate(`/exams/${newId}`);
     };
 
     const handleDeleteExam = async (id: number) => {
         if(window.confirm('Are you sure you want to delete this exam? This will also delete all associated marks.')) {
-            await db.transaction('rw', db.exams, db.marks, db.studentExamData, async () => {
-                await db.exams.delete(id);
-                await db.marks.where('examId').equals(id).delete();
-                await db.studentExamData.where('examId').equals(id).delete();
-            });
+            try {
+                await db.transaction('rw', db.exams, db.marks, db.studentExamData, async () => {
+                    await db.exams.delete(id);
+                    await db.marks.where('examId').equals(id).delete();
+                    await db.studentExamData.where('examId').equals(id).delete();
+                });
+            } catch (error) {
+                console.error("Failed to delete exam:", error);
+                alert("An error occurred while deleting the exam.");
+            }
         }
     }
 

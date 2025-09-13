@@ -30,22 +30,32 @@ const StaffProfile: React.FC = () => {
     };
 
     const handleSave = async (staffData: Staff) => {
-        // FIX: Replaced `db.staff.update` with `db.staff.put`. The `update` method's TypeScript
-        // typings can conflict when an object contains a nested array like `teachingAssignments`.
-        // `put` is simpler for full-object updates and avoids this type issue.
         if (staffId) {
-            await db.staff.put(staffData);
-            setIsFormOpen(false);
+            try {
+                // FIX: Replaced `db.staff.update` with `db.staff.put`. The `update` method's TypeScript
+                // typings can conflict when an object contains a nested array like `teachingAssignments`.
+                // `put` is simpler for full-object updates and avoids this type issue.
+                await db.staff.put(staffData);
+                setIsFormOpen(false);
+            } catch (error) {
+                console.error("Failed to update staff:", error);
+                alert("An error occurred while updating staff details.");
+            }
         }
     };
 
     const handleDelete = async () => {
         if (staff && staffId && window.confirm(`Are you sure you want to delete ${staff.name}? This will also delete their timetable assignments and cannot be undone.`)) {
-            await db.transaction('rw', db.staff, db.timetable, async () => {
-                await db.timetable.where('staffId').equals(staffId).delete();
-                await db.staff.delete(staffId);
-            });
-            navigate('/staff');
+            try {
+                await db.transaction('rw', db.staff, db.timetable, async () => {
+                    await db.timetable.where('staffId').equals(staffId).delete();
+                    await db.staff.delete(staffId);
+                });
+                navigate('/staff');
+            } catch (error) {
+                console.error("Failed to delete staff member:", error);
+                alert("An error occurred while deleting the staff member.");
+            }
         }
     };
 

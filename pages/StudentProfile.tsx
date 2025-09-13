@@ -61,19 +61,29 @@ const StudentProfile: React.FC = () => {
 
     const handleSave = async (studentData: Student) => {
         if (studentId) {
-            await db.students.update(studentId, studentData);
-            setIsFormOpen(false);
+            try {
+                await db.students.update(studentId, studentData);
+                setIsFormOpen(false);
+            } catch (error) {
+                console.error("Failed to update student:", error);
+                alert("An error occurred while updating student details.");
+            }
         }
     };
 
     const handleDelete = async () => {
         if (student && studentId && window.confirm(`Are you sure you want to delete ${student.name}? This will also delete all associated marks and cannot be undone.`)) {
-            await db.transaction('rw', db.students, db.marks, db.studentExamData, async () => {
-                await db.marks.where('studentId').equals(studentId).delete();
-                await db.studentExamData.where('studentId').equals(studentId).delete();
-                await db.students.delete(studentId);
-            });
-            navigate('/students');
+            try {
+                await db.transaction('rw', db.students, db.marks, db.studentExamData, async () => {
+                    await db.marks.where('studentId').equals(studentId).delete();
+                    await db.studentExamData.where('studentId').equals(studentId).delete();
+                    await db.students.delete(studentId);
+                });
+                navigate('/students');
+            } catch (error) {
+                console.error("Failed to delete student:", error);
+                alert("An error occurred while deleting the student.");
+            }
         }
     };
     
