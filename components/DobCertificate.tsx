@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 
@@ -29,10 +28,8 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
         };
         
         const yearToWords = (y: number): string => {
-            const yStr = y.toString();
-            let word = '';
             if (y >= 2000) {
-                 word = "Two Thousand";
+                 let word = "Two Thousand";
                  const remainder = y % 100;
                  if (remainder > 0) {
                      word += ' and ';
@@ -46,7 +43,7 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
                  return word;
             }
             if (y >= 1900) {
-                 word = 'Nineteen Hundred';
+                 let word = 'Nineteen Hundred';
                  const remainder = y % 100;
                  if (remainder > 0) {
                      word += ' and ';
@@ -74,81 +71,87 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
 
     const dobInWords = dateToWords(student.dob);
     const dobDdMmYyyy = formatDateDDMMYYYY(student.dob);
-    const dateOfIssue = new Date().toLocaleDateString('en-GB');
+    const dateOfIssue = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
     const place = schoolDetails?.address.split(',').pop()?.trim() || '';
-    
-    const DetailItem: React.FC<{ label: string; value?: string | null; fullWidth?: boolean }> = ({ label, value, fullWidth }) => (
-        <div className={`flex items-baseline ${fullWidth ? 'col-span-2' : ''}`}>
-            <span className="w-2/5 font-semibold text-gray-700">{label}:</span>
-            <span className="flex-1 font-bold border-b border-dotted border-black text-left pl-2">{value || ''}</span>
+
+    const DetailItem: React.FC<{ label: string; value: string | undefined | null; colSpan?: number }> = ({ label, value, colSpan }) => (
+        <div className={`flex items-baseline ${colSpan === 2 ? 'col-span-2' : ''}`}>
+            <span className="font-semibold w-1/3 flex-shrink-0 text-gray-700">{label}:</span>
+            <span className="flex-1 font-bold border-b border-dotted border-gray-600 pl-2">{value || '________________'}</span>
         </div>
     );
 
     return (
         <div className="A4-page-container">
-            <div id="dob-certificate" className="w-[210mm] h-[297mm] bg-white p-6 flex flex-col font-serif text-black">
+            <div id="dob-certificate" className="w-[210mm] h-[297mm] bg-white p-8 flex flex-col font-serif text-black relative">
                 
-                <header className="text-center mb-4 border-b-2 border-black pb-2">
-                    <h1 className="text-2xl font-bold uppercase">{schoolDetails?.name || 'School Name'}</h1>
-                    <p className="text-sm">{schoolDetails?.address || 'School Address'}</p>
-                    <p className="text-xs">
-                        Phone: {schoolDetails?.phone || 'N/A'} | Email: {schoolDetails?.email || 'N/A'} | UDISE: {schoolDetails?.udiseCode || 'N/A'}
-                    </p>
-                </header>
+                {/* Watermark */}
+                {schoolDetails?.logo && (
+                    <div className="absolute inset-0 flex items-center justify-center z-0">
+                        <img src={schoolDetails.logo} alt="Watermark" className="w-2/3 max-h-2/3 object-contain opacity-10" />
+                    </div>
+                )}
 
-                <h2 className="text-xl font-bold text-center my-3 underline underline-offset-4">Date of Birth Certificate</h2>
-
-                <main className="flex-1 text-md leading-relaxed">
-                    <p className="mb-4 text-center italic text-sm">
-                        This is to certify that according to the school records, the particulars of the student are as under:
-                    </p>
+                <div className="relative z-10 flex flex-col h-full">
+                    {/* Header */}
+                    <header className="text-center mb-8">
+                        {schoolDetails?.logo && (
+                            <img src={schoolDetails.logo} alt="School Logo" className="w-24 h-24 mx-auto mb-2 object-contain" />
+                        )}
+                        <h1 className="text-3xl font-bold tracking-wider">
+                            {schoolDetails?.name || 'School Name'}
+                        </h1>
+                        <p className="text-md text-gray-600">{schoolDetails?.address || 'School Address'}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {schoolDetails?.phone && <span>Ph: {schoolDetails.phone}</span>}
+                          {schoolDetails?.email && <span className="mx-2">| Email: {schoolDetails.email}</span>}
+                          {schoolDetails?.udiseCode && <span>| UDISE: {schoolDetails.udiseCode}</span>}
+                        </p>
+                    </header>
                     
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm mt-6">
-                        <DetailItem label="Name of Student" value={student.name} />
-                        <DetailItem label="Admission No." value={student.admissionNo} />
-                        <DetailItem label="Father’s Name" value={student.fathersName} />
-                        <DetailItem label="Mother’s Name" value={student.mothersName} />
-                        <DetailItem label="Gender" value={student.gender} />
-                        <DetailItem label="Date of Birth" value={dobDdMmYyyy} />
-                        <DetailItem label="Date of Birth (in words)" value={dobInWords} fullWidth={true} />
-                        <DetailItem label="Place of Birth" value="" />
-                        <DetailItem label="Date of Admission" value={formatDateDDMMYYYY(student.admissionDate || '')} />
-                        <DetailItem label="Class at Admission" value="" />
-                        <DetailItem label="Birth Verified From" value="School Record" />
-                        <DetailItem label="Residential Address" value={student.address} fullWidth={true} />
-                    </div>
+                    {/* Title */}
+                    <h2 className="text-2xl font-bold text-center my-6 underline underline-offset-4 tracking-widest">
+                        DATE OF BIRTH CERTIFICATE
+                    </h2>
 
-                    <div className="mt-6">
-                        <span className="italic text-sm">Remarks (if any):</span>
-                        <div className="w-full border-b border-dotted border-black mt-1 h-5"></div>
-                    </div>
-                </main>
+                    {/* Main Content */}
+                    <main className="flex-1 text-lg leading-relaxed">
+                        <p className="text-center mb-6">
+                            This is to certify that:
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-base my-4">
+                            <DetailItem label="Name of Student" value={student.name} />
+                            <DetailItem label="Admission No." value={student.admissionNo} />
+                            <DetailItem label="Father’s Name" value={student.fathersName} />
+                            <DetailItem label="Class/Section" value={`${student.className} '${student.section}'`} />
+                            <DetailItem label="Mother’s Name" value={student.mothersName} />
+                            <DetailItem label="Date of Birth (figures)" value={dobDdMmYyyy} />
+                            <DetailItem label="Date of Birth (words)" value={dobInWords} colSpan={2} />
+                        </div>
 
-                <footer className="mt-auto pt-10 text-sm">
-                    <div className="flex justify-between items-start mb-12">
-                         <div>
-                            <p><span className="font-semibold">Date of Issue:</span> {dateOfIssue}</p>
+                        <p className="mt-8 text-center text-base italic">
+                            The above particulars have been taken from the Admission Register of the school and are correct to the best of my knowledge.
+                        </p>
+                        
+                        <div className="mt-10 text-xs border-t border-dashed pt-2">
+                            <p className="font-bold">Certificate Note:</p>
+                            <p>This certificate is issued for official purposes only. It is based on the records maintained in the school admission register and is not valid for claiming age in a court of law.</p>
+                        </div>
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="mt-auto flex justify-between items-end pt-12 pb-2">
+                        <div className="text-left text-base">
                             <p><span className="font-semibold">Place:</span> {place}</p>
+                            <p><span className="font-semibold">Date:</span> {dateOfIssue}</p>
                         </div>
                         <div className="text-center">
-                            <div className="w-56 h-16"></div> {/* Space for signature */}
-                            <div className="border-t border-black w-56"></div>
-                            <p className="font-semibold">Signature of Head of School / Principal</p>
-                            <p>Name: ____________________________</p>
-                            <p>Designation: _______________________</p>
+                            <div className="border-t-2 border-gray-700 w-64 mt-24 mb-2"></div>
+                            <p className="font-semibold text-lg">Headmaster/Principal</p>
+                            <p>(Signature with Seal)</p>
                         </div>
-                    </div>
-                     <div className="text-center">
-                        <p className="font-semibold">School Seal:</p>
-                    </div>
-                </footer>
-                
-                <div className="text-xs text-gray-700 mt-4 border-t pt-2">
-                    <p className="font-bold">Note:</p>
-                    <ol className="list-decimal list-inside">
-                        <li>This certificate is issued on the basis of records and documents provided by the parent or guardian.</li>
-                        <li>This certificate does not serve as a legal birth certificate for government use unless specifically authorized by the issuing authority.</li>
-                    </ol>
+                    </footer>
                 </div>
             </div>
         </div>
