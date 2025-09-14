@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 
@@ -14,53 +13,50 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
         if (!dateString) return '_______________________';
         const date = new Date(dateString + 'T00:00:00');
         if (isNaN(date.getTime())) return '_______________________';
-        
+
         const day = date.getDate();
         const month = date.toLocaleString('en-US', { month: 'long' });
         const year = date.getFullYear();
 
-        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-        
+        const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+        const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+        const numberToWords = (num: number): string => {
+            if (num === 0) return '';
+            if (num < 20) return ones[num];
+            if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 !== 0 ? ' ' + ones[num % 10] : '');
+            if (num < 1000) return ones[Math.floor(num / 100)] + ' hundred' + (num % 100 !== 0 ? ' ' + numberToWords(num % 100) : '');
+            return numberToWords(Math.floor(num / 1000)) + ' thousand' + (num % 1000 !== 0 ? ' ' + numberToWords(num % 1000) : '');
+        };
+
         const dayToOrdinalWord = (d: number): string => {
-            const ordinals = ['','First','Second','Third','Fourth','Fifth','Sixth','Seventh','Eighth','Ninth','Tenth','Eleventh','Twelfth','Thirteenth','Fourteenth','Fifteenth','Sixteenth','Seventeenth','Eighteenth','Nineteenth','Twentieth','Twenty-First','Twenty-Second','Twenty-Third','Twenty-Fourth','Twenty-Fifth','Twenty-Sixth','Twenty-Seventh','Twenty-Eighth','Twenty-Ninth','Thirtieth','Thirty-First'];
-            return ordinals[d] || d.toString();
+            if (d === 0) return '';
+            const ordinals = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteen', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth', 'twenty-first', 'twenty-second', 'twenty-third', 'twenty-fourth', 'twenty-fifth', 'twenty-sixth', 'twenty-seventh', 'twenty-eighth', 'twenty-ninth', 'thirtieth', 'thirty-first'];
+            return ordinals[d - 1] || d.toString();
         };
         
         const yearToWords = (y: number): string => {
-            if (y >= 2000) {
-                 let word = "Two Thousand";
-                 const remainder = y % 100;
-                 if (remainder > 0) {
-                     word += ' and ';
-                     if (remainder < 10) word += ones[remainder];
-                     else if (remainder < 20) word += teens[remainder-10];
-                     else {
-                         word += tens[Math.floor(remainder/10)];
-                         if (remainder % 10 > 0) word += ` ${ones[remainder % 10]}`;
-                     }
-                 }
-                 return word;
+            if (y >= 1900 && y < 2000) {
+                const firstPart = Math.floor(y / 100); // e.g., 19
+                const secondPart = y % 100; // e.g., 99
+                let yearText = numberToWords(firstPart) + ' hundred';
+                if (secondPart > 0) {
+                    yearText += ' ' + numberToWords(secondPart);
+                }
+                return yearText;
             }
-            if (y >= 1900) {
-                 let word = 'Nineteen Hundred';
-                 const remainder = y % 100;
-                 if (remainder > 0) {
-                     word += ' and ';
-                     if (remainder < 10) word += ones[remainder];
-                     else if (remainder < 20) word += teens[remainder-10];
-                     else {
-                         word += tens[Math.floor(remainder/10)];
-                         if (remainder % 10 > 0) word += ` ${ones[remainder % 10]}`;
-                     }
-                 }
-                 return word;
+            if (y >= 2000 && y < 2100) {
+                 return numberToWords(y);
             }
             return y.toString();
         };
+
+        const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+        const dayInWords = capitalize(dayToOrdinalWord(day));
+        const yearInWords = yearToWords(year);
         
-        return `${dayToOrdinalWord(day)} ${month}, ${yearToWords(year)}`;
+        return `${dayInWords} of ${month}, ${yearInWords}`;
     };
     
     const formatDateDDMMYYYY = (dateString: string): string => {
