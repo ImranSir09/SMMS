@@ -1,20 +1,13 @@
 import Dexie, { Table } from 'dexie';
-// FIX: Import DailyLog type to be used in the database schema definition.
-import { SchoolDetails, Student, Staff, Exam, Mark, DailyLog, TimetableSlot, StudentExamData, HolisticRecord } from '../types';
+import { SchoolDetails, Student, Staff, Exam, Mark, DailyLog, StudentExamData, HolisticRecord } from '../types';
 
-// FIX: Resolved issues where TypeScript could not find Dexie's base methods
-// (e.g., 'version', 'transaction', 'tables') on the subclassed AppDB. 
-// Switched to a direct instantiation pattern with type assertion, which is a
-// robust alternative that ensures the `db` object has the correct Dexie type.
 export const db = new Dexie('AegisSchoolDB') as Dexie & {
   schoolDetails: Table<SchoolDetails, number>;
   students: Table<Student, number>;
   staff: Table<Staff, number>;
   exams: Table<Exam, number>;
   marks: Table<Mark, number>;
-  // FIX: Add the dailyLogs table to the Dexie type definition.
   dailyLogs: Table<DailyLog, number>;
-  timetable: Table<TimetableSlot, number>;
   studentExamData: Table<StudentExamData, number>;
   holisticRecords: Table<HolisticRecord, number>;
 };
@@ -41,7 +34,6 @@ db.version(2).stores({
   // For v1 to v2, we are just adding new tables, which Dexie handles automatically.
 });
 
-// FIX: Introduce a new database version (v3) to add the dailyLogs table.
 db.version(3).stores({
   schoolDetails: '++id, name',
   students: '++id, name, rollNo, admissionNo, className',
@@ -175,4 +167,17 @@ db.version(12).stores({
   timetable: '++id, &[staffId+day+period], staffId, day, period',
   studentExamData: '++id, &[examId+studentId], studentId',
   holisticRecords: '++id, &[studentId+domain+aspect], studentId, className',
+});
+
+// v13: Remove timetable table
+db.version(13).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className',
+  staff: '++id, name, staffId, designation, subjects',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  holisticRecords: '++id, &[studentId+domain+aspect], studentId, className',
+  timetable: null, // This deletes the table
 });

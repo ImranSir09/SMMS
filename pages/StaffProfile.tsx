@@ -5,8 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Staff } from '../types';
 import Card from '../components/Card';
-import { EditIcon, TrashIcon, CertificateIcon, TimetableIcon, BriefcaseIcon } from '../components/icons';
-import StaffTimetable from '../components/StaffTimetable';
+import { EditIcon, TrashIcon, CertificateIcon, BriefcaseIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import StaffForm from '../components/StaffForm';
 import { useToast } from '../contexts/ToastContext';
@@ -26,7 +25,6 @@ const StaffProfile: React.FC = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
 
     const staff = useLiveQuery(() => staffId ? db.staff.get(staffId) : undefined, [staffId]);
-    const timetable = useLiveQuery(() => staffId ? db.timetable.where({ staffId }).toArray() : [], [staffId]);
 
     const handleEdit = () => {
         setIsFormOpen(true);
@@ -46,12 +44,9 @@ const StaffProfile: React.FC = () => {
     };
 
     const handleDelete = async () => {
-        if (staff && staffId && window.confirm(`Are you sure you want to delete ${staff.name}? This will also delete their timetable assignments and cannot be undone.`)) {
+        if (staff && staffId && window.confirm(`Are you sure you want to delete ${staff.name}? This action cannot be undone.`)) {
             try {
-                await db.transaction('rw', db.staff, db.timetable, async () => {
-                    await db.timetable.where('staffId').equals(staffId).delete();
-                    await db.staff.delete(staffId);
-                });
+                await db.staff.delete(staffId);
                 navigate('/staff');
                 addToast(`${staff.name} was deleted successfully.`, 'success');
             } catch (error) {
@@ -86,14 +81,6 @@ const StaffProfile: React.FC = () => {
                 <button onClick={() => navigate('/certificates', { state: { searchId: staff.staffId, searchType: 'staff' } })} className={`${buttonStyle} bg-green-600 text-white`}><CertificateIcon className="w-3 h-3" /> Certificates</button>
                 <button onClick={handleDelete} className={`${buttonStyle} bg-red-600 text-white`}><TrashIcon className="w-3 h-3" /> Delete</button>
             </div>
-            
-            <Card className="p-3">
-                <div className="flex items-center gap-1.5 font-semibold text-md mb-2 border-b border-border pb-1">
-                    <TimetableIcon className="w-4 h-4 text-foreground/60" />
-                    <h3>Weekly Timetable</h3>
-                </div>
-                <StaffTimetable slots={timetable || []} />
-            </Card>
 
             <Card className="p-3">
                 <div className="flex items-center gap-1.5 font-semibold text-md mb-2 border-b border-border pb-1">

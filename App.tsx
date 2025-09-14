@@ -11,7 +11,6 @@ import Settings from './services/Settings';
 import BottomNav from './components/BottomNav';
 import Reports from './pages/Reports';
 import Certificates from './pages/Certificates';
-import Timetable from './pages/Timetable';
 import ExamMarks from './pages/ExamMarks';
 import StudentProfile from './pages/StudentProfile';
 import StaffProfile from './pages/StaffProfile';
@@ -88,7 +87,6 @@ const App: React.FC = () => {
                 <Route path="/staff/:id" element={<StaffProfile />} />
                 <Route path="/exams" element={<Exams />} />
                 <Route path="/exams/:examId" element={<ExamMarks />} />
-                <Route path="/timetable" element={<Timetable />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/certificates" element={<Certificates />} />

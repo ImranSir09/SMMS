@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { DashboardIcon, StudentsIcon, StaffIcon, SettingsIcon, TimetableIcon, HolisticIcon } from './icons';
+import { DashboardIcon, StudentsIcon, StaffIcon, SettingsIcon, HolisticIcon } from './icons';
 
 const BottomNav: React.FC = () => {
   const navItems = [
@@ -8,7 +8,6 @@ const BottomNav: React.FC = () => {
     { to: "/students", icon: <StudentsIcon className="w-5 h-5" />, label: "Students" },
     { to: "/staff", icon: <StaffIcon className="w-5 h-5" />, label: "Staff" },
     { to: "/holistic", icon: <HolisticIcon className="w-5 h-5" />, label: "Holistic" },
-    { to: "/timetable", icon: <TimetableIcon className="w-5 h-5" />, label: "Timetable" },
     { to: "/settings", icon: <SettingsIcon className="w-5 h-5" />, label: "Settings" },
   ];
 

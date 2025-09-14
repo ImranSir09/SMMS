@@ -87,15 +87,6 @@ export interface DailyLog {
   riceConsumed: number;
 }
 
-export interface TimetableSlot {
-    id?: number;
-    staffId: number;
-    day: string;
-    period: number;
-    className: string;
-    subject: string;
-}
-
 export interface HolisticRecord {
   id?: number;
   studentId: number;

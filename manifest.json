@@ -71,13 +71,6 @@
       "description": "Quickly add a new staff record",
       "url": "/#/staff",
       "icons": [{ "src": "https://via.placeholder.com/192.png?text=Staff", "sizes": "192x192" }]
-    },
-    {
-      "name": "View Timetable",
-      "short_name": "Timetable",
-      "description": "Open the school timetable",
-      "url": "/#/timetable",
-      "icons": [{ "src": "https://via.placeholder.com/192.png?text=Time", "sizes": "192x192" }]
     }
   ],
   "screenshots": [
