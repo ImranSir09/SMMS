@@ -1,25 +1,106 @@
 {
+  "id": "/?source=pwa",
   "short_name": "SMS Mobile",
   "name": "School Management System Mobile",
+  "description": "A comprehensive, offline-first school management application for modern educational institutions.",
   "icons": [
     {
-      "src": "https://www.gstatic.com/images/branding/product/1x/google_gemini_32dp.png",
-      "type": "image/png",
-      "sizes": "32x32"
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png"
     },
     {
-      "src": "https://www.gstatic.com/images/branding/product/1x/google_gemini_192dp.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
     },
     {
-      "src": "https://www.gstatic.com/images/branding/product/1x/google_gemini_512dp.png",
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/maskable-icon-512x512.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "sizes": "512x512"
+      "purpose": "maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff"
+  "orientation": "portrait-primary",
+  "theme_color": "#2563eb",
+  "background_color": "#f8fafc",
+  "shortcuts": [
+    {
+      "name": "Add Student",
+      "short_name": "New Student",
+      "description": "Quickly add a new student record",
+      "url": "/#/students",
+      "icons": [{ "src": "/icons/shortcut-student.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Add Staff",
+      "short_name": "New Staff",
+      "description": "Quickly add a new staff record",
+      "url": "/#/staff",
+      "icons": [{ "src": "/icons/shortcut-staff.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "View Timetable",
+      "short_name": "Timetable",
+      "description": "Open the school timetable",
+      "url": "/#/timetable",
+      "icons": [{ "src": "/icons/shortcut-timetable.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Main dashboard showing key school statistics."
+    },
+    {
+      "src": "/screenshots/students.png",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Student management screen with class filters."
+    },
+    {
+      "src": "/screenshots/profile.png",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Detailed student profile with academic performance."
+    }
+  ]
 }
