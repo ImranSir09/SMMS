@@ -3,6 +3,7 @@ import { useAppData } from '../hooks/useAppData';
 import { db } from '../services/db';
 import { SchoolDetails } from '../types';
 import Card from '../components/Card';
+import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon } from '../components/icons';
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs transition-colors";
 const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors";
@@ -192,53 +193,79 @@ const Settings: React.FC = () => {
     return (
         <div className="flex flex-col gap-4 animate-fade-in">
             <Card className="p-3">
-                <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">School Details</h2>
+                <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">
+                    <BuildingIcon className="w-5 h-5" />
+                    <h2>School Details</h2>
+                </div>
                 <div className="space-y-3">
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">School Name</label>
-                        <input name="name" value={details.name || ''} onChange={handleChange} className={inputStyle} />
+                        <div className="relative">
+                            <BuildingIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
+                            <input name="name" value={details.name || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                        </div>
                         {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                     </div>
                      <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Official Email</label>
-                        <input name="email" type="email" value={details.email || ''} onChange={handleChange} className={inputStyle} />
+                        <div className="relative">
+                            <MailIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
+                            <input name="email" type="email" value={details.email || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                        </div>
                         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Phone Number</label>
-                        <input name="phone" type="tel" value={details.phone || ''} onChange={handleChange} className={inputStyle} />
+                        <div className="relative">
+                             <PhoneIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
+                             <input name="phone" type="tel" value={details.phone || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                        </div>
                         {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">UDISE Code</label>
-                        <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={inputStyle} />
+                        <div className="relative">
+                            <HashIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
+                            <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                        </div>
                         {errors.udiseCode && <p className="text-red-500 text-xs mt-1">{errors.udiseCode}</p>}
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Address</label>
-                        <input name="address" value={details.address || ''} onChange={handleChange} className={inputStyle} />
+                        <div className="relative">
+                            <MapPinIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
+                            <input name="address" value={details.address || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                        </div>
                         {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">School Logo</label>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             {logoPreview ? (
                                 <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 object-contain rounded-md border border-border p-1" />
                             ) : (
                                 <div className="w-16 h-16 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Logo</div>
                             )}
-                            <input type="file" accept="image/png, image/jpeg" onChange={handleLogoChange} className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
+                            <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-3 rounded-md bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5">
+                                <UploadIcon className="w-4 h-4 text-foreground/60" />
+                                <span className="text-xs text-foreground/80">Upload Logo</span>
+                                <input type="file" accept="image/png, image/jpeg" onChange={handleLogoChange} className="hidden" />
+                            </label>
                         </div>
                     </div>
-                    <button onClick={handleSaveDetails} className={`${primaryButtonStyle} w-full`}>Save Details</button>
+                    <button onClick={handleSaveDetails} className={`${primaryButtonStyle} w-full flex items-center justify-center gap-2`}><SaveIcon className="w-4 h-4"/> Save Details</button>
                 </div>
             </Card>
 
             <Card className="p-3">
-                <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Data Management</h2>
+                <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">
+                    <DatabaseIcon className="w-5 h-5" />
+                    <h2>Data Management</h2>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
-                    <button onClick={handleBackup} className={`${buttonStyle} bg-blue-600 text-white`}>Backup Data</button>
-                     <label className={`${buttonStyle} bg-green-600 text-white text-center cursor-pointer`}>
+                    <button onClick={handleBackup} className={`${buttonStyle} bg-blue-600 text-white flex items-center justify-center gap-2`}><DownloadIcon className="w-4 h-4" /> Backup Data</button>
+                     <label className={`${buttonStyle} bg-green-600 text-white text-center cursor-pointer flex items-center justify-center gap-2`}>
+                        <UploadIcon className="w-4 h-4" />
                         Restore Data
                         <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
                     </label>
@@ -246,7 +273,10 @@ const Settings: React.FC = () => {
             </Card>
 
             <Card className="p-3 border-red-500/50 bg-red-500/5">
-                <h2 className="text-md font-semibold mb-2 border-b border-red-500/20 pb-1 text-red-600 dark:text-red-400">Danger Zone</h2>
+                <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-red-500/20 pb-1 text-red-600 dark:text-red-400">
+                    <AlertTriangleIcon className="w-5 h-5" />
+                    <h2>Danger Zone</h2>
+                </div>
                 <div>
                     <p className="font-semibold text-sm">Reset All Application Data</p>
                     <p className="text-xs text-foreground/80 mt-1 mb-3">

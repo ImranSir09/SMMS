@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Staff, SchoolDetails } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -21,7 +22,7 @@ const DutySlip: React.FC<DutySlipProps> = ({ staff, schoolDetails, dutyDetails }
         )}
         <header className="text-center mb-10 z-10">
             {schoolDetails?.logo && (
-                <img src={schoolDetails.logo} alt="School Logo" className="w-24 h-24 mx-auto mb-2 object-contain" />
+                <img src={schoolDetails.logo} alt="School Logo" className="w-28 h-28 mx-auto mb-2 object-contain" />
             )}
           <h1 className="text-3xl font-bold uppercase">{schoolDetails?.name || 'School Name'}</h1>
           <p className="text-lg">{schoolDetails?.address || 'School Address'}</p>

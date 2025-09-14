@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student, Staff, Exam, HolisticRecord } from '../types';
 import Card from '../components/Card';
-import { IdCardIcon, ExamsIcon, CalendarIcon, CertificateIcon, LeavingIcon, AdmissionIcon, BonafideIcon } from '../components/icons';
+import { IdCardIcon, ExamsIcon, CalendarIcon, CertificateIcon, LeavingIcon, AdmissionIcon, BonafideIcon, SearchIcon, ClipboardListIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
@@ -268,7 +267,10 @@ const Certificates: React.FC = () => {
             </div>
             <input id="searchId" type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder={`${searchType === 'student' ? 'Adm No.' : 'Staff ID'}`} className={`${inputStyle} flex-1`} />
         </div>
-        <button onClick={handleSearch} className="w-full py-2 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold">Search</button>
+        <button onClick={handleSearch} className="w-full py-2 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold flex items-center justify-center gap-2">
+            <SearchIcon className="w-4 h-4" />
+            Search
+        </button>
         {error && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
       </Card>
 
@@ -282,12 +284,24 @@ const Certificates: React.FC = () => {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
-               <button onClick={handleGenerateAdmissionCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-teal-600`}>Adm. Cert</button>
-               <button onClick={handleGenerateStudentIdCard} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-blue-600`}>ID Card</button>
-               <button onClick={handleGenerateDobCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-purple-600`}>DOB Cert</button>
-               <button onClick={handleGenerateBonafideCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-pink-600`}>Bonafide</button>
-               <button onClick={() => setIsLeavingCertModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-red-600`}>Leaving Cert</button>
-               <button onClick={() => setIsNepCardModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-green-600`}>NEP Marks Card</button>
+               <button onClick={handleGenerateAdmissionCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-teal-600`}>
+                    <AdmissionIcon className="w-3.5 h-3.5" /> Adm. Cert
+               </button>
+               <button onClick={handleGenerateStudentIdCard} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-blue-600`}>
+                    <IdCardIcon className="w-3.5 h-3.5" /> ID Card
+               </button>
+               <button onClick={handleGenerateDobCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-purple-600`}>
+                    <CalendarIcon className="w-3.5 h-3.5" /> DOB Cert
+               </button>
+               <button onClick={handleGenerateBonafideCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-pink-600`}>
+                    <BonafideIcon className="w-3.5 h-3.5" /> Bonafide
+               </button>
+               <button onClick={() => setIsLeavingCertModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-red-600`}>
+                    <LeavingIcon className="w-3.5 h-3.5" /> Leaving Cert
+               </button>
+               <button onClick={() => setIsNepCardModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-green-600`}>
+                    <ExamsIcon className="w-3.5 h-3.5" /> NEP Card
+               </button>
           </div>
         </Card>
       )}
@@ -302,9 +316,15 @@ const Certificates: React.FC = () => {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
-               <button onClick={handleGenerateStaffIdCard} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-blue-600`}>ID Card</button>
-               <button onClick={() => setIsDutySlipModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-teal-600`}>Duty Slip</button>
-               <button onClick={() => setIsChargeModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-orange-600`}>Charge Cert</button>
+               <button onClick={handleGenerateStaffIdCard} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-blue-600`}>
+                    <IdCardIcon className="w-3.5 h-3.5" /> ID Card
+                </button>
+               <button onClick={() => setIsDutySlipModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-teal-600`}>
+                    <ClipboardListIcon className="w-3.5 h-3.5" /> Duty Slip
+                </button>
+               <button onClick={() => setIsChargeModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-orange-600`}>
+                    <CertificateIcon className="w-3.5 h-3.5" /> Charge Cert
+                </button>
             </div>
         </Card>
       )}

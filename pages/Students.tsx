@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Student } from '../types';
-import { StudentsIcon } from '../components/icons';
+import { StudentsIcon, UploadIcon, PlusIcon, SearchIcon, ArrowLeftIcon, ArrowRightIcon } from '../components/icons';
 import BulkAddStudentsModal from '../components/BulkAddStudentsModal';
 import Modal from '../components/Modal';
 import StudentForm from '../components/StudentForm';
@@ -11,9 +11,9 @@ import StudentCard from '../components/StudentCard';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 
-const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors disabled:opacity-60";
+const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-1";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
-const secondaryButtonStyle = `${buttonStyle} bg-gray-500/80 hover:bg-gray-500 text-white`;
+const secondaryButtonStyle = `${buttonStyle} bg-gray-600 hover:bg-gray-700 text-white`;
 
 const STUDENTS_PER_PAGE = 8;
 
@@ -114,17 +114,20 @@ const Students: React.FC = () => {
                     {classTabs.map(c => <option key={c} value={c}>Class {c}</option>)}
                 </select>
                 <div className="flex-shrink-0 flex items-center gap-2">
-                    <button onClick={() => setIsBulkAddModalOpen(true)} className={secondaryButtonStyle}>Bulk</button>
-                    <button onClick={handleAdd} className={accentButtonStyle}>Add</button>
+                    <button onClick={() => setIsBulkAddModalOpen(true)} className={secondaryButtonStyle}><UploadIcon className="w-4 h-4"/> Bulk</button>
+                    <button onClick={handleAdd} className={accentButtonStyle}><PlusIcon className="w-4 h-4"/> Add</button>
                 </div>
             </div>
-             <input
-                type="text"
-                placeholder={`Search in Class ${activeClass}...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="p-2 text-sm bg-background border border-input rounded-md w-full mb-2"
-            />
+             <div className="relative mb-2">
+                <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50"/>
+                <input
+                    type="text"
+                    placeholder={`Search in Class ${activeClass}...`}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="p-2 pl-8 text-sm bg-background border border-input rounded-md w-full"
+                />
+            </div>
 
             <div className="flex-1 grid grid-cols-2 gap-2">
                 {paginatedStudents.map((student) => (
@@ -152,10 +155,10 @@ const Students: React.FC = () => {
                 </div>
             )}
 
-            <div className="flex-shrink-0 flex items-center justify-center gap-4 pt-2 text-sm">
-                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="font-semibold disabled:opacity-50">Prev</button>
-                <span className="text-foreground/80">Page {currentPage} of {totalPages || 1}</span>
-                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="font-semibold disabled:opacity-50">Next</button>
+            <div className="flex-shrink-0 flex items-center justify-center gap-2 pt-2 text-sm">
+                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 disabled:opacity-50"><ArrowLeftIcon className="w-4 h-4"/></button>
+                <span className="text-foreground/80 font-semibold">Page {currentPage} of {totalPages || 1}</span>
+                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="p-2 disabled:opacity-50"><ArrowRightIcon className="w-4 h-4"/></button>
             </div>
             
             <Modal

@@ -5,6 +5,7 @@ import Card from '../components/Card';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
+import { BookmarkIcon, ClipboardListIcon } from '../components/icons';
 import SubjectTopperList from '../components/SubjectTopperList';
 import { Student } from '../types';
 
@@ -98,7 +99,10 @@ const Reports: React.FC = () => {
             <Card className="p-3">
                 <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Exam Reports</h2>
                 <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-primary">Subject Topper List</h3>
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                        <BookmarkIcon className="w-4 h-4" />
+                        <h3>Subject Topper List</h3>
+                    </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Select Exam</label>
                         <select value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)} className={inputStyle}>
@@ -127,7 +131,10 @@ const Reports: React.FC = () => {
             <Card className="p-3">
                 <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Class Reports</h2>
                 <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-primary">Class Roll Statement</h3>
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                        <ClipboardListIcon className="w-4 h-4" />
+                        <h3>Class Roll Statement</h3>
+                    </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Select Class</label>
                         <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className={inputStyle}>

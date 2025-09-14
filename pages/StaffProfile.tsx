@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Staff } from '../types';
 import Card from '../components/Card';
-import { EditIcon, TrashIcon, IdCardIcon, CertificateIcon } from '../components/icons';
+import { EditIcon, TrashIcon, CertificateIcon, TimetableIcon, BriefcaseIcon } from '../components/icons';
 import StaffTimetable from '../components/StaffTimetable';
 import Modal from '../components/Modal';
 import StaffForm from '../components/StaffForm';
@@ -86,12 +86,18 @@ const StaffProfile: React.FC = () => {
             </div>
             
             <Card className="p-3">
-                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Weekly Timetable</h3>
+                <div className="flex items-center gap-1.5 font-semibold text-md mb-2 border-b border-border pb-1">
+                    <TimetableIcon className="w-4 h-4 text-foreground/60" />
+                    <h3>Weekly Timetable</h3>
+                </div>
                 <StaffTimetable slots={timetable || []} />
             </Card>
 
             <Card className="p-3">
-                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Professional Details</h3>
+                <div className="flex items-center gap-1.5 font-semibold text-md mb-2 border-b border-border pb-1">
+                    <BriefcaseIcon className="w-4 h-4 text-foreground/60" />
+                    <h3>Professional Details</h3>
+                </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                     <span><strong className="font-medium text-foreground/70">Staff ID:</strong> {staff.staffId}</span>
                     <span><strong className="font-medium text-foreground/70">CPIS Code:</strong> {staff.cpisCode || 'N/A'}</span>

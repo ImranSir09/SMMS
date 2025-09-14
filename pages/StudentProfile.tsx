@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Student, Mark, Exam } from '../types';
 import Card from '../components/Card';
-import { EditIcon, TrashIcon, IdCardIcon } from '../components/icons';
+import { EditIcon, TrashIcon, IdCardIcon, UserIcon, HeartHandIcon, CreditCardIcon, BarChart3Icon } from '../components/icons';
 import LineChart from '../components/LineChart';
 import Modal from '../components/Modal';
 import StudentForm from '../components/StudentForm';
@@ -121,7 +121,10 @@ const StudentProfile: React.FC = () => {
             
             {/* Details Cards */}
             <Card className="p-3">
-                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Academic Performance</h3>
+                <div className="flex items-center gap-1.5 font-semibold text-md mb-2 border-b border-border pb-1">
+                    <BarChart3Icon className="w-4 h-4 text-foreground/60" />
+                    <h3>Academic Performance</h3>
+                </div>
                 {performanceData.length > 0 ? (
                     <LineChart data={performanceData} title="Overall Percentage per Exam" />
                 ) : (
@@ -130,7 +133,10 @@ const StudentProfile: React.FC = () => {
             </Card>
 
             <Card className="p-3">
-                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Personal & Academic Information</h3>
+                 <div className="flex items-center gap-1.5 font-semibold text-md mb-2 border-b border-border pb-1">
+                    <UserIcon className="w-4 h-4 text-foreground/60" />
+                    <h3>Personal & Academic Information</h3>
+                </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                     <InfoItem label="Admission No" value={student.admissionNo} />
                     <InfoItem label="Gender" value={student.gender} />
@@ -142,7 +148,10 @@ const StudentProfile: React.FC = () => {
             </Card>
 
             <Card className="p-3">
-                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Parent & Contact Information</h3>
+                <div className="flex items-center gap-1.5 font-semibold text-md mb-2 border-b border-border pb-1">
+                    <HeartHandIcon className="w-4 h-4 text-foreground/60" />
+                    <h3>Parent & Contact Information</h3>
+                </div>
                 <div className="grid grid-cols-1 gap-y-2 text-sm">
                     <InfoItem label="Father's Name" value={student.fathersName} />
                     <InfoItem label="Mother's Name" value={student.mothersName} />
@@ -152,7 +161,10 @@ const StudentProfile: React.FC = () => {
             </Card>
             
             <Card className="p-3">
-                <h3 className="font-semibold text-md mb-2 border-b border-border pb-1">Financial & Identity</h3>
+                <div className="flex items-center gap-1.5 font-semibold text-md mb-2 border-b border-border pb-1">
+                    <CreditCardIcon className="w-4 h-4 text-foreground/60" />
+                    <h3>Financial & Identity</h3>
+                </div>
                 <div className="grid grid-cols-1 gap-y-2 text-sm">
                     <InfoItem label="Aadhar No" value={student.aadharNo} />
                     <InfoItem label="Account No" value={student.accountNo} />

@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import Card from '../components/Card';
-import { StudentsIcon, StaffIcon, ExamsIcon, SchoolIcon } from '../components/icons';
+import { StudentsIcon, StaffIcon, ExamsIcon, SchoolIcon, BarChart3Icon, PieChartIcon, BriefcaseIcon, UsersIcon } from '../components/icons';
 import DoughnutChart from '../components/DoughnutChart';
 import { Student, Staff } from '../types';
 import { useAppData } from '../hooks/useAppData';
@@ -77,16 +77,26 @@ const Dashboard: React.FC = () => {
             </div>
         </li>
     );
+    
+    const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; action?: React.ReactNode; }> = ({ icon, title, action }) => (
+        <div className="flex justify-between items-center px-1 mb-1">
+            <div className="flex items-center gap-1.5">
+                {icon}
+                <h3 className="text-sm font-bold">{title}</h3>
+            </div>
+            {action}
+        </div>
+    );
 
     return (
         <div className="flex flex-col gap-3 animate-fade-in">
              {/* School Header */}
-            <div className="flex-shrink-0 flex items-center gap-3 p-3 bg-card rounded-lg shadow-sm">
+            <div className="flex-shrink-0 flex items-center gap-4 p-3 bg-card rounded-lg shadow-sm">
                 {schoolDetails?.logo ? (
-                    <img src={schoolDetails.logo} alt="School Logo" className="w-12 h-12 object-contain rounded-md" />
+                    <img src={schoolDetails.logo} alt="School Logo" className="w-16 h-16 object-contain rounded-md" />
                 ) : (
-                    <div className="w-12 h-12 flex items-center justify-center bg-primary/10 rounded-full">
-                        <SchoolIcon className="w-6 h-6 text-primary" />
+                    <div className="w-16 h-16 flex items-center justify-center bg-primary/10 rounded-full">
+                        <SchoolIcon className="w-8 h-8 text-primary" />
                     </div>
                 )}
                 <div>
@@ -104,14 +114,14 @@ const Dashboard: React.FC = () => {
             <div className="flex-1 grid grid-cols-2 grid-rows-[auto_1fr_auto] gap-3">
                 {/* At a Glance */}
                 <Card className="col-span-2 p-2 space-y-2">
-                    <h3 className="text-sm font-bold px-1">At a Glance</h3>
+                    <SectionHeader icon={<BarChart3Icon className="w-4 h-4 text-foreground/60" />} title="At a Glance" />
                     <div className="grid grid-cols-3 gap-2">
                         <StatCard
                             icon={<StudentsIcon />}
                             label="Students"
                             value={
                                 students ? (
-                                    <div className="flex items-baseline gap-2">
+                                    <div className="flex flex-col items-start">
                                         <span>{students.length}</span>
                                         <span className="text-xs font-normal text-foreground/70">
                                             ({genderCounts.male} Boys / {genderCounts.female} Girls)
@@ -128,7 +138,7 @@ const Dashboard: React.FC = () => {
                 
                 {/* Class Distribution */}
                 <Card className="p-2 flex flex-col">
-                    <h3 className="text-sm font-bold px-1 mb-1">Class Distribution</h3>
+                    <SectionHeader icon={<PieChartIcon className="w-4 h-4 text-foreground/60" />} title="Class Distribution" />
                     <div className="flex-1 flex items-center justify-center">
                         {chartData && chartData.length > 0 ? (
                         <DoughnutChart data={chartData} />
@@ -140,10 +150,11 @@ const Dashboard: React.FC = () => {
 
                 {/* Recently Added Staff */}
                 <Card className="p-2 flex flex-col">
-                    <div className="flex justify-between items-center px-1 mb-1">
-                        <h3 className="text-sm font-bold">Recent Staff</h3>
-                        <span onClick={() => navigate('/staff')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>
-                    </div>
+                     <SectionHeader 
+                        icon={<BriefcaseIcon className="w-4 h-4 text-foreground/60" />} 
+                        title="Recent Staff" 
+                        action={<span onClick={() => navigate('/staff')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>}
+                    />
                     {recentStaff.length > 0 ? (
                         <ul className="space-y-1 overflow-y-auto">
                             {recentStaff.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={s.designation} onClick={() => navigate(`/staff/${s.id}`)} />)}
@@ -155,10 +166,11 @@ const Dashboard: React.FC = () => {
 
                 {/* Recently Added Students */}
                 <Card className="col-span-2 p-2">
-                     <div className="flex justify-between items-center px-1 mb-1">
-                        <h3 className="text-sm font-bold">Recent Students</h3>
-                        <span onClick={() => navigate('/students')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>
-                    </div>
+                      <SectionHeader 
+                        icon={<UsersIcon className="w-4 h-4 text-foreground/60" />} 
+                        title="Recent Students" 
+                        action={<span onClick={() => navigate('/students')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>}
+                    />
                     {recentStudents.length > 0 ? (
                         <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
                             {recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} onClick={() => navigate(`/student/${s.id}`)} />)}

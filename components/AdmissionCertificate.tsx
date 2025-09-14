@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -29,7 +30,7 @@ const AdmissionCertificate: React.FC<AdmissionCertificateProps> = ({ student, sc
         <div className="w-full h-full border-4 border-double border-gray-800 p-6 flex flex-col z-10">
             <header className="text-center mb-8">
                 {schoolDetails?.logo && (
-                    <img src={schoolDetails.logo} alt="School Logo" className="w-24 h-24 mx-auto mb-2 object-contain" />
+                    <img src={schoolDetails.logo} alt="School Logo" className="w-28 h-28 mx-auto mb-2 object-contain" />
                 )}
                 <h1 className="text-4xl font-bold text-gray-900 tracking-wider">
                     {schoolDetails?.name || 'School Name'}

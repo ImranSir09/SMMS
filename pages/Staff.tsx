@@ -4,13 +4,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Staff } from '../types';
-import { StaffIcon } from '../components/icons';
+import { StaffIcon, PlusIcon, SearchIcon, ArrowLeftIcon, ArrowRightIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import StaffForm from '../components/StaffForm';
 import { useNavigate } from 'react-router-dom';
 import StaffCard from '../components/StaffCard';
 
-const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors";
+const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors flex items-center justify-center gap-1";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
 
 const STAFF_PER_PAGE = 8;
@@ -81,14 +81,17 @@ const Staff: React.FC = () => {
     return (
         <div className="flex flex-col">
             <div className="flex-shrink-0 flex items-center gap-2 mb-2">
-                <input
-                    type="text"
-                    placeholder="Search by name, designation..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="p-2 text-sm bg-background border border-input rounded-md w-full"
-                />
-                <button onClick={handleAdd} className={accentButtonStyle}>Add</button>
+                <div className="relative w-full">
+                    <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50"/>
+                    <input
+                        type="text"
+                        placeholder="Search by name, designation..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="p-2 pl-8 text-sm bg-background border border-input rounded-md w-full"
+                    />
+                </div>
+                <button onClick={handleAdd} className={accentButtonStyle}><PlusIcon className="w-4 h-4"/> Add</button>
             </div>
 
             <div className="flex-1 grid grid-cols-2 gap-2">
@@ -117,10 +120,10 @@ const Staff: React.FC = () => {
                 </div>
             )}
             
-            <div className="flex-shrink-0 flex items-center justify-center gap-4 pt-2 text-sm">
-                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="font-semibold disabled:opacity-50">Prev</button>
-                <span className="text-foreground/80">Page {currentPage} of {totalPages || 1}</span>
-                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="font-semibold disabled:opacity-50">Next</button>
+            <div className="flex-shrink-0 flex items-center justify-center gap-2 pt-2 text-sm">
+                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 disabled:opacity-50"><ArrowLeftIcon className="w-4 h-4"/></button>
+                <span className="text-foreground/80 font-semibold">Page {currentPage} of {totalPages || 1}</span>
+                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="p-2 disabled:opacity-50"><ArrowRightIcon className="w-4 h-4"/></button>
             </div>
             
             <Modal

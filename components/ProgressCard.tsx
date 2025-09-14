@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Student, SchoolDetails, Mark, StudentExamData } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -73,7 +74,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ student, marks, schoolDetai
             <div className="absolute inset-2 border border-slate-400"></div>
 
             <header className="text-center mb-2 z-10">
-                {schoolDetails.logo && <img src={schoolDetails.logo} alt="School Logo" className="h-16 w-16 mx-auto object-contain mb-1" />}
+                {schoolDetails.logo && <img src={schoolDetails.logo} alt="School Logo" className="h-28 w-28 mx-auto object-contain mb-1" />}
                 <h1 className="text-2xl font-bold font-gothic tracking-wide">{schoolDetails.name.toUpperCase()}</h1>
                 <p className="text-xs">{schoolDetails.address}</p>
             </header>

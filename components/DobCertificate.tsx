@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 
@@ -96,7 +97,7 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
                     {/* Header */}
                     <header className="text-center mb-8">
                         {schoolDetails?.logo && (
-                            <img src={schoolDetails.logo} alt="School Logo" className="w-24 h-24 mx-auto mb-2 object-contain" />
+                            <img src={schoolDetails.logo} alt="School Logo" className="w-28 h-28 mx-auto mb-2 object-contain" />
                         )}
                         <h1 className="text-3xl font-bold tracking-wider">
                             {schoolDetails?.name || 'School Name'}

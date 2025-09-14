@@ -1,11 +1,12 @@
 
+
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import { Exam } from '../types';
 import Card from '../components/Card';
-import { ClipboardListIcon, ExamsIcon } from '../components/icons';
+import { ClipboardListIcon, ExamsIcon, PlusIcon, TrashIcon } from '../components/icons';
 import Modal from '../components/Modal';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
@@ -67,7 +68,10 @@ const Exams: React.FC = () => {
 
     return (
         <div className="flex flex-col">
-            <button onClick={handleOpenCreateModal} className="w-full mb-3 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors">Create New Exam</button>
+            <button onClick={handleOpenCreateModal} className="w-full mb-3 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+                <PlusIcon className="w-5 h-5"/>
+                Create New Exam
+            </button>
             
             <div className="flex-1 grid grid-cols-2 gap-3 overflow-y-auto">
                 {exams?.map(exam => (
@@ -81,7 +85,9 @@ const Exams: React.FC = () => {
                                 <ClipboardListIcon className="w-3 h-3" />
                                 Marks
                             </button>
-                            <button onClick={() => handleDeleteExam(exam.id!)} className="text-[10px] text-red-500 hover:underline font-semibold">Delete</button>
+                            <button onClick={() => handleDeleteExam(exam.id!)} className="p-1 text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
+                                <TrashIcon className="w-3.5 h-3.5" />
+                            </button>
                        </div>
                     </Card>
                 ))}
@@ -112,7 +118,6 @@ const Exams: React.FC = () => {
                     >
                         {EXAM_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
-
                     <select
                         name="className"
                         value={newExamData.className}
@@ -120,12 +125,16 @@ const Exams: React.FC = () => {
                         required
                         className={inputStyle}
                     >
-                        <option value="" disabled>-- Select Class --</option>
+                        <option value="">-- Select Class --</option>
                         {CLASS_OPTIONS.map(cls => <option key={cls} value={cls}>{cls}</option>)}
                     </select>
-                     <div className="flex justify-end gap-2 pt-4">
-                        <button type="button" onClick={() => setIsCreateModalOpen(false)} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm">Cancel</button>
-                        <button type="button" onClick={handleSaveExam} className="py-2 px-4 rounded-md bg-success text-success-foreground hover:bg-success-hover text-sm">Create & Open</button>
+                    <div className="flex justify-end pt-2">
+                        <button 
+                            onClick={handleSaveExam}
+                            className="py-2 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors"
+                        >
+                            Create & Go to Marks
+                        </button>
                     </div>
                 </div>
             </Modal>

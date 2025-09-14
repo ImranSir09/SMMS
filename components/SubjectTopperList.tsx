@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 
@@ -32,7 +33,7 @@ const SubjectTopperList: React.FC<SubjectTopperListProps> = ({ toppers, examName
         <div className="relative z-10 flex flex-col h-full p-4">
             <header className="text-center mb-10">
                 {schoolDetails?.logo && (
-                    <img src={schoolDetails.logo} alt="School Logo" className="w-20 h-20 mx-auto mb-2 object-contain" />
+                    <img src={schoolDetails.logo} alt="School Logo" className="w-28 h-28 mx-auto mb-2 object-contain" />
                 )}
               <h1 className="text-3xl font-bold font-gothic text-blue-900 tracking-wider">{schoolDetails.name}</h1>
               <p className="text-md text-gray-700">{schoolDetails.address}</p>
