@@ -12,7 +12,7 @@ import { useAppData } from '../hooks/useAppData';
 type StatCardProps = {
     icon: React.ReactElement<{ className?: string }>;
     label: string;
-    value: number | string | undefined;
+    value: React.ReactNode;
     onClick?: () => void;
 };
 
@@ -23,7 +23,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, onClick }) => (
         </div>
         <div>
             <p className="text-xs text-foreground/70">{label}</p>
-            <p className="text-md font-bold">{value ?? '...'}</p>
+            <div className="text-md font-bold">{value ?? '...'}</div>
         </div>
     </div>
 );
@@ -35,12 +35,21 @@ const Dashboard: React.FC = () => {
     const staff = useLiveQuery(() => db.staff.toArray(), []);
     const exams = useLiveQuery(() => db.exams.count(), [], 0);
 
-    const { chartData, recentStudents, recentStaff } = useMemo(() => {
+    const { chartData, recentStudents, recentStaff, genderCounts } = useMemo(() => {
         const classCounts: { [key: string]: number } = {};
         let recentStudents: Student[] = [];
+        const genderCounts = { male: 0, female: 0, other: 0 };
+
         if (students) {
             students.forEach(student => {
                 classCounts[student.className] = (classCounts[student.className] || 0) + 1;
+                if (student.gender === 'Male') {
+                    genderCounts.male++;
+                } else if (student.gender === 'Female') {
+                    genderCounts.female++;
+                } else {
+                    genderCounts.other++;
+                }
             });
             recentStudents = [...students].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 4);
         }
@@ -51,7 +60,7 @@ const Dashboard: React.FC = () => {
 
         const recentStaff: Staff[] = staff ? [...staff].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 4) : [];
         
-        return { chartData, recentStudents, recentStaff };
+        return { chartData, recentStudents, recentStaff, genderCounts };
 
     }, [students, staff]);
 
@@ -97,7 +106,21 @@ const Dashboard: React.FC = () => {
                 <Card className="col-span-2 p-2 space-y-2">
                     <h3 className="text-sm font-bold px-1">At a Glance</h3>
                     <div className="grid grid-cols-3 gap-2">
-                        <StatCard icon={<StudentsIcon />} label="Students" value={students?.length} onClick={() => navigate('/students')} />
+                        <StatCard
+                            icon={<StudentsIcon />}
+                            label="Students"
+                            value={
+                                students ? (
+                                    <div className="flex items-baseline gap-2">
+                                        <span>{students.length}</span>
+                                        <span className="text-xs font-normal text-foreground/70">
+                                            ({genderCounts.male} Boys / {genderCounts.female} Girls)
+                                        </span>
+                                    </div>
+                                ) : '...'
+                            }
+                            onClick={() => navigate('/students')}
+                        />
                         <StatCard icon={<StaffIcon />} label="Staff" value={staff?.length} onClick={() => navigate('/staff')} />
                         <StatCard icon={<ExamsIcon />} label="Exams" value={exams} onClick={() => navigate('/exams')} />
                     </div>
