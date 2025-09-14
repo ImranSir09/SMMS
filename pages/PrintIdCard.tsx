@@ -4,7 +4,6 @@ import { db } from '../services/db';
 import { Student } from '../types';
 import IdCard from '../components/IdCard';
 import { useAppData } from '../hooks/useAppData';
-// FIX: Changed import from 'generatePdf' to 'generatePdfFromComponent' and updated the function call to pass the component directly.
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 
@@ -25,6 +24,7 @@ const PrintIdCard: React.FC = () => {
   
   const handleDownloadPdf = async () => {
     if (student && schoolDetails) {
+        // The generatePdfFromComponent will capture the new two-sided component layout
         await generatePdfFromComponent(
             <IdCard student={student} schoolDetails={schoolDetails} />,
             `ID-Card-${student.admissionNo}-${student.name}`
@@ -37,9 +37,9 @@ const PrintIdCard: React.FC = () => {
   }
 
   const ControlPanel = () => (
-      <div className="max-w-4xl mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
-        <h1 className="text-2xl font-bold text-gray-800">Document Preview</h1>
-        <p className="text-gray-600 mb-4">Preview for {student.name}'s ID Card.</p>
+      <div className="w-full mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
+        <h1 className="text-2xl font-bold text-gray-800">ID Card Preview</h1>
+        <p className="text-gray-600 mb-4">Preview for {student.name}'s ID Card (Front & Back).</p>
         <div className="flex flex-wrap gap-4">
              <button
                 onClick={handleDownloadPdf}
@@ -58,20 +58,34 @@ const PrintIdCard: React.FC = () => {
   );
 
   return (
-    <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
+    <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white flex flex-col items-center">
       <ControlPanel />
       
-      <div className="flex justify-center items-start">
-        <div id="student-id-card-printable">
-             <IdCard student={student} schoolDetails={schoolDetails} />
-        </div>
+      {/* This div is the target for both printing and PDF generation */}
+      <div id="student-id-card-printable">
+         <IdCard student={student} schoolDetails={schoolDetails} />
       </div>
 
       <style>{`
         @media print {
-          body * { visibility: hidden; }
-          #student-id-card-printable, #student-id-card-printable * { visibility: visible; }
-          #student-id-card-printable { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+          body, html {
+            background-color: white;
+          }
+          body * {
+             visibility: hidden;
+          }
+          #student-id-card-printable, #student-id-card-printable * {
+            visibility: visible;
+          }
+          #student-id-card-printable {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: auto;
+            transform: scale(0.95); /* Scale down slightly to fit on one page */
+            transform-origin: top left;
+          }
         }
       `}</style>
     </div>

@@ -8,102 +8,152 @@ interface DobCertificateProps {
 }
 
 const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails }) => {
-    const dob = new Date(student.dob + 'T00:00:00');
-    const day = !isNaN(dob.getTime()) ? dob.getDate() : '';
-    const month = !isNaN(dob.getTime()) ? dob.toLocaleString('en-US', { month: 'long' }) : '';
-    const year = !isNaN(dob.getTime()) ? dob.getFullYear() : '';
-    const classAndSection = `${student.className} ${student.section || ''}`.trim();
+    
+    // Helper function to convert a date string into a formatted word string
+    const dateToWords = (dateString: string): string => {
+        if (!dateString) return '_______________________';
+        const date = new Date(dateString + 'T00:00:00');
+        if (isNaN(date.getTime())) return '_______________________';
+        
+        const day = date.getDate();
+        const month = date.toLocaleString('en-US', { month: 'long' });
+        const year = date.getFullYear();
+
+        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        
+        const dayToOrdinalWord = (d: number): string => {
+            const ordinals = ['','First','Second','Third','Fourth','Fifth','Sixth','Seventh','Eighth','Ninth','Tenth','Eleventh','Twelfth','Thirteenth','Fourteenth','Fifteenth','Sixteenth','Seventeenth','Eighteenth','Nineteenth','Twentieth','Twenty-First','Twenty-Second','Twenty-Third','Twenty-Fourth','Twenty-Fifth','Twenty-Sixth','Twenty-Seventh','Twenty-Eighth','Twenty-Ninth','Thirtieth','Thirty-First'];
+            return ordinals[d] || d.toString();
+        };
+        
+        const yearToWords = (y: number): string => {
+            const yStr = y.toString();
+            let word = '';
+            if (y >= 2000) {
+                 word = "Two Thousand";
+                 const remainder = y % 100;
+                 if (remainder > 0) {
+                     word += ' and ';
+                     if (remainder < 10) word += ones[remainder];
+                     else if (remainder < 20) word += teens[remainder-10];
+                     else {
+                         word += tens[Math.floor(remainder/10)];
+                         if (remainder % 10 > 0) word += ` ${ones[remainder % 10]}`;
+                     }
+                 }
+                 return word;
+            }
+            if (y >= 1900) {
+                 word = 'Nineteen Hundred';
+                 const remainder = y % 100;
+                 if (remainder > 0) {
+                     word += ' and ';
+                     if (remainder < 10) word += ones[remainder];
+                     else if (remainder < 20) word += teens[remainder-10];
+                     else {
+                         word += tens[Math.floor(remainder/10)];
+                         if (remainder % 10 > 0) word += ` ${ones[remainder % 10]}`;
+                     }
+                 }
+                 return word;
+            }
+            return y.toString();
+        };
+        
+        return `${dayToOrdinalWord(day)} ${month}, ${yearToWords(year)}`;
+    };
+    
+    const formatDateDDMMYYYY = (dateString: string): string => {
+        if (!dateString) return '';
+        const date = new Date(dateString + 'T00:00:00');
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleDateString('en-GB');
+    };
+
+    const dobInWords = dateToWords(student.dob);
+    const dobDdMmYyyy = formatDateDDMMYYYY(student.dob);
+    const dateOfIssue = new Date().toLocaleDateString('en-GB');
+    const place = schoolDetails?.address.split(',').pop()?.trim() || '';
+    
+    const ParticularItem: React.FC<{ number: number; label: string; value?: string | null }> = ({ number, label, value }) => (
+        <div className="flex items-baseline">
+            <span className="w-8 font-semibold">{number}.</span>
+            <span className="w-2/5 text-gray-800">{label}:</span>
+            <span className="flex-1 font-bold border-b border-dotted border-black text-left pl-2">{value || ''}</span>
+        </div>
+    );
 
     return (
         <div className="A4-page-container">
-            <div id="dob-certificate" className="w-[210mm] h-[297mm] bg-white p-4 flex flex-col font-serif text-black relative">
-                <div className="w-full h-full border-2 border-black p-4 flex flex-col relative">
-                    {/* Background Logo */}
-                    {schoolDetails?.logo && (
-                        <div className="absolute inset-0 flex items-center justify-center z-0">
-                            <img src={schoolDetails.logo} alt="Logo" className="w-1/2 max-h-1/2 object-contain opacity-10" />
-                        </div>
-                    )}
+            <div id="dob-certificate" className="w-[210mm] h-[297mm] bg-white p-6 flex flex-col font-serif text-black">
+                
+                <header className="text-center mb-4 border-b-2 border-black pb-2">
+                    <h1 className="text-2xl font-bold uppercase">{schoolDetails?.name || 'School Name'}</h1>
+                    <p className="text-sm">{schoolDetails?.address || 'School Address'}</p>
+                    <p className="text-xs">
+                        Phone: {schoolDetails?.phone || 'N/A'} | Email: {schoolDetails?.email || 'N/A'} | UDISE: {schoolDetails?.udiseCode || 'N/A'}
+                    </p>
+                </header>
 
-                    <header className="relative z-10">
-                        <div className="flex justify-between items-start">
-                             <div className="flex flex-col items-center">
-                               {schoolDetails?.logo && (
-                                    <img src={schoolDetails.logo} alt="School Logo" className="w-16 h-16 object-contain" />
-                                )}
-                                <div className="text-sm font-bold font-gothic mt-1">
-                                    <p>Be Elite</p>
-                                </div>
-                            </div>
-                            <div className="text-center">
-                                <h1 className="text-2xl font-bold font-gothic text-black tracking-wider">
-                                    {schoolDetails?.name || 'School Name'}
-                                </h1>
-                                <p className="text-sm">{schoolDetails?.address || 'School Address'}</p>
-                                <p className="text-sm">
-                                  {schoolDetails?.phone && <span>Ph: {schoolDetails.phone}</span>}
-                                </p>
-                            </div>
-                            <div>
-                                {student.photo ? (
-                                    <img src={student.photo} alt={student.name} className="w-20 h-24 object-cover border-2 border-gray-400" />
-                                ) : (
-                                    <div className="w-20 h-24 border-2 border-gray-400 bg-gray-200 flex items-center justify-center text-xs text-gray-500">No Photo</div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-center z-10 text-sm mt-2">
-                            <span>Certificate No: ............</span>
-                            <span>Date of Issue: {new Date().toLocaleDateString('en-GB')}</span>
-                        </div>
-                        <h2 className="text-2xl font-semibold font-gothic text-center my-2 underline underline-offset-4">
-                            Date of Birth Certificate
-                        </h2>
-                    </header>
+                <h2 className="text-xl font-bold text-center my-3 underline underline-offset-4">Date of Birth Certificate</h2>
 
-                    <main className="flex-1 flex flex-col z-10 text-md leading-relaxed">
-                        <h3 className="text-center font-bold underline underline-offset-2 my-6">
-                            TO WHOM IT MAY CONCERN
-                        </h3>
-                        
-                        <div className="space-y-8 mt-4 text-base">
-                            <p className="flex items-end flex-wrap">
-                                This is to certify that Mr./Miss. 
-                                <span className="font-semibold border-b border-black flex-grow text-center mx-2">{student.name}</span>
-                            </p>
-                            <p className="flex items-end flex-wrap">
-                                Son / Daughter of
-                                <span className="font-semibold border-b border-black flex-grow text-center mx-2">{student.fathersName}</span>
-                            </p>
-                             <p className="flex items-end flex-wrap">
-                                is a regular student of this institution. At present, he/she is reading in
-                                <span className="font-semibold border-b border-black flex-grow text-center mx-2">{classAndSection}</span>
-                            </p>
-                            <p className="flex items-end flex-wrap">
-                                Under Admission No.
-                                <span className="font-semibold border-b border-black flex-grow text-center mx-2">{student.admissionNo}</span>
-                            </p>
-                            <p className="flex items-end flex-wrap">
-                                According to the school admission record, his/her date of birth is
-                                <span className="font-semibold border-b border-black w-16 text-center mx-2">{day}</span>
-                                <span className="font-semibold border-b border-black w-32 text-center mx-2">{month}</span>
-                                <span className="font-semibold border-b border-black w-24 text-center mx-2">{year}</span>
-                            </p>
-                            <p className="mt-8">
-                                His/Her character and conduct as per school records are satisfactory.
-                            </p>
-                        </div>
-                    </main>
+                <main className="flex-1 text-md leading-relaxed">
+                    <p className="mb-4 text-center italic text-sm">
+                        This is to certify that the particulars given below are true and correct to the best of our knowledge and records.
+                    </p>
+                    
+                    <div className="space-y-3 text-sm">
+                        <ParticularItem number={1} label="Name of Student" value={student.name} />
+                        <ParticularItem number={2} label="Date of Birth (in words)" value={dobInWords} />
+                        <ParticularItem number={3} label="Date of Birth (dd/mm/yyyy)" value={dobDdMmYyyy} />
+                        <ParticularItem number={4} label="Place of Birth" value="" />
+                        <ParticularItem number={5} label="Gender" value={student.gender} />
+                        <ParticularItem number={6} label="Mother’s Name" value={student.mothersName} />
+                        <ParticularItem number={7} label="Father’s Name" value={student.fathersName} />
+                        <ParticularItem number={8} label="Residential Address" value={student.address} />
 
-                    <footer className="mt-auto flex justify-between items-end z-10 pt-16 pb-2">
-                        <div className="text-center text-gray-600">
-                            <p className="font-semibold">(Official Seal)</p>
+                        <hr className="my-3 border-dashed" />
+
+                        <ParticularItem number={9} label="Admission/Registration Number" value={student.admissionNo} />
+                        <ParticularItem number={10} label="Class at Admission" value="" />
+                        <ParticularItem number={11} label="Date of Admission" value={formatDateDDMMYYYY(student.admissionDate || '')} />
+                        <ParticularItem number={12} label="Birth Verified From (document)" value="School Record" />
+                        <ParticularItem number={13} label="Certificate Issued For" value="Official Purpose" />
+                    </div>
+
+                    <div className="mt-3">
+                        <span className="italic text-sm">Remarks (if any):</span>
+                        <div className="w-full border-b border-dotted border-black mt-1 h-5"></div>
+                    </div>
+                </main>
+
+                <footer className="mt-auto pt-10 text-sm">
+                    <div className="flex justify-between items-start mb-12">
+                         <div>
+                            <p><span className="font-semibold">Date of Issue:</span> {dateOfIssue}</p>
+                            <p><span className="font-semibold">Place:</span> {place}</p>
                         </div>
                         <div className="text-center">
-                            <div className="border-t border-black w-56 mb-1"></div>
-                            <p className="font-semibold text-sm">Signature of Principal</p>
+                            <div className="w-56 h-16"></div> {/* Space for signature */}
+                            <div className="border-t border-black w-56"></div>
+                            <p className="font-semibold">Signature of Head of School / Principal</p>
+                            <p>Name: ____________________________</p>
+                            <p>Designation: _______________________</p>
                         </div>
-                    </footer>
+                    </div>
+                     <div className="text-center">
+                        <p className="font-semibold">School Seal:</p>
+                    </div>
+                </footer>
+                
+                <div className="text-xs text-gray-700 mt-4 border-t pt-2">
+                    <p className="font-bold">Note:</p>
+                    <ol className="list-decimal list-inside">
+                        <li>This certificate is issued on the basis of records and documents provided by the parent or guardian.</li>
+                        <li>This certificate does not serve as a legal birth certificate for government use unless specifically authorized by the issuing authority.</li>
+                    </ol>
                 </div>
             </div>
         </div>

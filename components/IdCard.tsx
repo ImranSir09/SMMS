@@ -7,77 +7,107 @@ interface IdCardProps {
 }
 
 const IdCard: React.FC<IdCardProps> = ({ student, schoolDetails }) => {
-  return (
-    <div className="w-[3.375in] h-[2.125in] bg-white rounded-lg shadow-xl flex flex-col font-sans text-slate-900 overflow-hidden border border-slate-200">
-      
-      {/* Header */}
-      <header className="flex items-center gap-2 p-2 bg-indigo-700 text-white">
-          {schoolDetails?.logo ? (
-              <div className="w-10 h-10 bg-white rounded-md p-1 flex-shrink-0">
-                <img src={schoolDetails.logo} alt="Logo" className="w-full h-full object-contain" />
-              </div>
-          ) : (
-              <div className="w-10 h-10 bg-white rounded-md"></div>
-          )}
-          <div>
-            <p className="font-gothic font-bold text-sm leading-tight tracking-wider">
-                {schoolDetails?.name || 'School Name'}
-            </p>
-            <p className="text-[8px] text-indigo-200 leading-tight">
-                {schoolDetails?.address || 'School Address'}
-            </p>
-          </div>
-      </header>
-      
-      {/* Body Content */}
-      <main className="flex flex-1 p-2 gap-2 min-h-0">
-          {/* Photo */}
-          <div className="w-1/3 flex-shrink-0">
-             {student.photo ? (
-                <img
-                  src={student.photo}
-                  alt={student.name}
-                  className="w-full h-full object-cover rounded-md border-2 border-slate-200"
-                />
-              ) : (
-                <div className="w-full h-full rounded-md bg-slate-200 flex items-center justify-center text-slate-500 text-center text-xs p-2">
-                  No Photo
-                </div>
-              )}
-          </div>
 
-          {/* Details */}
-          <div className="flex-1 text-[10px] grid grid-cols-2 gap-x-2 content-start">
-              <div className="col-span-2 mb-1">
-                  <p className="font-bold text-lg text-indigo-800 leading-tight tracking-tight">{student.name}</p>
-              </div>
-              <div>
-                <p className="font-semibold text-slate-500">CLASS</p>
-                <p className="font-bold text-xs">{student.className} '{student.section}'</p>
-              </div>
-              <div>
-                <p className="font-semibold text-slate-500">ROLL NO.</p>
-                <p className="font-bold text-xs">{student.rollNo}</p>
-              </div>
-              <div className="mt-1">
-                <p className="font-semibold text-slate-500">ADM. NO.</p>
-                <p className="font-bold text-xs">{student.admissionNo}</p>
-              </div>
-              <div className="mt-1">
-                <p className="font-semibold text-slate-500">D.O.B.</p>
-                <p className="font-bold text-xs">{student.dob}</p>
-              </div>
-               <div className="col-span-2 mt-1">
-                <p className="font-semibold text-slate-500">FATHER'S NAME</p>
-                <p className="font-bold text-xs">{student.fathersName}</p>
-              </div>
-          </div>
+  const CardFront = () => (
+    <div className="w-[3.375in] h-[2.125in] bg-white rounded-lg shadow-xl flex flex-col font-sans text-slate-900 overflow-hidden border border-slate-200">
+      {/* Top Bar */}
+      <div className="flex items-center p-2 bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-slate-700 dark:to-slate-800">
+        {schoolDetails?.logo && (
+          <img src={schoolDetails.logo} alt="Logo" className="w-10 h-10 object-contain" />
+        )}
+        <div className="ml-2 text-right flex-1">
+          <p className="font-bold text-sm text-indigo-800 dark:text-indigo-300 leading-tight">
+            {schoolDetails?.name || 'School Name'}
+          </p>
+        </div>
+      </div>
+
+      {/* Center Section */}
+      <main className="flex-1 flex flex-col items-center justify-center pt-1 text-center bg-slate-50 dark:bg-slate-900/50">
+        <div className="w-24 h-24 rounded-full p-1 border-2 border-indigo-500 shadow-lg">
+          {student.photo ? (
+            <img src={student.photo} alt={student.name} className="w-full h-full object-cover rounded-full" />
+          ) : (
+            <div className="w-full h-full rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs">No Photo</div>
+          )}
+        </div>
+        <h2 className="text-xl font-bold mt-2 text-slate-800 dark:text-slate-200">{student.name}</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Class: {student.className} '{student.section}'</p>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-indigo-700 text-white text-center text-[9px] font-bold p-1 tracking-widest">
-         STUDENT IDENTITY CARD
+      {/* Bottom Bar */}
+      <footer className="p-2 flex items-center justify-between bg-slate-100 dark:bg-slate-800 text-xs">
+        <div>
+          <p className="font-semibold text-slate-500 dark:text-slate-400">Student ID</p>
+          <p className="font-bold">{student.admissionNo}</p>
+        </div>
+        <div>
+          <img 
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=40x40&data=${student.admissionNo}`} 
+            alt="QR Code"
+            className="w-10 h-10"
+          />
+        </div>
+        <div className="text-right">
+          <p className="font-semibold text-slate-500 dark:text-slate-400">Roll No.</p>
+          <p className="font-bold">{student.rollNo}</p>
+        </div>
       </footer>
+    </div>
+  );
+
+  const CardBack = () => (
+    <div className="w-[3.375in] h-[2.125in] bg-white rounded-lg shadow-xl flex flex-col font-sans text-slate-900 overflow-hidden border border-slate-200 relative">
+        {/* Watermark */}
+        {schoolDetails?.logo && (
+            <div className="absolute inset-0 flex items-center justify-center z-0">
+                <img src={schoolDetails.logo} alt="Watermark" className="w-32 h-32 object-contain opacity-10" />
+            </div>
+        )}
+
+      {/* Header */}
+      <div className="text-center py-1 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 z-10">
+        <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">STUDENT INFORMATION</p>
+      </div>
+
+      {/* Details Block */}
+      <main className="flex-1 p-3 text-xs z-10 space-y-2">
+        <div className="grid grid-cols-[max-content_auto] gap-x-2 gap-y-1">
+          <strong className="text-slate-500 dark:text-slate-400">Father's Name:</strong>
+          <span>{student.fathersName}</span>
+          <strong className="text-slate-500 dark:text-slate-400">Mother's Name:</strong>
+          <span>{student.mothersName}</span>
+          <strong className="text-slate-500 dark:text-slate-400">Date of Birth:</strong>
+          <span>{student.dob}</span>
+          <strong className="text-slate-500 dark:text-slate-400">Blood Group:</strong>
+          <span>{student.bloodGroup || 'N/A'}</span>
+          <strong className="text-slate-500 dark:text-slate-400">Address:</strong>
+          <span className="truncate">{student.address}</span>
+        </div>
+        <div className="pt-2">
+          <p className="text-[10px] text-center italic text-slate-500 dark:text-slate-400">If found, please return to the school office.</p>
+        </div>
+      </main>
+
+      {/* Footer Bar */}
+      <footer className="p-2 border-t border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex justify-between items-center z-10">
+        <div className="text-xs">
+          <p className="font-bold text-slate-600 dark:text-slate-300">{schoolDetails?.name}</p>
+          <p className="text-slate-500 dark:text-slate-400">Ph: {schoolDetails?.phone}</p>
+        </div>
+        <div className="text-right">
+          {/* Placeholder for signature */}
+          <div className="w-24 h-6"></div> 
+          <p className="text-[10px] border-t border-slate-400 dark:border-slate-500 font-semibold">Principal's Signature</p>
+        </div>
+      </footer>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 p-2">
+      <CardFront />
+      <CardBack />
     </div>
   );
 };

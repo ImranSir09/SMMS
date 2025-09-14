@@ -9,6 +9,14 @@ interface AdmissionCertificateProps {
 }
 
 const AdmissionCertificate: React.FC<AdmissionCertificateProps> = ({ student, schoolDetails }) => {
+
+    const DetailItem: React.FC<{ label: string; value: string | undefined | null; colSpan?: number }> = ({ label, value, colSpan }) => (
+        <div className={`flex items-baseline ${colSpan === 2 ? 'col-span-2' : ''}`}>
+            <span className="font-semibold w-1/3 flex-shrink-0 text-gray-700">{label}:</span>
+            <span className="flex-1 font-bold border-b border-dotted border-gray-600 pl-2">{value || 'N/A'}</span>
+        </div>
+    );
+
   return (
     <div className="A4-page-container">
       <div id="admission-certificate" className="w-[210mm] h-[297mm] bg-white p-8 flex flex-col font-serif text-black relative">
@@ -38,29 +46,36 @@ const AdmissionCertificate: React.FC<AdmissionCertificateProps> = ({ student, sc
                 <p className="text-sm mt-1">Academic Year: 2024-25</p>
             </header>
 
-            <main className="flex-1 text-lg leading-relaxed">
+            <main className="flex-1 text-base leading-relaxed">
                 <p className="indent-8">
                     This is to certify that the student whose details are mentioned below has been granted admission to this institution for the academic session.
                 </p>
                 
-                <div className="my-6 p-4 border-y-2 border-dashed border-gray-300 grid grid-cols-[max-content_auto] gap-x-6 gap-y-4">
-                    <span className="font-semibold">Full Name:</span>
-                    <span className="font-bold">{student.name}</span>
+                <div className="my-6 p-4 border-y-2 border-dashed border-gray-400 grid grid-cols-2 gap-x-8 gap-y-3">
+                    <DetailItem label="Full Name" value={student.name} />
+                    <DetailItem label="Father's Name" value={student.fathersName} />
+                    
+                    <DetailItem label="Admission No" value={student.admissionNo} />
+                    <DetailItem label="Mother's Name" value={student.mothersName} />
 
-                    <span className="font-semibold">Admission Number:</span>
-                    <span>{student.admissionNo}</span>
+                    <DetailItem label="Class Admitted To" value={`${student.className} '${student.section}'`} />
+                    <DetailItem label="Contact Number" value={student.contact} />
+
+                    <DetailItem label="Date of Admission" value={student.admissionDate ? formatDateLong(student.admissionDate) : undefined} />
+                    <DetailItem label="Category" value={student.category} />
                     
-                    <span className="font-semibold">Class & Section:</span>
-                    <span>{student.className} '{student.section}'</span>
+                    <DetailItem label="Date of Birth" value={formatDateLong(student.dob)} />
+                    <DetailItem label="Blood Group" value={student.bloodGroup} />
                     
-                    <span className="font-semibold">Date of Admission:</span>
-                    <span>{student.admissionDate ? formatDateLong(student.admissionDate) : 'N/A'}</span>
+                    <DetailItem label="Gender" value={student.gender} />
+                    <DetailItem label="Aadhar Number" value={student.aadharNo} />
                     
-                    <span className="font-semibold">Date of Birth:</span>
-                    <span>{formatDateLong(student.dob)}</span>
+                    <DetailItem label="Address" value={student.address} colSpan={2} />
                 </div>
                 
-                <p className="mt-8">The school administration extends a warm welcome to the student and looks forward to a fruitful association. We are committed to providing a nurturing and challenging environment for their holistic development.</p>
+                <p className="mt-6">
+                    The school administration extends a warm welcome to the student and looks forward to a fruitful association. We are committed to providing a nurturing and challenging environment for their holistic development.
+                </p>
             </main>
 
             <footer className="mt-auto flex justify-between items-end pt-8 pb-2">

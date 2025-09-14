@@ -37,9 +37,9 @@ const PrintStaffIdCard: React.FC = () => {
   }
   
   const ControlPanel = () => (
-      <div className="max-w-4xl mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
-        <h1 className="text-2xl font-bold text-gray-800">Document Preview</h1>
-        <p className="text-gray-600 mb-4">Preview for {staff.name}'s ID Card.</p>
+      <div className="w-full mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
+        <h1 className="text-2xl font-bold text-gray-800">ID Card Preview</h1>
+        <p className="text-gray-600 mb-4">Preview for {staff.name}'s ID Card (Front & Back).</p>
         <div className="flex flex-wrap gap-4">
              <button
                 onClick={handleDownloadPdf}
@@ -58,20 +58,33 @@ const PrintStaffIdCard: React.FC = () => {
   );
 
   return (
-    <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
+    <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white flex flex-col items-center">
       <ControlPanel />
       
-      <div className="flex justify-center items-start">
-        <div id="staff-id-card-printable">
-            <StaffIdCard staff={staff} schoolDetails={schoolDetails} />
-        </div>
+      <div id="staff-id-card-printable">
+          <StaffIdCard staff={staff} schoolDetails={schoolDetails} />
       </div>
 
       <style>{`
         @media print {
-          body * { visibility: hidden; }
-          #staff-id-card-printable, #staff-id-card-printable * { visibility: visible; }
-          #staff-id-card-printable { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+          body, html {
+            background-color: white;
+          }
+          body * {
+             visibility: hidden;
+          }
+          #staff-id-card-printable, #staff-id-card-printable * {
+            visibility: visible;
+          }
+          #staff-id-card-printable {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: auto;
+            transform: scale(0.95);
+            transform-origin: top left;
+          }
         }
       `}</style>
     </div>

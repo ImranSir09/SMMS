@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
