@@ -20,10 +20,12 @@ root.render(
 // Register the service worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Register the service worker using a root-relative path.
-    // This is the most straightforward and reliable method, avoiding
-    // issues with URL construction in sandboxed or unusual environments.
-    navigator.serviceWorker.register('/sw.js')
+    // In some sandboxed environments, relative paths like '/sw.js' can be
+    // incorrectly resolved against the wrong origin. To fix this, we manually
+    // construct the absolute URL for the service worker from the current
+    // page's location properties, ensuring it's always registered from the correct origin.
+    const swUrl = `${window.location.protocol}//${window.location.host}/sw.js`;
+    navigator.serviceWorker.register(swUrl)
       .then(registration => {
         console.log('Service Worker registered with scope:', registration.scope);
       })
