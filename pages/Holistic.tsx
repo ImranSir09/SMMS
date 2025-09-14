@@ -32,10 +32,12 @@ const Holistic: React.FC = () => {
 
     const allStudents = useLiveQuery(() => db.students.toArray(), []);
 
-    const classTabs = useMemo(() => {
+    // FIX: Explicitly type the useMemo hook's return value as `string[]` to ensure
+    // TypeScript correctly infers the type of `classTabs`, resolving downstream errors.
+    const classTabs = useMemo<string[]>(() => {
         if (!allStudents) return [];
         const classSet = new Set(allStudents.map(s => s.className));
-        return Array.from(classSet).sort((a: string, b: string) => 
+        return Array.from(classSet).sort((a, b) => 
             a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
         );
     }, [allStudents]);

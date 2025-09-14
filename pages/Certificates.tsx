@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../services/db';
-import { Student, Staff } from '../types';
+import { Student, Staff, Exam, HolisticRecord } from '../types';
 import Card from '../components/Card';
 import { IdCardIcon, ExamsIcon, CalendarIcon, CertificateIcon, LeavingIcon, AdmissionIcon, BonafideIcon } from '../components/icons';
 import Modal from '../components/Modal';
@@ -18,6 +18,7 @@ import DutyCertificate from '../components/DutyCertificate';
 import AdmissionCertificate from '../components/AdmissionCertificate';
 import PhotoUploadModal from '../components/PhotoUploadModal';
 import BonafideCertificate from '../components/BonafideCertificate';
+import NepProgressCard from '../components/NepProgressCard';
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs transition-colors";
 const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
@@ -46,6 +47,11 @@ const Certificates: React.FC = () => {
   const [isDutyCertModalOpen, setIsDutyCertModalOpen] = useState(false);
   const [dutyCertDetails, setDutyCertDetails] = useState({ description: '', date: '' });
   const [photoUploadTarget, setPhotoUploadTarget] = useState<Student | Staff | null>(null);
+  
+  // NEP Modal States
+  const [isNepCardModalOpen, setIsNepCardModalOpen] = useState(false);
+  const [classExams, setClassExams] = useState<Exam[]>([]);
+  const [selectedExamIdForNep, setSelectedExamIdForNep] = useState('');
 
   const handleSearch = useCallback(async () => {
     setError('');
@@ -73,6 +79,21 @@ const Certificates: React.FC = () => {
         handleSearch();
     }
   }, [location.state, handleSearch]);
+  
+  // Fetch exams when modal is opened for a student
+  useEffect(() => {
+      if (isNepCardModalOpen && foundStudent) {
+          db.exams.where('className').equals(foundStudent.className).toArray()
+              .then(exams => {
+                  setClassExams(exams);
+                  if (exams.length > 0) {
+                      setSelectedExamIdForNep(String(exams[0].id!));
+                  } else {
+                      setSelectedExamIdForNep('');
+                  }
+              });
+      }
+  }, [isNepCardModalOpen, foundStudent]);
 
   const generateDoc = async (component: React.ReactElement, fileName: string) => {
       if (!schoolDetails) return;
@@ -115,6 +136,47 @@ const Certificates: React.FC = () => {
         }
         generateDoc(<SchoolLeavingCertificate student={foundStudent} schoolDetails={schoolDetails} leavingDetails={leavingCertDetails} />, `Leaving-Cert-${foundStudent.admissionNo}`);
         setIsLeavingCertModalOpen(false);
+    }
+  };
+
+  const handleGenerateNepCard = async () => {
+    if (!foundStudent || !selectedExamIdForNep || !schoolDetails) {
+        alert("Required data is missing to generate the card.");
+        return;
+    }
+    setIsGeneratingPdf(true);
+    try {
+        const examId = Number(selectedExamIdForNep);
+        const exam = await db.exams.get(examId);
+        if (!exam) throw new Error("Exam not found");
+
+        const studentMarks = await db.marks.where({ studentId: foundStudent.id!, examId }).toArray();
+        const studentHolisticRecords = await db.holisticRecords.where({ studentId: foundStudent.id! }).toArray();
+        
+        if (studentMarks.length === 0) {
+            alert(`No marks found for ${foundStudent.name} in the selected exam.`);
+            setIsGeneratingPdf(false);
+            return;
+        }
+
+        await generateDoc(
+            <NepProgressCard 
+                student={foundStudent}
+                marks={studentMarks}
+                holisticRecords={studentHolisticRecords}
+                schoolDetails={schoolDetails}
+                examName={exam.name}
+            />,
+            `NEP-Card-${exam.name}-${foundStudent.admissionNo}`
+        );
+        
+        setIsNepCardModalOpen(false);
+
+    } catch (error) {
+        console.error("NEP Card Generation failed:", error);
+        alert("Failed to generate NEP Progress Card.");
+    } finally {
+        setIsGeneratingPdf(false);
     }
   };
 
@@ -239,7 +301,7 @@ const Certificates: React.FC = () => {
                <button onClick={handleGenerateDobCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-purple-600`}>DOB Cert</button>
                <button onClick={handleGenerateBonafideCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-pink-600`}>Bonafide</button>
                <button onClick={() => setIsLeavingCertModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-red-600`}>Leaving Cert</button>
-               <button disabled className={`${docButtonStyle} bg-green-600`}>NEP Marks Card</button>
+               <button onClick={() => setIsNepCardModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-green-600`}>NEP Marks Card</button>
           </div>
         </Card>
       )}
@@ -308,6 +370,42 @@ const Certificates: React.FC = () => {
             title={`Upload Photo for ${photoUploadTarget?.name}`}
             onSave={handlePhotoSaveAndGenerate}
         />
+
+        <Modal
+            isOpen={isNepCardModalOpen}
+            onClose={() => setIsNepCardModalOpen(false)}
+            title="Generate NEP Progress Card"
+        >
+            <div className="p-4 space-y-4">
+                <p>Select an examination to generate the report card for <strong>{foundStudent?.name}</strong>.</p>
+                <div>
+                    <label htmlFor="examSelect" className={labelStyle}>Examination</label>
+                    <select
+                        id="examSelect"
+                        value={selectedExamIdForNep}
+                        onChange={e => setSelectedExamIdForNep(e.target.value)}
+                        className={inputStyle}
+                        disabled={classExams.length === 0}
+                    >
+                        {classExams.length > 0 ? (
+                            classExams.map(exam => <option key={exam.id} value={String(exam.id)}>{exam.name}</option>)
+                        ) : (
+                            <option>No exams found for this class</option>
+                        )}
+                    </select>
+                </div>
+                <div className="flex justify-end gap-2 pt-4">
+                    <button type="button" onClick={() => setIsNepCardModalOpen(false)} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm">Cancel</button>
+                    <button 
+                        onClick={handleGenerateNepCard}
+                        disabled={isGeneratingPdf || !selectedExamIdForNep} 
+                        className="py-2 px-4 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground text-sm disabled:opacity-60"
+                    >
+                        {isGeneratingPdf ? 'Generating...' : 'Generate'}
+                    </button>
+                </div>
+            </div>
+        </Modal>
     </div>
   );
 };
