@@ -34,7 +34,7 @@ const Holistic: React.FC = () => {
     const classTabs = useMemo<string[]>(() => {
         if (!allStudents) return [];
         const classSet = new Set(allStudents.map(s => s.className));
-        // FIX: Explicitly type the sort callback parameters to string to resolve TS error.
+        // FIX: Explicitly type the sort callback parameters to string to resolve a TypeScript inference issue.
         return Array.from(classSet).sort((a: string, b: string) => 
             a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
         );

@@ -372,6 +372,7 @@ const Certificates: React.FC = () => {
             onClose={() => setPhotoUploadTarget(null)}
             title={`Upload Photo for ${photoUploadTarget?.name}`}
             onSave={handlePhotoSaveAndGenerate}
+            aspectRatio={4 / 5}
         />
 
         <Modal

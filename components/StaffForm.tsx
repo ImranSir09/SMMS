@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Staff } from '../types';
 import { CloseIcon, PlusIcon } from './icons';
+import PhotoUploadModal from './PhotoUploadModal';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 const SUBJECT_OPTIONS = [
@@ -54,6 +54,7 @@ interface StaffFormProps {
 const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) => {
     const [formData, setFormData] = useState<Partial<Staff>>({ teachingAssignments: [], ...staffToEdit });
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
     useEffect(() => {
         setFormData({ teachingAssignments: [], ...staffToEdit });
@@ -72,6 +73,11 @@ const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) =
         }
     };
     
+    const handlePhotoSave = (photoBase64: string) => {
+        setFormData(prev => ({ ...prev, photo: photoBase64 }));
+        setIsPhotoModalOpen(false);
+    };
+
     const handleSaveClick = () => {
         const personalErrors = validateStaffPersonalDetails(formData);
         const professionalErrors = validateStaffProfessionalDetails(formData);
@@ -112,6 +118,19 @@ const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) =
     return (
         <>
             <main className="flex-1 p-6 overflow-y-auto space-y-6">
+                 <div className="flex items-center gap-4 border-b border-border pb-4">
+                    {formData.photo ? (
+                        <img src={formData.photo} alt="Staff" className="w-24 h-32 object-cover rounded-md border border-border" />
+                    ) : (
+                        <div className="w-24 h-32 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Photo</div>
+                    )}
+                    <div className="flex flex-col gap-2">
+                        <label className={labelStyle}>Staff Photo</label>
+                        <button type="button" onClick={() => setIsPhotoModalOpen(true)} className={`${secondaryButtonStyle} text-xs`}>
+                            Upload / Crop Photo
+                        </button>
+                    </div>
+                </div>
                 <section>
                     <h3 className="text-md font-semibold text-foreground border-b border-border pb-2 mb-4">Personal & Employment Details</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -208,6 +227,14 @@ const StaffForm: React.FC<StaffFormProps> = ({ staffToEdit, onSave, onClose }) =
                 <button type="button" onClick={onClose} className={secondaryButtonStyle}>Cancel</button>
                 <button type="button" onClick={handleSaveClick} className={successButtonStyle}>Save Staff</button>
             </footer>
+
+            <PhotoUploadModal
+                isOpen={isPhotoModalOpen}
+                onClose={() => setIsPhotoModalOpen(false)}
+                onSave={handlePhotoSave}
+                title="Upload Staff Photo"
+                aspectRatio={4 / 5}
+            />
         </>
     );
 };

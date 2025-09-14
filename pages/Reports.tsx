@@ -29,7 +29,7 @@ const Reports: React.FC = () => {
     const classOptions = useMemo<string[]>(() => {
         if (!students) return [];
         const classNames = students.map(s => s.className);
-        // FIX: Explicitly type the sort callback parameters to string to resolve TS error.
+        // FIX: Explicitly type the sort callback parameters to string to resolve a TypeScript inference issue.
         return [...new Set(classNames)].sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true }));
     }, [students]);
 
