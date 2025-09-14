@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -9,9 +10,13 @@ import ProgressCard from '../components/ProgressCard';
 import { PrintIcon } from '../components/icons';
 
 const SUBJECTS = ['English', 'Math', 'Science', 'Social Science', 'Urdu', 'Kashmiri'];
-const FA_FIELDS: (keyof Mark)[] = ['fa1', 'fa2', 'fa3', 'fa4', 'fa5', 'fa6'];
-const MARK_FIELDS: { key: keyof Mark; label: string; max: number }[] = [
-    ...FA_FIELDS.map((f, i) => ({ key: f, label: `FA${i+1}`, max: 5 })),
+const ALL_MARK_FIELDS: { key: keyof Mark; label: string; max: number }[] = [
+    { key: 'fa1', label: 'FA1', max: 5 },
+    { key: 'fa2', label: 'FA2', max: 5 },
+    { key: 'fa3', label: 'FA3', max: 5 },
+    { key: 'fa4', label: 'FA4', max: 5 },
+    { key: 'fa5', label: 'FA5', max: 5 },
+    { key: 'fa6', label: 'FA6', max: 5 },
     { key: 'coCurricular', label: 'CCA', max: 20 },
     { key: 'summative', label: 'SA', max: 50 },
 ];
@@ -34,6 +39,24 @@ const ExamMarks: React.FC = () => {
     const students = useLiveQuery(() => 
         exam ? db.students.where('className').equals(exam.className).sortBy('rollNo') : Promise.resolve([]), 
     [exam]);
+
+    const displayedMarkFields = useMemo(() => {
+        if (!exam) return [];
+
+        const examName = exam.name.toLowerCase();
+
+        if (examName.startsWith('fa1')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa1');
+        if (examName.startsWith('fa2')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa2');
+        if (examName.startsWith('fa3')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa3');
+        if (examName.startsWith('fa4')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa4');
+        if (examName.startsWith('fa5')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa5');
+        if (examName.startsWith('fa6')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa6');
+        if (examName.includes('co-curricular')) return ALL_MARK_FIELDS.filter(f => f.key === 'coCurricular');
+        if (examName.includes('summative')) return ALL_MARK_FIELDS.filter(f => f.key === 'summative');
+        
+        // Default case for 'Term 1', 'Final Exam', 'Other', etc.
+        return ALL_MARK_FIELDS;
+    }, [exam]);
 
     useEffect(() => {
         if (SUBJECTS.length > 0 && !activeSubject) {
@@ -95,7 +118,7 @@ const ExamMarks: React.FC = () => {
 
     const handleMarkChange = (studentId: number, subject: string, field: keyof Mark, value: string) => {
         const numericValue = Number(value);
-        const max = MARK_FIELDS.find(f => f.key === field)?.max;
+        const max = ALL_MARK_FIELDS.find(f => f.key === field)?.max;
         const markKey = `${studentId}-${subject}`;
 
         if (max !== undefined && (numericValue < 0 || numericValue > max)) {
@@ -117,10 +140,10 @@ const ExamMarks: React.FC = () => {
         setDirtyKeys(prev => new Set(prev).add(markKey));
     };
     
-    const calculateTotal = (marks: Partial<Mark> | undefined) => {
+    const calculateTotal = useCallback((marks: Partial<Mark> | undefined) => {
         if (!marks) return 0;
-        return MARK_FIELDS.reduce((sum, field) => sum + (Number(marks[field.key]) || 0), 0);
-    };
+        return displayedMarkFields.reduce((sum, field) => sum + (Number(marks[field.key]) || 0), 0);
+    }, [displayedMarkFields]);
 
     const handleGeneratePdf = async (student: Student) => {
         if (!schoolDetails || !exam) return;
@@ -189,7 +212,7 @@ const ExamMarks: React.FC = () => {
                     <thead className="sticky top-0 bg-background z-10">
                         <tr>
                             <th className={headerCellStyle}>Student</th>
-                            {MARK_FIELDS.map(f => <th key={String(f.key)} className={headerCellStyle}>{f.label}</th>)}
+                            {displayedMarkFields.map(f => <th key={String(f.key)} className={headerCellStyle}>{f.label}</th>)}
                             <th className={headerCellStyle}>Total</th>
                             <th className={headerCellStyle}>Report</th>
                         </tr>
@@ -204,7 +227,7 @@ const ExamMarks: React.FC = () => {
                                         <div className="truncate w-20">{student.name}</div>
                                         <div className="text-foreground/60">R. {student.rollNo}</div>
                                     </td>
-                                    {MARK_FIELDS.map(field => (
+                                    {displayedMarkFields.map(field => (
                                         <td key={String(field.key)} className={cellStyle}>
                                             <input
                                                 type="number"

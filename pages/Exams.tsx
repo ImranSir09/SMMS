@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +9,21 @@ import { ClipboardListIcon, ExamsIcon } from '../components/icons';
 import Modal from '../components/Modal';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
-const EXAM_OPTIONS = ['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'CCA', 'SA', 'Other'];
+const EXAM_OPTIONS = [
+    'Term 1',
+    'Mid-Term',
+    'Term 2',
+    'Final Exam',
+    'FA1',
+    'FA2',
+    'FA3',
+    'FA4',
+    'FA5',
+    'FA6',
+    'Co-Curricular',
+    'Summative Assessment',
+    'Other'
+];
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
