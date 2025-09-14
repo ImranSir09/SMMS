@@ -10,10 +10,6 @@ import Modal from '../components/Modal';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 const EXAM_OPTIONS = [
-    'Term 1',
-    'Mid-Term',
-    'Term 2',
-    'Final Exam',
     'FA1',
     'FA2',
     'FA3',
@@ -22,7 +18,6 @@ const EXAM_OPTIONS = [
     'FA6',
     'Co-Curricular',
     'Summative Assessment',
-    'Other'
 ];
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
@@ -30,19 +25,17 @@ const inputStyle = "p-2 w-full bg-background border border-input rounded-md focu
 const Exams: React.FC = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newExamData, setNewExamData] = useState({ name: '', className: '' });
-    const [customExamName, setCustomExamName] = useState('');
     const exams = useLiveQuery(() => db.exams.toArray(), []);
     const navigate = useNavigate();
     
     const handleOpenCreateModal = () => {
         setNewExamData({ name: EXAM_OPTIONS[0], className: '' });
-        setCustomExamName('');
         setIsCreateModalOpen(true);
     };
 
     const handleSaveExam = async () => {
         try {
-            const examNameToSave = newExamData.name === 'Other' ? customExamName.trim() : newExamData.name;
+            const examNameToSave = newExamData.name;
     
             if (!examNameToSave || !newExamData.className) {
                 alert("Please provide an exam name and select a class.");
@@ -117,19 +110,8 @@ const Exams: React.FC = () => {
                         required
                         className={inputStyle}
                     >
-                        {EXAM_OPTIONS.map(opt => <option key={opt} value={opt}>{opt === 'Other' ? 'Other...' : opt}</option>)}
+                        {EXAM_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
-
-                    {newExamData.name === 'Other' && (
-                        <input
-                            type="text"
-                            value={customExamName}
-                            onChange={(e) => setCustomExamName(e.target.value)}
-                            placeholder="Enter Custom Exam Name"
-                            required
-                            className={`${inputStyle} animate-fade-in`}
-                        />
-                    )}
 
                     <select
                         name="className"
