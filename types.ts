@@ -95,3 +95,14 @@ export interface TimetableSlot {
     className: string;
     subject: string;
 }
+
+export interface HolisticRecord {
+  id?: number;
+  studentId: number;
+  className: string;
+  academicYear: string; // e.g., '2024-25'
+  domain: 'Co-Curricular' | 'Personal & Social' | 'Subject Specific';
+  aspect: string; // e.g., 'Art & Craft', 'Discipline', 'English: Reading'
+  grade: 'A' | 'B' | 'C' | '' ; // A=Exceeds, B=Meets, C=Needs Support
+  remarks?: string;
+}

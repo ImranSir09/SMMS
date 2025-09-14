@@ -1,6 +1,6 @@
 import Dexie, { Table } from 'dexie';
 // FIX: Import DailyLog type to be used in the database schema definition.
-import { SchoolDetails, Student, Staff, Exam, Mark, DailyLog, TimetableSlot, StudentExamData } from '../types';
+import { SchoolDetails, Student, Staff, Exam, Mark, DailyLog, TimetableSlot, StudentExamData, HolisticRecord } from '../types';
 
 // FIX: Resolved issues where TypeScript could not find Dexie's base methods
 // (e.g., 'version', 'transaction', 'tables') on the subclassed AppDB. 
@@ -16,6 +16,7 @@ export const db = new Dexie('AegisSchoolDB') as Dexie & {
   dailyLogs: Table<DailyLog, number>;
   timetable: Table<TimetableSlot, number>;
   studentExamData: Table<StudentExamData, number>;
+  holisticRecords: Table<HolisticRecord, number>;
 };
 
 // Dexie versions must be in ascending order.
@@ -161,4 +162,17 @@ db.version(11).upgrade(tx => {
         student.category = student.category || '';
         student.bloodGroup = student.bloodGroup || '';
     });
+});
+
+// v12: Add holisticRecords table for NEP 2020 data
+db.version(12).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className',
+  staff: '++id, name, staffId, designation, subjects',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  timetable: '++id, &[staffId+day+period], staffId, day, period',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  holisticRecords: '++id, &[studentId+domain+aspect], studentId, className',
 });
