@@ -77,10 +77,9 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
     const dateOfIssue = new Date().toLocaleDateString('en-GB');
     const place = schoolDetails?.address.split(',').pop()?.trim() || '';
     
-    const ParticularItem: React.FC<{ number: number; label: string; value?: string | null }> = ({ number, label, value }) => (
-        <div className="flex items-baseline">
-            <span className="w-8 font-semibold">{number}.</span>
-            <span className="w-2/5 text-gray-800">{label}:</span>
+    const DetailItem: React.FC<{ label: string; value?: string | null; fullWidth?: boolean }> = ({ label, value, fullWidth }) => (
+        <div className={`flex items-baseline ${fullWidth ? 'col-span-2' : ''}`}>
+            <span className="w-2/5 font-semibold text-gray-700">{label}:</span>
             <span className="flex-1 font-bold border-b border-dotted border-black text-left pl-2">{value || ''}</span>
         </div>
     );
@@ -101,29 +100,25 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
 
                 <main className="flex-1 text-md leading-relaxed">
                     <p className="mb-4 text-center italic text-sm">
-                        This is to certify that the particulars given below are true and correct to the best of our knowledge and records.
+                        This is to certify that according to the school records, the particulars of the student are as under:
                     </p>
                     
-                    <div className="space-y-3 text-sm">
-                        <ParticularItem number={1} label="Name of Student" value={student.name} />
-                        <ParticularItem number={2} label="Date of Birth (in words)" value={dobInWords} />
-                        <ParticularItem number={3} label="Date of Birth (dd/mm/yyyy)" value={dobDdMmYyyy} />
-                        <ParticularItem number={4} label="Place of Birth" value="" />
-                        <ParticularItem number={5} label="Gender" value={student.gender} />
-                        <ParticularItem number={6} label="Mother’s Name" value={student.mothersName} />
-                        <ParticularItem number={7} label="Father’s Name" value={student.fathersName} />
-                        <ParticularItem number={8} label="Residential Address" value={student.address} />
-
-                        <hr className="my-3 border-dashed" />
-
-                        <ParticularItem number={9} label="Admission/Registration Number" value={student.admissionNo} />
-                        <ParticularItem number={10} label="Class at Admission" value="" />
-                        <ParticularItem number={11} label="Date of Admission" value={formatDateDDMMYYYY(student.admissionDate || '')} />
-                        <ParticularItem number={12} label="Birth Verified From (document)" value="School Record" />
-                        <ParticularItem number={13} label="Certificate Issued For" value="Official Purpose" />
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm mt-6">
+                        <DetailItem label="Name of Student" value={student.name} />
+                        <DetailItem label="Admission No." value={student.admissionNo} />
+                        <DetailItem label="Father’s Name" value={student.fathersName} />
+                        <DetailItem label="Mother’s Name" value={student.mothersName} />
+                        <DetailItem label="Gender" value={student.gender} />
+                        <DetailItem label="Date of Birth" value={dobDdMmYyyy} />
+                        <DetailItem label="Date of Birth (in words)" value={dobInWords} fullWidth={true} />
+                        <DetailItem label="Place of Birth" value="" />
+                        <DetailItem label="Date of Admission" value={formatDateDDMMYYYY(student.admissionDate || '')} />
+                        <DetailItem label="Class at Admission" value="" />
+                        <DetailItem label="Birth Verified From" value="School Record" />
+                        <DetailItem label="Residential Address" value={student.address} fullWidth={true} />
                     </div>
 
-                    <div className="mt-3">
+                    <div className="mt-6">
                         <span className="italic text-sm">Remarks (if any):</span>
                         <div className="w-full border-b border-dotted border-black mt-1 h-5"></div>
                     </div>

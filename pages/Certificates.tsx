@@ -14,7 +14,6 @@ import StaffIdCard from '../components/StaffIdCard';
 import DutySlip from '../components/DutySlip';
 import ChargeCertificate from '../components/ChargeCertificate';
 import SchoolLeavingCertificate from '../components/SchoolLeavingCertificate';
-import DutyCertificate from '../components/DutyCertificate';
 import AdmissionCertificate from '../components/AdmissionCertificate';
 import PhotoUploadModal from '../components/PhotoUploadModal';
 import BonafideCertificate from '../components/BonafideCertificate';
@@ -44,8 +43,6 @@ const Certificates: React.FC = () => {
   const [chargeDetails, setChargeDetails] = useState({ chargeName: '', date: '' });
   const [isLeavingCertModalOpen, setIsLeavingCertModalOpen] = useState(false);
   const [leavingCertDetails, setLeavingCertDetails] = useState({ leavingDate: '', reasonForLeaving: '', conduct: 'Good', promotionGranted: 'Yes' as 'Yes' | 'No' | 'N/A' });
-  const [isDutyCertModalOpen, setIsDutyCertModalOpen] = useState(false);
-  const [dutyCertDetails, setDutyCertDetails] = useState({ description: '', date: '' });
   const [photoUploadTarget, setPhotoUploadTarget] = useState<Student | Staff | null>(null);
   
   // NEP Modal States
@@ -211,17 +208,6 @@ const Certificates: React.FC = () => {
       setIsChargeModalOpen(false);
     }
   };
-
-  const handleGenerateDutyCertificate = () => {
-    if (foundStaff) {
-      if (!dutyCertDetails.description.trim() || !dutyCertDetails.date) {
-            alert('Please fill all required fields.');
-            return;
-      }
-      generateDoc(<DutyCertificate staff={foundStaff} schoolDetails={schoolDetails} dutyDetails={dutyCertDetails} />, `Duty-Cert-${foundStaff.staffId}`);
-      setIsDutyCertModalOpen(false);
-    }
-  };
   
   const handlePhotoSaveAndGenerate = async (photoBase64: string) => {
     if (!photoUploadTarget || !photoUploadTarget.id || !schoolDetails) return;
@@ -315,11 +301,10 @@ const Certificates: React.FC = () => {
               <p className="text-xs text-foreground/80">{foundStaff.designation}</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
                <button onClick={handleGenerateStaffIdCard} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-blue-600`}>ID Card</button>
                <button onClick={() => setIsDutySlipModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-teal-600`}>Duty Slip</button>
                <button onClick={() => setIsChargeModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-orange-600`}>Charge Cert</button>
-               <button onClick={() => setIsDutyCertModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-indigo-600`}>Duty Cert</button>
             </div>
         </Card>
       )}
@@ -361,8 +346,6 @@ const Certificates: React.FC = () => {
                 </form>
             </Modal>
         )}
-
-       {isDutyCertModalOpen && renderModalForm("Create Duty Certificate", dutyCertDetails, setDutyCertDetails, setIsDutyCertModalOpen, handleGenerateDutyCertificate, [{id: 'description', label: 'Duty Description', type: 'text', required: true}, {id: 'date', label: 'Date of Duty', type: 'date', required: true}])}
        
        <PhotoUploadModal
             isOpen={!!photoUploadTarget}

@@ -25,12 +25,11 @@ const Reports: React.FC = () => {
 
     const [selectedClass, setSelectedClass] = useState('');
 
-    // FIX: Explicitly type the useMemo hook's return value as `string[]` to ensure
-    // TypeScript correctly infers the type of `classOptions`, resolving downstream errors.
     const classOptions = useMemo<string[]>(() => {
         if (!students) return [];
         const classNames = students.map(s => s.className);
-        return [...new Set(classNames)].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+        // FIX: Explicitly type the sort callback parameters to string to resolve TS error.
+        return [...new Set(classNames)].sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true }));
     }, [students]);
 
     const handleGenerateTopperList = async () => {

@@ -28,12 +28,11 @@ const Students: React.FC = () => {
     const students = useLiveQuery(() => db.students.toArray(), []);
     const navigate = useNavigate();
 
-    // FIX: Explicitly type the useMemo hook's return value as `string[]` to ensure
-    // TypeScript correctly infers the type of `classTabs`, resolving downstream errors.
     const classTabs = useMemo<string[]>(() => {
         if (!students) return [];
         const classSet = new Set(students.map(s => s.className));
-        return Array.from(classSet).sort((a, b) => 
+        // FIX: Explicitly type the sort callback parameters to string to resolve TS error.
+        return Array.from(classSet).sort((a: string, b: string) => 
             a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
         );
     }, [students]);
