@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -9,6 +10,7 @@ import Modal from '../components/Modal';
 import StaffForm from '../components/StaffForm';
 import { useNavigate } from 'react-router-dom';
 import StaffCard from '../components/StaffCard';
+import { useToast } from '../contexts/ToastContext';
 
 const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors flex items-center justify-center gap-1";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
@@ -20,6 +22,7 @@ const Staff: React.FC = () => {
     const [editingStaff, setEditingStaff] = useState<Partial<Staff> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const { addToast } = useToast();
     
     const staff = useLiveQuery(() => db.staff.toArray(), []);
     const navigate = useNavigate();
@@ -52,20 +55,17 @@ const Staff: React.FC = () => {
         try {
             const existingStaff = await db.staff.where('staffId').equals(staffMember.staffId).first();
             if (existingStaff && existingStaff.id !== staffMember.id) {
-                alert(`Staff ID '${staffMember.staffId}' is already taken.`);
+                addToast(`Staff ID '${staffMember.staffId}' is already taken.`, 'error');
                 return;
             }
     
             const staffToSave = { ...staffMember, teachingAssignments: staffMember.teachingAssignments || [] };
-            // FIX: Replaced the conditional add/update logic with `db.staff.put`.
-            // `put` handles both creating new records and updating existing ones, simplifying the code.
-            // This also resolves a latent TypeScript error similar to the one in StaffProfile,
-            // caused by Dexie's `update` typings with nested arrays.
             await db.staff.put(staffToSave);
             handleCloseForm();
+            addToast(`Staff member ${staffMember.id ? 'updated' : 'added'} successfully.`, 'success');
         } catch (error) {
             console.error("Failed to save staff member:", error);
-            alert("An error occurred while saving the staff member. Please check the console for details.");
+            addToast("An error occurred while saving the staff member.", 'error');
         }
     };
 

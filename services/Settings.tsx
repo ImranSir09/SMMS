@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { db } from '../services/db';
 import { SchoolDetails } from '../types';
 import Card from '../components/Card';
 import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon } from '../components/icons';
+import { useToast } from '../contexts/ToastContext';
 
 const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs transition-colors";
 const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors";
@@ -12,6 +14,7 @@ const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground ho
 
 const Settings: React.FC = () => {
     const { schoolDetails, refreshSchoolDetails } = useAppData();
+    const { addToast } = useToast();
     const [details, setDetails] = useState<Partial<SchoolDetails>>({});
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -74,10 +77,13 @@ const Settings: React.FC = () => {
 
 
     const handleSaveDetails = async () => {
-        if (!validateDetails()) return;
+        if (!validateDetails()) {
+            addToast('Please correct the errors before saving.', 'error');
+            return;
+        }
         if (details.id) {
             await db.schoolDetails.update(details.id, details);
-            alert('School details updated!');
+            addToast('School details updated successfully!', 'success');
             refreshSchoolDetails();
         }
     };
@@ -99,10 +105,11 @@ const Settings: React.FC = () => {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+            addToast('Backup downloaded successfully!', 'success');
 
         } catch (error) {
             console.error("Backup failed:", error);
-            alert("Backup failed. See console for details.");
+            addToast('Backup failed. See console for details.', 'error');
         }
     };
 
@@ -150,12 +157,12 @@ const Settings: React.FC = () => {
                     }
                 });
 
-                alert('Data restored successfully! The application will now reload.');
+                addToast('Data restored successfully! The application will now reload.', 'success');
                 refreshSchoolDetails();
-                window.location.reload();
+                setTimeout(() => window.location.reload(), 2000);
             } catch (error: any) {
                 console.error("Restore failed:", error);
-                alert(`Restore failed: ${error.message}. Make sure it's a valid backup file for this application.`);
+                addToast(`Restore failed: ${error.message}. Make sure it's a valid backup file for this application.`, 'error');
             } finally {
                 if (event.target) event.target.value = '';
             }
@@ -172,11 +179,11 @@ const Settings: React.FC = () => {
                             await table.clear();
                         }
                     });
-                    alert('All data has been reset. The application will now reload.');
-                    window.location.reload();
+                    addToast('All data has been reset. The application will now reload.', 'info');
+                    setTimeout(() => window.location.reload(), 2000);
                 } catch (error) {
                     console.error("Failed to reset data:", error);
-                    alert("An error occurred while resetting the data. See console for details.");
+                    addToast("An error occurred while resetting the data. See console for details.", 'error');
                 }
             }
         }

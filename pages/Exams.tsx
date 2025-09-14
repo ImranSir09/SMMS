@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +9,7 @@ import { Exam } from '../types';
 import Card from '../components/Card';
 import { ClipboardListIcon, ExamsIcon, PlusIcon, TrashIcon } from '../components/icons';
 import Modal from '../components/Modal';
+import { useToast } from '../contexts/ToastContext';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 const EXAM_OPTIONS = [
@@ -28,6 +30,7 @@ const Exams: React.FC = () => {
     const [newExamData, setNewExamData] = useState({ name: '', className: '' });
     const exams = useLiveQuery(() => db.exams.toArray(), []);
     const navigate = useNavigate();
+    const { addToast } = useToast();
     
     const handleOpenCreateModal = () => {
         setNewExamData({ name: EXAM_OPTIONS[0], className: '' });
@@ -39,15 +42,16 @@ const Exams: React.FC = () => {
             const examNameToSave = newExamData.name;
     
             if (!examNameToSave || !newExamData.className) {
-                alert("Please provide an exam name and select a class.");
+                addToast("Please provide an exam name and select a class.", 'error');
                 return;
             }
             const newId = await db.exams.add({ name: examNameToSave, className: newExamData.className });
             setIsCreateModalOpen(false);
+            addToast('Exam created successfully!', 'success');
             navigate(`/exams/${newId}`);
         } catch (error) {
             console.error("Failed to save exam:", error);
-            alert("An error occurred while creating the exam.");
+            addToast("An error occurred while creating the exam.", 'error');
         }
     };
 
@@ -59,9 +63,10 @@ const Exams: React.FC = () => {
                     await db.marks.where('examId').equals(id).delete();
                     await db.studentExamData.where('examId').equals(id).delete();
                 });
+                addToast('Exam and all associated marks deleted.', 'success');
             } catch (error) {
                 console.error("Failed to delete exam:", error);
-                alert("An error occurred while deleting the exam.");
+                addToast("An error occurred while deleting the exam.", 'error');
             }
         }
     }

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -8,12 +9,14 @@ import { EditIcon, TrashIcon, IdCardIcon, UserIcon, HeartHandIcon, CreditCardIco
 import LineChart from '../components/LineChart';
 import Modal from '../components/Modal';
 import StudentForm from '../components/StudentForm';
+import { useToast } from '../contexts/ToastContext';
 
 const buttonStyle = "py-2 px-3 text-xs font-semibold rounded-md flex items-center justify-center gap-1.5 transition-colors";
 
 const StudentProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { addToast } = useToast();
 
     const studentId = useMemo(() => {
         const numId = Number(id);
@@ -64,9 +67,10 @@ const StudentProfile: React.FC = () => {
             try {
                 await db.students.update(studentId, studentData);
                 setIsFormOpen(false);
+                addToast('Student details updated successfully!', 'success');
             } catch (error) {
                 console.error("Failed to update student:", error);
-                alert("An error occurred while updating student details.");
+                addToast("An error occurred while updating student details.", 'error');
             }
         }
     };
@@ -80,9 +84,10 @@ const StudentProfile: React.FC = () => {
                     await db.students.delete(studentId);
                 });
                 navigate('/students');
+                addToast(`${student.name} was deleted successfully.`, 'success');
             } catch (error) {
                 console.error("Failed to delete student:", error);
-                alert("An error occurred while deleting the student.");
+                addToast("An error occurred while deleting the student.", 'error');
             }
         }
     };

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -8,6 +9,7 @@ import Modal from '../components/Modal';
 import StudentForm from '../components/StudentForm';
 import { useNavigate } from 'react-router-dom';
 import StudentCard from '../components/StudentCard';
+import { useToast } from '../contexts/ToastContext';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 
@@ -24,6 +26,7 @@ const Students: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeClass, setActiveClass] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const { addToast } = useToast();
     
     const students = useLiveQuery(() => db.students.toArray(), []);
     const navigate = useNavigate();
@@ -76,7 +79,7 @@ const Students: React.FC = () => {
         try {
             const existingStudent = await db.students.where('admissionNo').equals(studentData.admissionNo).first();
             if (existingStudent && existingStudent.id !== studentData.id) {
-                alert(`Admission number '${studentData.admissionNo}' is already taken.`);
+                addToast(`Admission number '${studentData.admissionNo}' is already taken.`, 'error');
                 return;
             }
     
@@ -86,10 +89,11 @@ const Students: React.FC = () => {
                 await db.students.add(studentData);
             }
             handleCloseForm();
+            addToast(`Student ${studentData.id ? 'updated' : 'added'} successfully.`, 'success');
             setActiveClass(studentData.className);
         } catch (error) {
             console.error("Failed to save student:", error);
-            alert("An error occurred while saving the student. Please check the console for details.");
+            addToast("An error occurred while saving the student.", 'error');
         }
     };
 

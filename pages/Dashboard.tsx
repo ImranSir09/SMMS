@@ -1,11 +1,12 @@
 
+
 import React, { useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import Card from '../components/Card';
 import { StudentsIcon, StaffIcon, ExamsIcon, SchoolIcon, BarChart3Icon, PieChartIcon, BriefcaseIcon, UsersIcon } from '../components/icons';
-import DoughnutChart from '../components/DoughnutChart';
+import HorizontalBarChart from '../components/HorizontalBarChart';
 import { Student, Staff } from '../types';
 import { useAppData } from '../hooks/useAppData';
 
@@ -111,7 +112,7 @@ const Dashboard: React.FC = () => {
             </div>
             
             {/* Main content grid */}
-            <div className="flex-1 grid grid-cols-2 grid-rows-[auto_1fr_auto] gap-3">
+            <div className="flex-1 grid grid-cols-2 gap-3">
                 {/* At a Glance */}
                 <Card className="col-span-2 p-2 space-y-2">
                     <SectionHeader icon={<BarChart3Icon className="w-4 h-4 text-foreground/60" />} title="At a Glance" />
@@ -137,15 +138,9 @@ const Dashboard: React.FC = () => {
                 </Card>
                 
                 {/* Class Distribution */}
-                <Card className="p-2 flex flex-col">
+                <Card className="col-span-2 p-2 flex flex-col">
                     <SectionHeader icon={<PieChartIcon className="w-4 h-4 text-foreground/60" />} title="Class Distribution" />
-                    <div className="flex-1 flex items-center justify-center">
-                        {chartData && chartData.length > 0 ? (
-                        <DoughnutChart data={chartData} />
-                        ) : (
-                            <p className="text-foreground/60 text-xs text-center">No student data for chart.</p>
-                        )}
-                    </div>
+                    <HorizontalBarChart data={chartData} />
                 </Card>
 
                 {/* Recently Added Staff */}
@@ -165,14 +160,14 @@ const Dashboard: React.FC = () => {
                 </Card>
 
                 {/* Recently Added Students */}
-                <Card className="col-span-2 p-2">
+                <Card className="p-2 flex flex-col">
                       <SectionHeader 
                         icon={<UsersIcon className="w-4 h-4 text-foreground/60" />} 
                         title="Recent Students" 
                         action={<span onClick={() => navigate('/students')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>}
                     />
                     {recentStudents.length > 0 ? (
-                        <ul className="grid grid-cols-2 gap-x-2 gap-y-1">
+                        <ul className="space-y-1 overflow-y-auto">
                             {recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} onClick={() => navigate(`/student/${s.id}`)} />)}
                         </ul>
                     ) : (

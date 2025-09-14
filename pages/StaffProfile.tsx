@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -8,12 +9,14 @@ import { EditIcon, TrashIcon, CertificateIcon, TimetableIcon, BriefcaseIcon } fr
 import StaffTimetable from '../components/StaffTimetable';
 import Modal from '../components/Modal';
 import StaffForm from '../components/StaffForm';
+import { useToast } from '../contexts/ToastContext';
 
 const buttonStyle = "py-2 px-3 text-xs font-semibold rounded-md flex items-center justify-center gap-1.5 transition-colors";
 
 const StaffProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { addToast } = useToast();
 
     const staffId = useMemo(() => {
         const numId = Number(id);
@@ -32,14 +35,12 @@ const StaffProfile: React.FC = () => {
     const handleSave = async (staffData: Staff) => {
         if (staffId) {
             try {
-                // FIX: Replaced `db.staff.update` with `db.staff.put`. The `update` method's TypeScript
-                // typings can conflict when an object contains a nested array like `teachingAssignments`.
-                // `put` is simpler for full-object updates and avoids this type issue.
                 await db.staff.put(staffData);
                 setIsFormOpen(false);
+                addToast('Staff details updated successfully!', 'success');
             } catch (error) {
                 console.error("Failed to update staff:", error);
-                alert("An error occurred while updating staff details.");
+                addToast("An error occurred while updating staff details.", 'error');
             }
         }
     };
@@ -52,9 +53,10 @@ const StaffProfile: React.FC = () => {
                     await db.staff.delete(staffId);
                 });
                 navigate('/staff');
+                addToast(`${staff.name} was deleted successfully.`, 'success');
             } catch (error) {
                 console.error("Failed to delete staff member:", error);
-                alert("An error occurred while deleting the staff member.");
+                addToast("An error occurred while deleting the staff member.", 'error');
             }
         }
     };

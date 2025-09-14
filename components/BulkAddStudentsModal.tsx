@@ -1,8 +1,10 @@
+
 import React, { useState, useCallback } from 'react';
 import Modal from './Modal';
 import { db } from '../services/db';
 import { Student } from '../types';
 import { DownloadIcon, UploadIcon } from './icons';
+import { useToast } from '../contexts/ToastContext';
 
 // Define the fields we want to map from the CSV
 const STUDENT_FIELDS: { key: keyof Student; label: string; required: boolean }[] = [
@@ -36,6 +38,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
     const [error, setError] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
     const [importResult, setImportResult] = useState<{ success: number; failed: number } | null>(null);
+    const { addToast } = useToast();
 
     const resetState = useCallback(() => {
         setStep('upload');
@@ -75,7 +78,9 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             setCsvData(data);
             setStep('map');
         } catch (err: any) {
-            setError(err.message || 'Failed to parse CSV file.');
+            const errorMessage = err.message || 'Failed to parse CSV file.';
+            setError(errorMessage);
+            addToast(errorMessage, 'error');
         }
     };
     
@@ -138,11 +143,13 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             await db.students.bulkAdd(studentsToImport);
             setImportResult({ success: studentsToImport.length, failed: 0 });
             setStep('result');
+            addToast(`${studentsToImport.length} students imported successfully!`, 'success');
         } catch (err) {
             console.error("Bulk add failed:", err);
             setError("An error occurred during import. Check console for details. Some records may not have been saved.");
             setImportResult({ success: 0, failed: studentsToImport.length });
             setStep('result');
+            addToast('An error occurred during import.', 'error');
         } finally {
             setIsLoading(false);
         }
