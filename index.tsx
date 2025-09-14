@@ -20,8 +20,9 @@ root.render(
 // Register the service worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Use an absolute URL to avoid cross-origin issues in some hosting environments.
-    const swUrl = `${window.location.origin}/sw.js`;
+    // Use `import.meta.url` to create a robust, origin-correct path to the service worker.
+    // This resolves issues in sandboxed environments where `window.location.origin` might be incorrect.
+    const swUrl = new URL('sw.js', import.meta.url);
     navigator.serviceWorker.register(swUrl)
       .then(registration => {
         console.log('Service Worker registered with scope:', registration.scope);
