@@ -82,21 +82,21 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshots/dashboard.png",
+      "src": "https://via.placeholder.com/1080x2340.png?text=Dashboard",
       "sizes": "1080x2340",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Main dashboard showing key school statistics."
     },
     {
-      "src": "/screenshots/students.png",
+      "src": "https://via.placeholder.com/1080x2340.png?text=Students",
       "sizes": "1080x2340",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Student management screen with class filters."
     },
     {
-      "src": "/screenshots/profile.png",
+      "src": "https://via.placeholder.com/1080x2340.png?text=Profile",
       "sizes": "1080x2340",
       "type": "image/png",
       "form_factor": "narrow",
