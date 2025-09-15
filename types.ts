@@ -86,63 +86,91 @@ export interface DailyLog {
   riceConsumed: number;
 }
 
-// Reusable parts for HPC
-interface DomainAssessment {
-    domain: string;
-    curricularGoals?: string;
-    competencies?: string;
-    activity?: string;
-    assessmentQuestions?: string;
-    rubric?: {
-        awareness?: string;
-        sensitivity?: string;
-        creativity?: string;
-    };
-    teacherFeedback?: string;
-    selfAssessment?: { [key: string]: string };
-    peerAssessment?: { [key: string]: string };
+// HPC Data Structures Reworked
+
+type HpcPerformanceLevel = 'Beginner' | 'Proficient' | 'Advanced' | 'Stream' | 'Mountain' | 'Sky' | '';
+
+interface HpcTeacherFeedback {
+    areasOfStrength?: string[];
+    barriersToSuccess?: string[];
+    helpProgressFurther?: string;
+    observations?: string;
+    // For Middle Stage Wheel
+    wheel?: {
+        awareness?: { teacher: HpcPerformanceLevel, student: HpcPerformanceLevel, peer: HpcPerformanceLevel };
+        sensitivity?: { teacher: HpcPerformanceLevel, student: HpcPerformanceLevel, peer: HpcPerformanceLevel };
+        creativity?: { teacher: HpcPerformanceLevel, student: HpcPerformanceLevel, peer: HpcPerformanceLevel };
+    }
 }
 
-// Stage-specific data structures
-export interface FoundationalData {
-    meAndMySurroundings?: {
-        age?: string;
-        liveIn?: string;
-        birthday?: string;
-        wantsToBe?: string;
-        friends?: string;
-        favourites?: {
-            colour?: string; food?: string; animal?: string;
-            flower?: string; sport?: string; subject?: string;
-        };
+interface HpcSubjectAssessment {
+    curricularGoals?: string[];
+    competencies?: string[];
+    approach?: string[];
+    activity?: string;
+    assessmentQuestion?: string;
+    rubric?: {
+        awareness?: HpcPerformanceLevel;
+        sensitivity?: HpcPerformanceLevel;
+        creativity?: HpcPerformanceLevel;
     };
-    domainAssessments?: { [domain: string]: DomainAssessment };
+    selfReflection?: { [key: string]: string }; // Map statement to response
+    peerFeedback?: { [key: string]: string };
+    teacherFeedback?: HpcTeacherFeedback;
+    observationalNotes?: string;
+    challenges?: string;
+    howOvercame?: string;
+}
+
+export interface FoundationalData {
+    interests?: string[];
+    // Part A2: Me and My Surroundings is too graphical to model as data entry for now.
+    domainAssessments?: { [domain: string]: HpcSubjectAssessment };
 }
 
 export interface PreparatoryData {
-    aboutMe?: {
-        handDiagram?: {
-            goodAt?: string; notSoGoodAt?: string; improveSkill?: string;
-            likeToDo?: string; dontLikeToDo?: string;
-        };
+     partA2?: {
+        myNameIs?: string;
+        iAmYearsOld?: string;
+        myFamily?: string; // image data
+        handDiagram?: { iLikeTo?: string; iAmGoodAt?: string; iAmNotSoGoodAt?: string; iWouldLikeToImprove?: string; iDontLikeTo?: string; };
         favoriteThings?: { food?: string; games?: string; festivals?: string; };
-        growUpToBe?: string;
-        idol?: string;
-        learnThisYear?: string;
+        whenIGrowUp?: string;
+        myIdol?: string;
+        threeThingsToLearn?: string;
     };
-    howIFeel?: { [question: string]: string };
-    peerFeedback1?: { [question: string]: string };
-    peerFeedback2?: { [question: string]: string };
+    partA3?: { [key: string]: string }; // How do I feel at school?
+    peerFeedback1?: { [key: string]: string };
+    peerFeedback2?: { [key: string]: string };
     parentFeedback?: {
-      resources?: string[];
-      questions?: { [question: string]: string };
-      supportNeeded?: string[];
-      specify?: string;
+        resources?: string[];
+        childUnderstanding?: { [key: string]: string };
+        supportNeeded?: string[];
+        otherSupport?: string;
+        supportAtHome?: string;
     };
-    learningStandardAssessments?: { [standard: string]: DomainAssessment };
+    subjectAssessments?: { [subject: string]: HpcSubjectAssessment };
 }
 
-type MiddleData = PreparatoryData;
+export interface MiddleData {
+    partA2?: {
+        iLiveWith?: string; weStayAt?: string; freeTimeDoing?: string;
+        iAmResponsible?: string; couldDoBetter?: string; iCareAboutOthers?: string; feelProud?: string;
+        academicGoal?: { importantBecause?: string; steps?: string; };
+        personalGoal?: { importantBecause?: string; steps?: string; };
+        learnings?: { atSchool?: string; outsideSchool?: string; };
+        forMyTeacher?: { helpMeWith?: string; teacherToKnow?: string; };
+    };
+    partA3?: {
+        myAmbitionIs?: string; fiveSkills?: string; habitsToBe?: string;
+        achieveAmbitionBy?: string; subjectsToFocusOn?: string;
+        guidanceFrom?: string; personWillHelpBy?: string; willLearnNew?: string;
+        willFeel?: string; parentsWillFeel?: string;
+    };
+    partA4?: PreparatoryData['parentFeedback'];
+    subjectAssessments?: { [subject: string]: HpcSubjectAssessment };
+}
+
 
 // Main HPC Report Interface
 export interface HPCReportData {
@@ -152,10 +180,17 @@ export interface HPCReportData {
   stage: 'Foundational' | 'Preparatory' | 'Middle';
   grade: string;
   
-  // General Info (Part A1)
-  healthNotes?: string;
-  attendance?: { [month: string]: { working: number; present: number } };
-  interests?: string[];
+  // Part A1 General Info 
+  healthNotes?: string; // foundational
+  attendance?: { [month: string]: { working?: number; present?: number; reason?: string } };
+  interests?: string[]; // foundational
+  
+  // School/Student info for Middle/Preparatory Stage Part A1
+  village?: string; brc?: string; crc?: string; teacherCode?: string; apaarId?: string;
+  registrationNo?: string; age?: string; motherGuardianEducation?: string; motherGuardianOccupation?: string;
+  fatherGuardianEducation?: string; fatherGuardianOccupation?: string; siblingsCount?: number;
+  siblingsAge?: string; motherTongue?: string; mediumOfInstruction?: string;
+  ruralOrUrban?: 'Rural' | 'Urban'; illnessCount?: number;
 
   // Stage-specific details
   foundationalData?: FoundationalData;
@@ -165,9 +200,9 @@ export interface HPCReportData {
   // Summary (Part C)
   summaries: { 
     [domainOrSubject: string]: {
-      awareness?: string; 
-      sensitivity?: string;
-      creativity?: string;
+      awareness?: HpcPerformanceLevel; 
+      sensitivity?: HpcPerformanceLevel;
+      creativity?: HpcPerformanceLevel;
       notes?: string;
     }
   };

@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Student, HPCReportData, FoundationalData, PreparatoryData } from '../types';
+import { Student, HPCReportData } from '../types';
 import { HolisticIcon, PlusIcon, SaveIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useToast } from '../contexts/ToastContext';
 
 const ACADEMIC_YEAR = '2024-25';
 
+// Expanded configuration to drive form generation
 const STAGE_CONFIG = {
     Foundational: {
         domains: ['Physical Development', 'Socio-emotional Development', 'Cognitive Development', 'Language and Literacy', 'Aesthetic & Cultural', 'Positive Learning Habits'],
         scale: ['Stream', 'Mountain', 'Sky'],
+        interests: ['Reading', 'Creative writing', 'Dancing or Singing or Playing a musical instrument', 'Gardening', 'Yoga', 'Art', 'Craft', 'Sport or Games', 'Cooking', 'Regular chores at home with significant others']
     },
     Preparatory: {
         learningStandards: ['Language Education (R1)', 'Language Education (R2)', 'Mathematics', 'The World Around Us', 'Art Education', 'Physical Education'],
@@ -34,10 +36,10 @@ const getStageForClass = (className: string): 'Foundational' | 'Preparatory' | '
     return null;
 };
 
-const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode; }> = ({ title, children }) => {
-    const [isOpen, setIsOpen] = useState(false);
+const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = false }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
-        <div className="border border-border rounded-md">
+        <div className="border border-border rounded-md bg-card">
             <button type="button" onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center p-2 bg-background/50">
                 <span className="font-semibold text-sm">{title}</span>
                 <PlusIcon className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-45' : ''}`} />
@@ -84,7 +86,7 @@ const Holistic: React.FC = () => {
                 stage,
                 grade: student.className,
                 summaries: {},
-                foundationalData: stage === 'Foundational' ? {} : undefined,
+                foundationalData: stage === 'Foundational' ? { interests: [] } : undefined,
                 preparatoryData: stage === 'Preparatory' ? {} : undefined,
                 middleData: stage === 'Middle' ? {} : undefined,
             };
@@ -103,9 +105,9 @@ const Holistic: React.FC = () => {
             if (!prev) return null;
             const keys = path.split('.');
             const newState = JSON.parse(JSON.stringify(prev)); // Deep copy
-            let current = newState;
+            let current: any = newState;
             for (let i = 0; i < keys.length - 1; i++) {
-                if (current[keys[i]] === undefined) {
+                if (current[keys[i]] === undefined || current[keys[i]] === null) {
                     current[keys[i]] = {};
                 }
                 current = current[keys[i]];
@@ -114,6 +116,28 @@ const Holistic: React.FC = () => {
             return newState;
         });
     };
+    
+    const handleCheckboxChange = (path: string, value: string, checked: boolean) => {
+        setHpcData(prev => {
+            if (!prev) return null;
+            const keys = path.split('.');
+            const newState = JSON.parse(JSON.stringify(prev)); // Deep copy
+            let current: any = newState;
+             for (let i = 0; i < keys.length - 1; i++) {
+                if (current[keys[i]] === undefined || current[keys[i]] === null) current[keys[i]] = {};
+                current = current[keys[i]];
+            }
+            const arrayKey = keys[keys.length - 1];
+            let currentArray = current[arrayKey] || [];
+            if(checked) {
+                currentArray = [...currentArray, value];
+            } else {
+                currentArray = currentArray.filter((item: string) => item !== value);
+            }
+            current[arrayKey] = [...new Set(currentArray)]; // Ensure unique values
+            return newState;
+        });
+    }
 
     const handleSave = async () => {
         if (!hpcData) return;
@@ -129,7 +153,19 @@ const Holistic: React.FC = () => {
 
     const renderForm = () => {
         if (!hpcData) return null;
-
+        const TextareaInput: React.FC<{ path: string, placeholder: string, label: string, rows?: number }> = ({path, placeholder, label, rows=3}) => (
+            <div>
+                <label className="font-semibold text-xs mb-1 block">{label}</label>
+                <textarea 
+                    placeholder={placeholder} 
+                    className="w-full p-1 text-xs bg-background border border-input rounded"
+                    style={{ height: `${rows * 1.5}rem`}}
+                    value={path.split('.').reduce((o, k) => o?.[k], hpcData) || ''}
+                    onChange={e => handleDataChange(path, e.target.value)}
+                />
+            </div>
+        );
+        
         switch(hpcData.stage) {
             case 'Foundational':
                  const MONTHS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
@@ -137,69 +173,42 @@ const Holistic: React.FC = () => {
                     <div className="space-y-2">
                         <CollapsibleSection title="Part A: Health & Interests">
                             <div className="space-y-2">
-                                <div>
-                                    <label className="font-semibold text-xs mb-1 block">Health Notes</label>
-                                    <textarea 
-                                        placeholder="Any specific health information..." 
-                                        className="w-full p-1 text-xs bg-background border border-input rounded h-16"
-                                        value={hpcData.healthNotes || ''}
-                                        onChange={e => handleDataChange(`healthNotes`, e.target.value)}
-                                    />
-                                </div>
+                                <TextareaInput path="healthNotes" label="Health Notes" placeholder="Any specific health information..." />
                                 <div>
                                     <label className="font-semibold text-xs mb-1 block">Student's Interests</label>
-                                    <textarea 
-                                        placeholder="e.g., Drawing, Singing, Cricket" 
-                                        className="w-full p-1 text-xs bg-background border border-input rounded h-16"
-                                        value={hpcData.interests?.join(', ') || ''}
-                                        onChange={e => handleDataChange(`interests`, e.target.value.split(',').map(s => s.trim()))}
-                                    />
+                                    <div className="grid grid-cols-2 gap-1 text-xs">
+                                        {STAGE_CONFIG.Foundational.interests.map(interest => (
+                                            <label key={interest} className="flex items-center gap-1 p-1 bg-background/50 rounded">
+                                                <input type="checkbox"
+                                                    checked={hpcData.foundationalData?.interests?.includes(interest) || false}
+                                                    onChange={e => handleCheckboxChange('foundationalData.interests', interest, e.target.checked)}
+                                                />
+                                                {interest}
+                                            </label>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </CollapsibleSection>
                          <CollapsibleSection title="Part A: Attendance">
                             <div className="grid grid-cols-3 gap-2 text-xs">
-                                <div className="font-bold">Month</div>
-                                <div className="font-bold text-center">Working</div>
-                                <div className="font-bold text-center">Present</div>
+                                <div className="font-bold">Month</div><div className="font-bold text-center">Working</div><div className="font-bold text-center">Present</div>
                                 {MONTHS.map(month => {
                                     const monthKey = month.toLowerCase();
                                     return (
                                         <React.Fragment key={month}>
                                             <div className="font-semibold flex items-center">{month}</div>
-                                            <div>
-                                                <input 
-                                                    type="number" 
-                                                    placeholder="WD"
-                                                    className="w-full p-1 text-xs text-center bg-background border border-input rounded"
-                                                    value={hpcData.attendance?.[monthKey]?.working ?? ''}
-                                                    onChange={e => handleDataChange(`attendance.${monthKey}.working`, e.target.valueAsNumber)}
-                                                />
-                                            </div>
-                                            <div>
-                                                <input 
-                                                    type="number" 
-                                                    placeholder="PD"
-                                                    className="w-full p-1 text-xs text-center bg-background border border-input rounded"
-                                                    value={hpcData.attendance?.[monthKey]?.present ?? ''}
-                                                    onChange={e => handleDataChange(`attendance.${monthKey}.present`, e.target.valueAsNumber)}
-                                                />
-                                            </div>
+                                            <div><input type="number" placeholder="WD" className="w-full p-1 text-xs text-center bg-background border border-input rounded" value={hpcData.attendance?.[monthKey]?.working ?? ''} onChange={e => handleDataChange(`attendance.${monthKey}.working`, e.target.valueAsNumber)} /></div>
+                                            <div><input type="number" placeholder="PD" className="w-full p-1 text-xs text-center bg-background border border-input rounded" value={hpcData.attendance?.[monthKey]?.present ?? ''} onChange={e => handleDataChange(`attendance.${monthKey}.present`, e.target.valueAsNumber)} /></div>
                                         </React.Fragment>
                                     );
                                 })}
                             </div>
                         </CollapsibleSection>
-                        <CollapsibleSection title="Domain Assessments (Teacher's Notes)">
+                        <CollapsibleSection title="Part B: Domain Assessments (Teacher's Notes)">
                             {STAGE_CONFIG.Foundational.domains.map(domain => (
                                 <div key={domain} className="p-1 my-1 border rounded">
-                                    <h5 className="font-semibold text-xs mb-1">{domain}</h5>
-                                    <textarea 
-                                        placeholder="Teacher's Notes..." 
-                                        className="w-full p-1 text-xs bg-background border border-input rounded h-14"
-                                        value={hpcData.foundationalData?.domainAssessments?.[domain]?.teacherFeedback || ''}
-                                        onChange={e => handleDataChange(`foundationalData.domainAssessments.${domain}.teacherFeedback`, e.target.value)}
-                                    />
+                                    <TextareaInput path={`foundationalData.domainAssessments.${domain}.observationalNotes`} label={domain} placeholder="Observational notes..." rows={2} />
                                 </div>
                             ))}
                         </CollapsibleSection>
@@ -209,12 +218,7 @@ const Holistic: React.FC = () => {
                                     <h5 className="font-semibold text-xs mb-1">{domain}</h5>
                                      <div className="grid grid-cols-3 gap-1">
                                          {['awareness', 'sensitivity', 'creativity'].map(ability => (
-                                            <select
-                                                key={ability}
-                                                value={hpcData.summaries?.[domain]?.[ability as keyof typeof hpcData.summaries[string]] || ''}
-                                                onChange={e => handleDataChange(`summaries.${domain}.${ability}`, e.target.value)}
-                                                className="w-full p-1 text-xs bg-background border border-input rounded"
-                                            >
+                                            <select key={ability} value={hpcData.summaries?.[domain]?.[ability as keyof typeof hpcData.summaries[string]] || ''} onChange={e => handleDataChange(`summaries.${domain}.${ability}`, e.target.value)} className="w-full p-1 text-xs bg-background border border-input rounded">
                                                  <option value="">{ability.charAt(0).toUpperCase() + ability.slice(1)}</option>
                                                  {STAGE_CONFIG.Foundational.scale.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                             </select>
@@ -228,19 +232,13 @@ const Holistic: React.FC = () => {
             case 'Preparatory':
             case 'Middle':
                 const standards = hpcData.stage === 'Preparatory' ? STAGE_CONFIG.Preparatory.learningStandards : STAGE_CONFIG.Middle.learningStandards;
-                 const scale = hpcData.stage === 'Preparatory' ? STAGE_CONFIG.Preparatory.scale : STAGE_CONFIG.Middle.scale;
+                const scale = hpcData.stage === 'Preparatory' ? STAGE_CONFIG.Preparatory.scale : STAGE_CONFIG.Middle.scale;
                  return (
                      <div className="space-y-2">
-                        <CollapsibleSection title="Part B: Learning Standards">
+                        <CollapsibleSection title="Part B: Teacher's Observational Notes">
                              {standards.map(standard => (
                                 <div key={standard} className="p-1 my-1 border rounded">
-                                     <h5 className="font-semibold text-xs mb-1">{standard}</h5>
-                                     <textarea 
-                                        placeholder="Observational Notes..." 
-                                        className="w-full p-1 text-xs bg-background border border-input rounded h-14"
-                                        value={hpcData.preparatoryData?.learningStandardAssessments?.[standard]?.teacherFeedback || ''}
-                                        onChange={e => handleDataChange(`preparatoryData.learningStandardAssessments.${standard}.teacherFeedback`, e.target.value)}
-                                    />
+                                    <TextareaInput path={`${hpcData.stage!.toLowerCase()}Data.subjectAssessments.${standard}.observationalNotes`} label={standard} placeholder="Observational notes..." rows={2}/>
                                 </div>
                             ))}
                         </CollapsibleSection>
@@ -250,12 +248,7 @@ const Holistic: React.FC = () => {
                                      <h5 className="font-semibold text-xs mb-1">{standard}</h5>
                                      <div className="grid grid-cols-3 gap-1">
                                          {['awareness', 'sensitivity', 'creativity'].map(ability => (
-                                            <select
-                                                key={ability}
-                                                value={hpcData.summaries?.[standard]?.[ability as keyof typeof hpcData.summaries[string]] || ''}
-                                                onChange={e => handleDataChange(`summaries.${standard}.${ability}`, e.target.value)}
-                                                className="w-full p-1 text-xs bg-background border border-input rounded"
-                                            >
+                                            <select key={ability} value={hpcData.summaries?.[standard]?.[ability as keyof typeof hpcData.summaries[string]] || ''} onChange={e => handleDataChange(`summaries.${standard}.${ability}`, e.target.value)} className="w-full p-1 text-xs bg-background border border-input rounded">
                                                  <option value="">{ability.charAt(0).toUpperCase() + ability.slice(1)}</option>
                                                  {scale.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                             </select>
@@ -304,7 +297,7 @@ const Holistic: React.FC = () => {
             )}
             
             <Modal isOpen={!!selectedStudent} onClose={handleCloseModal} title={`HPC Data for ${selectedStudent?.name}`}>
-                <div className="p-2 flex-1">
+                <div className="p-2 flex-1 overflow-y-auto">
                     {renderForm()}
                 </div>
                 <footer className="p-2 border-t border-border flex justify-end">

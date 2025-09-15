@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -78,9 +79,9 @@ const StudentProfile: React.FC = () => {
     const handleDelete = async () => {
         if (student && studentId && window.confirm(`Are you sure you want to delete ${student.name}? This will also delete all associated marks and cannot be undone.`)) {
             try {
-                // FIX: Included 'hpcReports' in the transaction to ensure holistic data is also deleted.
-                await db.transaction('rw', db.students, db.marks, db.hpcReports, async () => {
+                await db.transaction('rw', db.students, db.marks, db.studentExamData, db.hpcReports, async () => {
                     await db.marks.where('studentId').equals(studentId).delete();
+                    await db.studentExamData.where('studentId').equals(studentId).delete();
                     await db.hpcReports.where('studentId').equals(studentId).delete();
                     await db.students.delete(studentId);
                 });
