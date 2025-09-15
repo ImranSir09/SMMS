@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../services/db';
-import { Student, Staff, Exam, HolisticRecord } from '../types';
+// FIX: Removed unused 'HolisticRecord' type which was causing an import error.
+import { Student, Staff, Exam } from '../types';
 import Card from '../components/Card';
 import { IdCardIcon, ExamsIcon, CalendarIcon, CertificateIcon, LeavingIcon, AdmissionIcon, BonafideIcon, SearchIcon, ClipboardListIcon } from '../components/icons';
 import Modal from '../components/Modal';
@@ -23,6 +24,8 @@ const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
 const docButtonStyle = "flex items-center justify-center gap-1 py-2 px-1 rounded-md text-white text-[10px] font-semibold transition-colors disabled:opacity-60 text-center";
 
 type SearchType = 'student' | 'staff';
+// FIX: Define a constant for the academic year to ensure consistency.
+const ACADEMIC_YEAR = '2024-25';
 
 const Certificates: React.FC = () => {
   const location = useLocation();
@@ -147,7 +150,8 @@ const Certificates: React.FC = () => {
         if (!exam) throw new Error("Exam not found");
 
         const studentMarks = await db.marks.where({ studentId: foundStudent.id!, examId }).toArray();
-        const studentHolisticRecords = await db.holisticRecords.where({ studentId: foundStudent.id! }).toArray();
+        // FIX: Replaced 'holisticRecords' with 'hpcReports' to fetch correct data from the database.
+        const studentHpcReport = await db.hpcReports.where({ studentId: foundStudent.id!, academicYear: ACADEMIC_YEAR }).first();
         
         if (studentMarks.length === 0) {
             alert(`No marks found for ${foundStudent.name} in the selected exam.`);
@@ -155,11 +159,12 @@ const Certificates: React.FC = () => {
             return;
         }
 
+        // FIX: Changed 'holisticRecords' prop to 'hpcReport' to match the NepProgressCard component's expected props.
         await generateDoc(
             <NepProgressCard 
                 student={foundStudent}
                 marks={studentMarks}
-                holisticRecords={studentHolisticRecords}
+                hpcReport={studentHpcReport || null}
                 schoolDetails={schoolDetails}
                 examName={exam.name}
             />,

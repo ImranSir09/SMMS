@@ -1,5 +1,4 @@
-// FIX: Replaced incorrect file content (which was a React component) with the correct type definitions.
-// This resolves all cascading import and type errors across the application.
+// types.ts
 
 export interface SchoolDetails {
   id: number;
@@ -70,11 +69,11 @@ export interface Mark {
 }
 
 export interface StudentExamData {
-    id?: number;
-    examId: number;
-    studentId: number;
-    proficiencyLevel?: 'Stream' | 'Mountain' | 'Sky' | '';
-    remarks?: string;
+  id?: number;
+  examId: number;
+  studentId: number;
+  remarks?: string;
+  proficiencyLevel?: 'Stream' | 'Mountain' | 'Sky';
 }
 
 export interface DailyLog {
@@ -87,13 +86,91 @@ export interface DailyLog {
   riceConsumed: number;
 }
 
-export interface HolisticRecord {
+// Reusable parts for HPC
+interface DomainAssessment {
+    domain: string;
+    curricularGoals?: string;
+    competencies?: string;
+    activity?: string;
+    assessmentQuestions?: string;
+    rubric?: {
+        awareness?: string;
+        sensitivity?: string;
+        creativity?: string;
+    };
+    teacherFeedback?: string;
+    selfAssessment?: { [key: string]: string };
+    peerAssessment?: { [key: string]: string };
+}
+
+// Stage-specific data structures
+// FIX: Export FoundationalData interface to be used in other modules.
+export interface FoundationalData {
+    meAndMySurroundings?: {
+        age?: string;
+        liveIn?: string;
+        birthday?: string;
+        wantsToBe?: string;
+        friends?: string;
+        favourites?: {
+            colour?: string; food?: string; animal?: string;
+            flower?: string; sport?: string; subject?: string;
+        };
+    };
+    domainAssessments?: { [domain: string]: DomainAssessment };
+}
+
+// FIX: Export PreparatoryData interface to be used in other modules.
+export interface PreparatoryData {
+    aboutMe?: {
+        handDiagram?: {
+            goodAt?: string; notSoGoodAt?: string; improveSkill?: string;
+            likeToDo?: string; dontLikeToDo?: string;
+        };
+        favoriteThings?: { food?: string; games?: string; festivals?: string; };
+        growUpToBe?: string;
+        idol?: string;
+        learnThisYear?: string;
+    };
+    howIFeel?: { [question: string]: string };
+    peerFeedback1?: { [question: string]: string };
+    peerFeedback2?: { [question: string]: string };
+    parentFeedback?: {
+      resources?: string[];
+      questions?: { [question: string]: string };
+      supportNeeded?: string[];
+      specify?: string;
+    };
+    learningStandardAssessments?: { [standard: string]: DomainAssessment };
+}
+
+type MiddleData = PreparatoryData;
+
+// Main HPC Report Interface
+export interface HPCReportData {
   id?: number;
   studentId: number;
-  className: string;
-  academicYear: string; // e.g., '2024-25'
-  domain: 'Co-Curricular' | 'Personal & Social' | 'Subject Specific';
-  aspect: string; // e.g., 'Art & Craft', 'Discipline', 'English: Reading'
-  grade: 'A' | 'B' | 'C' | '' ; // A=Exceeds, B=Meets, C=Needs Support
-  remarks?: string;
+  academicYear: string;
+  stage: 'Foundational' | 'Preparatory' | 'Middle';
+  grade: string;
+  
+  // General Info (Part A1)
+  healthNotes?: string;
+  attendance?: { [month: string]: { working: number; present: number } };
+  interests?: string[];
+
+  // Stage-specific details
+  foundationalData?: FoundationalData;
+  preparatoryData?: PreparatoryData;
+  middleData?: MiddleData;
+
+  // Summary (Part C)
+  summaries: { 
+    [domainOrSubject: string]: {
+      awareness?: string; 
+      sensitivity?: string;
+      creativity?: string;
+      notes?: string;
+    }
+  };
 }

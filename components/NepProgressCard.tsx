@@ -1,13 +1,14 @@
 
 
 import React from 'react';
-import { Student, SchoolDetails, Mark, HolisticRecord } from '../types';
+// FIX: Changed import from HolisticRecord to HPCReportData to align with the updated types and database schema.
+import { Student, SchoolDetails, Mark, HPCReportData } from '../types';
 import { formatDateLong } from '../utils/formatters';
 
 interface NepProgressCardProps {
   student: Student;
   marks: Mark[];
-  holisticRecords: HolisticRecord[];
+  hpcReport: HPCReportData | null;
   schoolDetails: SchoolDetails;
   examName: string;
 }
@@ -27,7 +28,7 @@ const getGrade = (percentage: number): string => {
     return 'E';
 };
 
-const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, holisticRecords, schoolDetails, examName }) => {
+const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, hpcReport, schoolDetails, examName }) => {
     
     const SUBJECT_ORDER = ['English', 'Math', 'Science', 'Social Science', 'Urdu', 'Kashmiri'];
     const displayedSubjects = marks.length > 0 ? SUBJECT_ORDER.filter(s => marks.some(m => m.subject === s)) : [];
@@ -57,9 +58,11 @@ const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, holis
     const overallGrade = getGrade(overallPercentage);
     const result = overallPercentage >= 33 ? 'Passed' : 'Needs Improvement';
 
-    const getHolisticGrade = (domain: string, aspect: string) => {
-        const record = holisticRecords.find(r => r.domain === domain && r.aspect === aspect);
-        return record?.grade || '-';
+    const getHolisticGradeForAspect = (aspect: string) => {
+        const summary = hpcReport?.summaries?.[aspect];
+        // This is a simplification; we're just picking one of the ability ratings.
+        // A more complex mapping from Awareness/Sensitivity/Creativity to a single grade might be needed.
+        return summary?.awareness || '-'; 
     };
 
     const DetailItem: React.FC<{ label: string; value: string | undefined }> = ({ label, value }) => (
@@ -103,7 +106,7 @@ const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, holis
                             <tr>
                                 <th className={headerCellStyle}>Subject</th>
                                 <th className={headerCellStyle}>Marks Obtd. (50)</th>
-                                <th className={headerCellStyle}>Grade</th>
+                                <th className="border border-slate-500 p-1 text-center align-middle font-semibold bg-slate-100">Grade</th>
                             </tr>
                         </thead>
                          <tbody>
@@ -138,15 +141,15 @@ const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, holis
                         </thead>
                          <tbody>
                             <tr><td className={`${labelCellStyle} bg-slate-50`} colSpan={2}>Co-Curricular Activities</td></tr>
-                            <tr><td className={labelCellStyle}>Art Education</td><td className={cellStyle}>{getHolisticGrade('Co-Curricular', 'Art Education')}</td></tr>
-                            <tr><td className={labelCellStyle}>Health & Physical Ed.</td><td className={cellStyle}>{getHolisticGrade('Co-Curricular', 'Health & Physical Ed.')}</td></tr>
+                            <tr><td className={labelCellStyle}>Art Education</td><td className={cellStyle}>{getHolisticGradeForAspect('Art Education')}</td></tr>
+                            <tr><td className={labelCellStyle}>Health & Physical Ed.</td><td className={cellStyle}>{getHolisticGradeForAspect('Health & Physical Ed.')}</td></tr>
                             
                             <tr><td className={`${labelCellStyle} bg-slate-50`} colSpan={2}>Personal & Social Qualities</td></tr>
-                            <tr><td className={labelCellStyle}>Discipline</td><td className={cellStyle}>{getHolisticGrade('Personal & Social', 'Discipline')}</td></tr>
-                            <tr><td className={labelCellStyle}>Punctuality</td><td className={cellStyle}>{getHolisticGrade('Personal & Social', 'Punctuality')}</td></tr>
-                            <tr><td className={labelCellStyle}>Collaboration</td><td className={cellStyle}>{getHolisticGrade('Personal & Social', 'Collaboration')}</td></tr>
-                            <tr><td className={labelCellStyle}>Leadership</td><td className={cellStyle}>{getHolisticGrade('Personal & Social', 'Leadership')}</td></tr>
-                            <tr><td className={labelCellStyle}>Curiosity</td><td className={cellStyle}>{getHolisticGrade('Personal & Social', 'Curiosity')}</td></tr>
+                            <tr><td className={labelCellStyle}>Discipline</td><td className={cellStyle}>{getHolisticGradeForAspect('Discipline')}</td></tr>
+                            <tr><td className={labelCellStyle}>Punctuality</td><td className={cellStyle}>{getHolisticGradeForAspect('Punctuality')}</td></tr>
+                            <tr><td className={labelCellStyle}>Collaboration</td><td className={cellStyle}>{getHolisticGradeForAspect('Collaboration')}</td></tr>
+                            <tr><td className={labelCellStyle}>Leadership</td><td className={cellStyle}>{getHolisticGradeForAspect('Leadership')}</td></tr>
+                            <tr><td className={labelCellStyle}>Curiosity</td><td className={cellStyle}>{getHolisticGradeForAspect('Curiosity')}</td></tr>
                          </tbody>
                     </table>
                 </div>

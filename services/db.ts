@@ -1,6 +1,8 @@
 import Dexie, { Table } from 'dexie';
-import { SchoolDetails, Student, Staff, Exam, Mark, DailyLog, StudentExamData, HolisticRecord } from '../types';
+// FIX: Import the new StudentExamData type.
+import { SchoolDetails, Student, Staff, Exam, Mark, DailyLog, HPCReportData, StudentExamData } from '../types';
 
+// FIX: Add studentExamData to the Dexie type definition.
 export const db = new Dexie('AegisSchoolDB') as Dexie & {
   schoolDetails: Table<SchoolDetails, number>;
   students: Table<Student, number>;
@@ -8,8 +10,8 @@ export const db = new Dexie('AegisSchoolDB') as Dexie & {
   exams: Table<Exam, number>;
   marks: Table<Mark, number>;
   dailyLogs: Table<DailyLog, number>;
+  hpcReports: Table<HPCReportData, number>;
   studentExamData: Table<StudentExamData, number>;
-  holisticRecords: Table<HolisticRecord, number>;
 };
 
 // Dexie versions must be in ascending order.
@@ -192,4 +194,17 @@ db.version(14).stores({
   dailyLogs: '++id, &date',
   studentExamData: '++id, &[examId+studentId], studentId',
   holisticRecords: '++id, &[studentId+domain+aspect], studentId, className',
+});
+
+// v15: Replace holisticRecords with comprehensive hpcReports table
+db.version(15).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className, gender',
+  staff: '++id, name, staffId, designation, subjects',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  hpcReports: '++id, &[studentId+academicYear], studentId', // New table
+  holisticRecords: null, // Delete old table
 });

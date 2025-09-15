@@ -16,6 +16,7 @@ import StudentProfile from './pages/StudentProfile';
 import StaffProfile from './pages/StaffProfile';
 import PrintRollStatement from './pages/PrintRollStatement';
 import Holistic from './pages/Holistic';
+import PrintHPC from './pages/PrintHPC';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -92,6 +93,7 @@ const App: React.FC = () => {
                 <Route path="/certificates" element={<Certificates />} />
                 <Route path="/holistic" element={<Holistic />} />
                 <Route path="/print/roll-statement/:className" element={<PrintRollStatement />} />
+                <Route path="/print/hpc/:studentId" element={<PrintHPC />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
         </main>

@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Student, Mark, Exam } from '../types';
 import Card from '../components/Card';
-import { EditIcon, TrashIcon, IdCardIcon, UserIcon, HeartHandIcon, CreditCardIcon, BarChart3Icon } from '../components/icons';
+import { EditIcon, TrashIcon, IdCardIcon, UserIcon, HeartHandIcon, CreditCardIcon, BarChart3Icon, HolisticIcon } from '../components/icons';
 import LineChart from '../components/LineChart';
 import Modal from '../components/Modal';
 import StudentForm from '../components/StudentForm';
@@ -78,9 +78,10 @@ const StudentProfile: React.FC = () => {
     const handleDelete = async () => {
         if (student && studentId && window.confirm(`Are you sure you want to delete ${student.name}? This will also delete all associated marks and cannot be undone.`)) {
             try {
-                await db.transaction('rw', db.students, db.marks, db.studentExamData, async () => {
+                // FIX: Included 'hpcReports' in the transaction to ensure holistic data is also deleted.
+                await db.transaction('rw', db.students, db.marks, db.hpcReports, async () => {
                     await db.marks.where('studentId').equals(studentId).delete();
-                    await db.studentExamData.where('studentId').equals(studentId).delete();
+                    await db.hpcReports.where('studentId').equals(studentId).delete();
                     await db.students.delete(studentId);
                 });
                 navigate('/students');
@@ -118,10 +119,11 @@ const StudentProfile: React.FC = () => {
             </Card>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
                 <button onClick={handleEdit} className={`${buttonStyle} bg-blue-600 text-white`}><EditIcon className="w-3 h-3" /> Edit</button>
-                <button onClick={() => navigate('/certificates', { state: { searchId: student.admissionNo, searchType: 'student' } })} className={`${buttonStyle} bg-green-600 text-white`}><IdCardIcon className="w-3 h-3" /> Certificates</button>
-                <button onClick={handleDelete} className={`${buttonStyle} bg-red-600 text-white`}><TrashIcon className="w-3 h-3" /> Delete</button>
+                <button onClick={() => navigate(`/print/hpc/${student.id}`)} className={`${buttonStyle} bg-purple-600 text-white`}><HolisticIcon className="w-3 h-3" /> HPC Report</button>
+                <button onClick={() => navigate('/certificates', { state: { searchId: student.admissionNo, searchType: 'student' } })} className={`${buttonStyle} bg-green-600 text-white col-span-2`}><IdCardIcon className="w-3 h-3" /> Other Certificates</button>
+                <button onClick={handleDelete} className={`${buttonStyle} bg-red-600 text-white col-span-2`}><TrashIcon className="w-3 h-3" /> Delete Student Record</button>
             </div>
             
             {/* Details Cards */}
