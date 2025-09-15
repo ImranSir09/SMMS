@@ -7,7 +7,6 @@ interface HPCFoundationalCardProps {
   hpcData: HPCReportData;
 }
 
-// FIX: Define STAGE_CONFIG constant to resolve reference error in the component.
 const STAGE_CONFIG = {
     Foundational: {
         domains: ['Physical Development', 'Socio-emotional Development', 'Cognitive Development', 'Language and Literacy', 'Aesthetic & Cultural', 'Positive Learning Habits'],

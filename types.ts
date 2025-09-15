@@ -104,7 +104,6 @@ interface DomainAssessment {
 }
 
 // Stage-specific data structures
-// FIX: Export FoundationalData interface to be used in other modules.
 export interface FoundationalData {
     meAndMySurroundings?: {
         age?: string;
@@ -120,7 +119,6 @@ export interface FoundationalData {
     domainAssessments?: { [domain: string]: DomainAssessment };
 }
 
-// FIX: Export PreparatoryData interface to be used in other modules.
 export interface PreparatoryData {
     aboutMe?: {
         handDiagram?: {

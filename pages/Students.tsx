@@ -42,7 +42,6 @@ const Students: React.FC = () => {
         [activeClass]
     );
 
-    // FIX: Correctly call useLiveQuery with an empty dependency array before the default value.
     const totalStudentCount = useLiveQuery(() => db.students.count(), [], 0);
 
     useEffect(() => {
