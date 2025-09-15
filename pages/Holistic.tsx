@@ -132,9 +132,65 @@ const Holistic: React.FC = () => {
 
         switch(hpcData.stage) {
             case 'Foundational':
+                 const MONTHS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
                 return (
                     <div className="space-y-2">
-                        <CollapsibleSection title="Domain Assessments">
+                        <CollapsibleSection title="Part A: Health & Interests">
+                            <div className="space-y-2">
+                                <div>
+                                    <label className="font-semibold text-xs mb-1 block">Health Notes</label>
+                                    <textarea 
+                                        placeholder="Any specific health information..." 
+                                        className="w-full p-1 text-xs bg-background border border-input rounded h-16"
+                                        value={hpcData.healthNotes || ''}
+                                        onChange={e => handleDataChange(`healthNotes`, e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="font-semibold text-xs mb-1 block">Student's Interests</label>
+                                    <textarea 
+                                        placeholder="e.g., Drawing, Singing, Cricket" 
+                                        className="w-full p-1 text-xs bg-background border border-input rounded h-16"
+                                        value={hpcData.interests?.join(', ') || ''}
+                                        onChange={e => handleDataChange(`interests`, e.target.value.split(',').map(s => s.trim()))}
+                                    />
+                                </div>
+                            </div>
+                        </CollapsibleSection>
+                         <CollapsibleSection title="Part A: Attendance">
+                            <div className="grid grid-cols-3 gap-2 text-xs">
+                                <div className="font-bold">Month</div>
+                                <div className="font-bold text-center">Working</div>
+                                <div className="font-bold text-center">Present</div>
+                                {MONTHS.map(month => {
+                                    const monthKey = month.toLowerCase();
+                                    return (
+                                        <React.Fragment key={month}>
+                                            <div className="font-semibold flex items-center">{month}</div>
+                                            <div>
+                                                <input 
+                                                    type="number" 
+                                                    placeholder="WD"
+                                                    className="w-full p-1 text-xs text-center bg-background border border-input rounded"
+                                                    value={hpcData.attendance?.[monthKey]?.working ?? ''}
+                                                    onChange={e => handleDataChange(`attendance.${monthKey}.working`, e.target.valueAsNumber)}
+                                                />
+                                            </div>
+                                            <div>
+                                                <input 
+                                                    type="number" 
+                                                    placeholder="PD"
+                                                    className="w-full p-1 text-xs text-center bg-background border border-input rounded"
+                                                    value={hpcData.attendance?.[monthKey]?.present ?? ''}
+                                                    onChange={e => handleDataChange(`attendance.${monthKey}.present`, e.target.valueAsNumber)}
+                                                />
+                                            </div>
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </div>
+                        </CollapsibleSection>
+                        <CollapsibleSection title="Domain Assessments (Teacher's Notes)">
                             {STAGE_CONFIG.Foundational.domains.map(domain => (
                                 <div key={domain} className="p-1 my-1 border rounded">
                                     <h5 className="font-semibold text-xs mb-1">{domain}</h5>
@@ -147,7 +203,7 @@ const Holistic: React.FC = () => {
                                 </div>
                             ))}
                         </CollapsibleSection>
-                         <CollapsibleSection title="Part C: Summary">
+                         <CollapsibleSection title="Part C: Summary Assessment">
                             {STAGE_CONFIG.Foundational.domains.map(domain => (
                                 <div key={domain} className="p-1 my-1 border rounded">
                                     <h5 className="font-semibold text-xs mb-1">{domain}</h5>
@@ -169,7 +225,6 @@ const Holistic: React.FC = () => {
                         </CollapsibleSection>
                     </div>
                 );
-             // Add cases for Preparatory and Middle stages here
             case 'Preparatory':
             case 'Middle':
                 const standards = hpcData.stage === 'Preparatory' ? STAGE_CONFIG.Preparatory.learningStandards : STAGE_CONFIG.Middle.learningStandards;
