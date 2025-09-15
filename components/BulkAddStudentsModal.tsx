@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback } from 'react';
 import Modal from './Modal';
 import { db } from '../services/db';
@@ -139,17 +140,25 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         setIsLoading(true);
         setError('');
         const studentsToImport = getMappedStudents();
+        let successCount = 0;
+        const CHUNK_SIZE = 50;
+
         try {
-            await db.students.bulkAdd(studentsToImport);
-            setImportResult({ success: studentsToImport.length, failed: 0 });
+            for (let i = 0; i < studentsToImport.length; i += CHUNK_SIZE) {
+                const chunk = studentsToImport.slice(i, i + CHUNK_SIZE);
+                await db.students.bulkAdd(chunk);
+                successCount += chunk.length;
+            }
+            setImportResult({ success: successCount, failed: 0 });
             setStep('result');
-            addToast(`${studentsToImport.length} students imported successfully!`, 'success');
+            addToast(`${successCount} students imported successfully!`, 'success');
         } catch (err) {
             console.error("Bulk add failed:", err);
-            setError("An error occurred during import. Check console for details. Some records may not have been saved.");
-            setImportResult({ success: 0, failed: studentsToImport.length });
+            const failedCount = studentsToImport.length - successCount;
+            setError("An error occurred during import. Some records may not have been saved.");
+            setImportResult({ success: successCount, failed: failedCount });
             setStep('result');
-            addToast('An error occurred during import.', 'error');
+            addToast(`An error occurred during import. ${successCount} records were saved.`, 'error');
         } finally {
             setIsLoading(false);
         }

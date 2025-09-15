@@ -1,6 +1,6 @@
 
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
@@ -32,38 +32,47 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, onClick }) => (
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const { schoolDetails } = useAppData();
-    const students = useLiveQuery(() => db.students.toArray(), []);
-    const staff = useLiveQuery(() => db.staff.toArray(), []);
-    const exams = useLiveQuery(() => db.exams.count(), [], 0);
 
-    const { chartData, recentStudents, recentStaff, genderCounts } = useMemo(() => {
-        const classCounts: { [key: string]: number } = {};
-        let recentStudents: Student[] = [];
-        const genderCounts = { male: 0, female: 0, other: 0 };
-
-        if (students) {
-            students.forEach(student => {
-                classCounts[student.className] = (classCounts[student.className] || 0) + 1;
-                if (student.gender === 'Male') {
-                    genderCounts.male++;
-                } else if (student.gender === 'Female') {
-                    genderCounts.female++;
-                } else {
-                    genderCounts.other++;
-                }
-            });
-            recentStudents = [...students].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 4);
-        }
+    const dashboardData = useLiveQuery(async () => {
+        const [
+            studentCount,
+            maleCount,
+            femaleCount,
+            otherCount,
+            staffCount,
+            examCount,
+            recentStudents,
+            recentStaff,
+            classNames,
+        ] = await Promise.all([
+            db.students.count(),
+            db.students.where({ gender: 'Male' }).count(),
+            db.students.where({ gender: 'Female' }).count(),
+            db.students.where({ gender: 'Other' }).count(),
+            db.staff.count(),
+            db.exams.count(),
+            db.students.orderBy('id').reverse().limit(4).toArray(),
+            db.staff.orderBy('id').reverse().limit(4).toArray(),
+            db.students.orderBy('className').uniqueKeys(),
+        ]);
         
-        const chartData = Object.entries(classCounts)
-            .map(([label, value]) => ({ label, value }))
-            .sort((a, b) => b.value - a.value);
+        const classCounts = await Promise.all(
+            (classNames as string[]).map(async (name) => ({
+                label: name,
+                value: await db.students.where({ className: name }).count(),
+            }))
+        );
 
-        const recentStaff: Staff[] = staff ? [...staff].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 4) : [];
-        
-        return { chartData, recentStudents, recentStaff, genderCounts };
-
-    }, [students, staff]);
+        return {
+            studentCount,
+            genderCounts: { male: maleCount, female: femaleCount, other: otherCount },
+            staffCount,
+            examCount,
+            recentStudents,
+            recentStaff,
+            chartData: classCounts.sort((a,b) => b.value - a.value),
+        };
+    }, []);
 
     const QuickListItem: React.FC<{ photo: string | null; name: string; detail: string; onClick: () => void; }> = ({ photo, name, detail, onClick }) => (
         <li onClick={onClick} className="flex items-center gap-2 p-1 rounded-md cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
@@ -121,26 +130,26 @@ const Dashboard: React.FC = () => {
                             icon={<StudentsIcon />}
                             label="Students"
                             value={
-                                students ? (
+                                dashboardData ? (
                                     <div className="flex flex-col items-start">
-                                        <span>{students.length}</span>
+                                        <span>{dashboardData.studentCount}</span>
                                         <span className="text-xs font-normal text-foreground/70">
-                                            ({genderCounts.male} Boys / {genderCounts.female} Girls)
+                                            ({dashboardData.genderCounts.male}M / {dashboardData.genderCounts.female}F)
                                         </span>
                                     </div>
                                 ) : '...'
                             }
                             onClick={() => navigate('/students')}
                         />
-                        <StatCard icon={<StaffIcon />} label="Staff" value={staff?.length} onClick={() => navigate('/staff')} />
-                        <StatCard icon={<ExamsIcon />} label="Exams" value={exams} onClick={() => navigate('/exams')} />
+                        <StatCard icon={<StaffIcon />} label="Staff" value={dashboardData?.staffCount} onClick={() => navigate('/staff')} />
+                        <StatCard icon={<ExamsIcon />} label="Exams" value={dashboardData?.examCount} onClick={() => navigate('/exams')} />
                     </div>
                 </Card>
                 
                 {/* Class Distribution */}
                 <Card className="col-span-2 p-2 flex flex-col">
                     <SectionHeader icon={<PieChartIcon className="w-4 h-4 text-foreground/60" />} title="Class Distribution" />
-                    <HorizontalBarChart data={chartData} />
+                    <HorizontalBarChart data={dashboardData?.chartData || []} />
                 </Card>
 
                 {/* Recently Added Staff */}
@@ -150,9 +159,9 @@ const Dashboard: React.FC = () => {
                         title="Recent Staff" 
                         action={<span onClick={() => navigate('/staff')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>}
                     />
-                    {recentStaff.length > 0 ? (
+                    {dashboardData && dashboardData.recentStaff.length > 0 ? (
                         <ul className="space-y-1 overflow-y-auto">
-                            {recentStaff.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={s.designation} onClick={() => navigate(`/staff/${s.id}`)} />)}
+                            {dashboardData.recentStaff.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={s.designation} onClick={() => navigate(`/staff/${s.id}`)} />)}
                         </ul>
                     ) : (
                         <p className="text-center text-xs text-foreground/60 pt-2">No staff added yet.</p>
@@ -166,9 +175,9 @@ const Dashboard: React.FC = () => {
                         title="Recent Students" 
                         action={<span onClick={() => navigate('/students')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>}
                     />
-                    {recentStudents.length > 0 ? (
+                    {dashboardData && dashboardData.recentStudents.length > 0 ? (
                         <ul className="space-y-1 overflow-y-auto">
-                            {recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} onClick={() => navigate(`/student/${s.id}`)} />)}
+                            {dashboardData.recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} onClick={() => navigate(`/student/${s.id}`)} />)}
                         </ul>
                     ) : (
                         <p className="text-center text-xs text-foreground/60 py-2">No students added yet.</p>

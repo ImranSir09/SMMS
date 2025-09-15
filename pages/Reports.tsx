@@ -17,7 +17,6 @@ const Reports: React.FC = () => {
     const navigate = useNavigate();
 
     const exams = useLiveQuery(() => db.exams.toArray(), []);
-    const students = useLiveQuery(() => db.students.toArray(), []);
     
     const [selectedExamId, setSelectedExamId] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('');
@@ -26,12 +25,11 @@ const Reports: React.FC = () => {
 
     const [selectedClass, setSelectedClass] = useState('');
 
-    const classOptions = useMemo<string[]>(() => {
-        if (!students) return [];
-        const classNames = students.map(s => s.className);
-        // FIX: Explicitly type the sort callback parameters to string to resolve a TypeScript inference issue.
-        return [...new Set(classNames)].sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true }));
-    }, [students]);
+    const classOptions = useLiveQuery(
+        () => db.students.orderBy('className').uniqueKeys()
+            .then(keys => (keys as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))),
+        []
+    );
 
     const handleGenerateTopperList = async () => {
         if (!selectedExamId || !selectedSubject) {
@@ -139,7 +137,7 @@ const Reports: React.FC = () => {
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Select Class</label>
                         <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className={inputStyle}>
                             <option value="">-- Choose Class --</option>
-                            {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                            {classOptions?.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                     </div>
                     <button 

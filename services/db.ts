@@ -181,3 +181,15 @@ db.version(13).stores({
   holisticRecords: '++id, &[studentId+domain+aspect], studentId, className',
   timetable: null, // This deletes the table
 });
+
+// v14: Add index on gender for faster dashboard queries
+db.version(14).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className, gender',
+  staff: '++id, name, staffId, designation, subjects',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  holisticRecords: '++id, &[studentId+domain+aspect], studentId, className',
+});

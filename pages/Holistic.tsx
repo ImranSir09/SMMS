@@ -29,19 +29,14 @@ const Holistic: React.FC = () => {
     const [activeClass, setActiveClass] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<ActiveTab>('Co-Curricular');
 
-    const allStudents = useLiveQuery(() => db.students.toArray(), []);
-
-    const classTabs = useMemo<string[]>(() => {
-        if (!allStudents) return [];
-        const classSet = new Set(allStudents.map(s => s.className));
-        // FIX: Explicitly type the sort callback parameters to string to resolve a TypeScript inference issue.
-        return Array.from(classSet).sort((a: string, b: string) => 
-            a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
-        );
-    }, [allStudents]);
+    const classTabs = useLiveQuery(
+        () => db.students.orderBy('className').uniqueKeys()
+            .then(keys => (keys as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))),
+        []
+    );
 
     useEffect(() => {
-        if (classTabs.length > 0 && !activeClass) {
+        if (classTabs && classTabs.length > 0 && !activeClass) {
             setActiveClass(classTabs[0]);
         }
     }, [classTabs, activeClass]);
@@ -95,7 +90,7 @@ const Holistic: React.FC = () => {
                     className="p-2 text-sm bg-background border border-input rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                     <option value="" disabled>-- Select a Class --</option>
-                    {classTabs.map(c => <option key={c} value={c}>Class {c}</option>)}
+                    {classTabs?.map(c => <option key={c} value={c}>Class {c}</option>)}
                 </select>
             </div>
             

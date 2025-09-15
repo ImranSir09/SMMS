@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -28,36 +29,39 @@ const Students: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const { addToast } = useToast();
     
-    const students = useLiveQuery(() => db.students.toArray(), []);
     const navigate = useNavigate();
 
-    const classTabs = useMemo<string[]>(() => {
-        if (!students) return [];
-        const classSet = new Set(students.map(s => s.className));
-        // FIX: Explicitly type the sort callback parameters to string to resolve a TypeScript inference issue.
-        return Array.from(classSet).sort((a: string, b: string) => 
-            a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
-        );
-    }, [students]);
+    const classTabs = useLiveQuery(
+        () => db.students.orderBy('className').uniqueKeys()
+            .then(keys => (keys as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))),
+        []
+    );
+
+    const studentsInClass = useLiveQuery(
+        () => activeClass ? db.students.where({ className: activeClass }).toArray() : [],
+        [activeClass]
+    );
+
+    // FIX: Correctly call useLiveQuery with an empty dependency array before the default value.
+    const totalStudentCount = useLiveQuery(() => db.students.count(), [], 0);
 
     useEffect(() => {
-        if (classTabs.length > 0 && !activeClass) {
+        if (classTabs && classTabs.length > 0 && !activeClass) {
             setActiveClass(classTabs[0]);
         }
     }, [classTabs, activeClass]);
 
     const filteredStudents = useMemo(() => {
-        if (!activeClass || !students) return [];
-        const classStudents = students
-            .filter(s => s.className === activeClass)
-            .sort((a, b) => a.rollNo.localeCompare(b.rollNo, undefined, { numeric: true, sensitivity: 'base' }));
+        if (!studentsInClass) return [];
+        const sorted = [...studentsInClass].sort((a, b) => a.rollNo.localeCompare(b.rollNo, undefined, { numeric: true, sensitivity: 'base' }));
 
-        if (!searchTerm) return classStudents;
-        return classStudents.filter(student =>
+        if (!searchTerm) return sorted;
+
+        return sorted.filter(student =>
             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             student.rollNo.includes(searchTerm)
         );
-    }, [activeClass, students, searchTerm]);
+    }, [studentsInClass, searchTerm]);
     
     const totalPages = Math.ceil((filteredStudents?.length || 0) / STUDENTS_PER_PAGE);
     const paginatedStudents = useMemo(() => {
@@ -115,7 +119,7 @@ const Students: React.FC = () => {
                     className="p-2 text-sm bg-background border border-input rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                     <option value="" disabled>-- Select a Class --</option>
-                    {classTabs.map(c => <option key={c} value={c}>Class {c}</option>)}
+                    {classTabs?.map(c => <option key={c} value={c}>Class {c}</option>)}
                 </select>
                 <div className="flex-shrink-0 flex items-center gap-2">
                     <button onClick={() => setIsBulkAddModalOpen(true)} className={secondaryButtonStyle}><UploadIcon className="w-4 h-4"/> Bulk</button>
@@ -143,13 +147,13 @@ const Students: React.FC = () => {
                 ))}
             </div>
             
-            {(paginatedStudents.length === 0 && students && students.length > 0) && (
+            {(paginatedStudents.length === 0 && totalStudentCount > 0) && (
                 <div className="flex-1 flex items-center justify-center text-center">
                     <p className="text-sm text-foreground/60">No students found for this class or search term.</p>
                 </div>
             )}
             
-            {(!students || students.length === 0) && (
+            {(totalStudentCount === 0) && (
                  <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-border rounded-lg">
                     <StudentsIcon className="w-10 h-10 text-foreground/20" />
                     <h3 className="text-md font-semibold mt-2">No Students Added</h3>
