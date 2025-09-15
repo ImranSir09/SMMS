@@ -171,7 +171,7 @@ const Holistic: React.FC = () => {
                  const MONTHS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
                 return (
                     <div className="space-y-2">
-                        <CollapsibleSection title="Part A: Health & Interests">
+                        <CollapsibleSection title="Part A: Health & Interests" defaultOpen={true}>
                             <div className="space-y-2">
                                 <TextareaInput path="healthNotes" label="Health Notes" placeholder="Any specific health information..." />
                                 <div>
@@ -190,7 +190,7 @@ const Holistic: React.FC = () => {
                                 </div>
                             </div>
                         </CollapsibleSection>
-                         <CollapsibleSection title="Part A: Attendance">
+                         <CollapsibleSection title="Part A: Attendance" defaultOpen={true}>
                             <div className="grid grid-cols-3 gap-2 text-xs">
                                 <div className="font-bold">Month</div><div className="font-bold text-center">Working</div><div className="font-bold text-center">Present</div>
                                 {MONTHS.map(month => {
@@ -235,7 +235,7 @@ const Holistic: React.FC = () => {
                 const scale = hpcData.stage === 'Preparatory' ? STAGE_CONFIG.Preparatory.scale : STAGE_CONFIG.Middle.scale;
                  return (
                      <div className="space-y-2">
-                        <CollapsibleSection title="Part B: Teacher's Observational Notes">
+                        <CollapsibleSection title="Part B: Teacher's Observational Notes" defaultOpen={true}>
                              {standards.map(standard => (
                                 <div key={standard} className="p-1 my-1 border rounded">
                                     <TextareaInput path={`${hpcData.stage!.toLowerCase()}Data.subjectAssessments.${standard}.observationalNotes`} label={standard} placeholder="Observational notes..." rows={2}/>

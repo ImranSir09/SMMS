@@ -92,7 +92,7 @@ const HPCFoundationalCard: React.FC<HPCFoundationalCardProps> = ({ student, scho
                         <tbody>
                             {['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'].map(month => {
                                 const data = hpcData.attendance?.[month.toLowerCase()];
-                                const percentage = (data && data.working && data.working > 0) ? ((data.present || 0 / data.working) * 100).toFixed(0) + '%' : '-';
+                                const percentage = (data && data.working && data.working > 0) ? (((data.present || 0) / data.working) * 100).toFixed(0) + '%' : '-';
                                 return (<tr key={month} className="text-center"><td className="border border-gray-400 p-0.5 font-semibold">{month}</td><td className="border border-gray-400 p-0.5 h-6">{data?.working || ''}</td><td className="border border-gray-400 p-0.5">{data?.present || ''}</td><td className="border border-gray-400 p-0.5">{percentage}</td></tr>);
                             })}
                         </tbody>
