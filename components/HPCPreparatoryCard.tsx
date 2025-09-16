@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails, HPCReportData } from '../types';
 
@@ -39,22 +40,22 @@ const SummarySection: React.FC<{ standard: string; hpcData: HPCReportData }> = (
     return (
         <div className="border border-gray-400 p-2 rounded-md break-inside-avoid-page">
             <h3 className="font-bold mb-2 col-span-full">{standard}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-2">
-                <div>
+            <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4">
+                <div className="flex flex-col items-center">
                     <h4 className="font-semibold text-center text-xs mb-1">Performance Level Descriptors</h4>
                     <div className="flex justify-around items-center bg-gray-50 p-1 rounded">
                         <Gauge level={summary.awareness} />
                         <Gauge level={summary.sensitivity} />
                         <Gauge level={summary.creativity} />
                     </div>
-                     <div className="grid grid-cols-3 gap-1 text-center text-[9px] mt-1">
-                        <span>Beginner</span>
-                        <span>Proficient</span>
-                        <span>Advanced</span>
+                     <div className="grid grid-cols-3 gap-1 text-center text-[9px] mt-1 w-full px-2">
+                        <span>Awareness</span>
+                        <span>Sensitivity</span>
+                        <span>Creativity</span>
                     </div>
                 </div>
                 <div>
-                    <div className="grid grid-cols-3 gap-2 items-start text-xs">
+                     <div className="grid grid-cols-3 gap-2 items-start text-xs">
                         {(['awareness', 'sensitivity', 'creativity'] as const).map(ability => (
                             <div key={ability}>
                                 <p className="font-semibold capitalize mb-1">{ability}</p>
@@ -79,41 +80,17 @@ const SummarySection: React.FC<{ standard: string; hpcData: HPCReportData }> = (
 
 
 const HPCPreparatoryCard: React.FC<HPCPreparatoryCardProps> = ({ student, schoolDetails, hpcData }) => {
-    const DetailBox: React.FC<{ label: string; value: string | undefined; className?: string }> = ({ label, value, className }) => (
-        <div className={`flex items-baseline ${className}`}><span className="font-semibold w-28 flex-shrink-0 text-gray-800">{label}:</span><span className="flex-1 border-b border-dotted border-gray-500 pl-1">{value || ''}</span></div>
-    );
-
     const summaryStandards = STAGE_CONFIG.Preparatory.learningStandards;
 
     return (
          <div className="text-black font-sans leading-tight text-xs">
             <div className="A4-page bg-white shadow-lg p-6 flex flex-col my-4">
                  <header className="text-center mb-4"><h1 className="text-xl font-bold">HOLISTIC PROGRESS CARD (HPC) - PREPARATORY STAGE</h1><p className="text-base">Academic Year: {hpcData.academicYear}</p></header>
-                 <section className="border-2 border-orange-500 p-3 rounded-md">
+                 <section>
                     <h2 className="text-center font-bold text-base text-orange-700 mb-2">PART-A: GENERAL INFORMATION</h2>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-                        <DetailBox label="School Name" value={schoolDetails.name} className="col-span-2" />
-                        <DetailBox label="Student's Name" value={student.name} />
-                        <DetailBox label="Admission No." value={student.admissionNo} />
-                        <DetailBox label="Date of Birth" value={student.dob} />
-                        <DetailBox label="Class" value={student.className} />
-                        <DetailBox label="Father's Name" value={student.fathersName} />
-                        <DetailBox label="Mother's Name" value={student.mothersName} />
-                        <DetailBox label="Address" value={student.address} className="col-span-2" />
-                        <DetailBox label="Contact No." value={student.contact} />
-                        <DetailBox label="UDISE Code" value={schoolDetails.udiseCode} />
-                    </div>
                  </section>
-                  <section className="border-2 border-orange-500 p-3 rounded-md mt-4 flex-grow">
-                    <h2 className="text-center font-bold text-base text-orange-700 mb-2">TEACHER'S OBSERVATIONAL NOTES / REMARKS</h2>
-                    <div className="w-full h-full border border-dotted min-h-[10rem] p-2 space-y-2 text-[10px]">
-                        {summaryStandards.map(standard => (
-                            <div key={standard}>
-                                <p className="font-semibold">{standard}:</p>
-                                <p className="pl-2 text-gray-700">{hpcData.preparatoryData?.subjectAssessments?.[standard]?.observationalNotes || '...'}</p>
-                            </div>
-                        ))}
-                    </div>
+                  <section className="flex-grow">
+                    <p className="text-sm font-bold text-center p-4">Note: The detailed graphical sections for Part A (All About Me, How I Feel at School, Peer Feedback, Parent Feedback) and Part B (Individual Subject Assessments) are part of the full report but are omitted in this summary view for data entry. The complete, formatted PDF will include all sections based on the available data.</p>
                   </section>
             </div>
 
