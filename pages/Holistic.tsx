@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Student, HPCReportData, HpcSentiment, ParentFeedback } from '../types';
-import { HolisticIcon, PlusIcon, SaveIcon } from '../components/icons';
+import { HolisticIcon, PlusIcon, SaveIcon, MountainIcon, SkyIcon, StreamIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useToast } from '../contexts/ToastContext';
 
@@ -75,6 +75,33 @@ const SentimentRadioGroup: React.FC<{ path: string, question: string, data: any,
         </div>
     </div>
 );
+
+const PerformanceLevelSelector: React.FC<{ path: string, label: string, data: any, onChange: (path: string, value: any) => void; }> = ({ path, label, data, onChange }) => {
+    const levels = [
+        { name: 'Stream', icon: <StreamIcon className="w-4 h-4" /> },
+        { name: 'Mountain', icon: <MountainIcon className="w-4 h-4" /> },
+        { name: 'Sky', icon: <SkyIcon className="w-4 h-4" /> },
+    ];
+    const currentValue = path.split('.').reduce((o: any, k) => o?.[k], data);
+
+    return (
+        <div className="flex items-center gap-2">
+            <label className="font-semibold text-xs w-20 flex-shrink-0">{label}</label>
+            <div className="flex-1 grid grid-cols-3 gap-1">
+                {levels.map(level => (
+                    <button
+                        key={level.name}
+                        type="button"
+                        onClick={() => onChange(path, level.name)}
+                        className={`flex items-center justify-center gap-1 text-xs p-1 rounded border-2 ${currentValue === level.name ? 'border-primary bg-primary/20' : 'border-transparent bg-background'}`}
+                    >
+                        {level.icon} {level.name}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 // Full HPC Form Component
 const HpcForm: React.FC<{ hpcData: Partial<HPCReportData>; onDataChange: (path: string, value: any) => void; onCheckboxChange: (path: string, value: string, checked: boolean) => void; }> = ({ hpcData, onDataChange, onCheckboxChange }) => {
@@ -194,24 +221,43 @@ const HpcForm: React.FC<{ hpcData: Partial<HPCReportData>; onDataChange: (path: 
             const domains = ['Physical Development', 'Socio-emotional Development', 'Cognitive Development', 'Language and Literacy', 'Aesthetic & Cultural', 'Positive Learning Habits'];
             return (
                 <div className="space-y-2">
-                    <TextareaInput path="healthNotes" label="Health Notes" placeholder="Any specific health information..." data={hpcData} onChange={onDataChange} />
-                    <CollapsibleSection title="Student's Interests" defaultOpen={true}>
-                         <div className="grid grid-cols-2 gap-1 text-xs">
-                            {interests.map(interest => (
-                                <label key={interest} className="flex items-center gap-2 p-2 bg-background/50 rounded">
-                                    <input type="checkbox"
-                                        checked={hpcData.foundationalData?.interests?.includes(interest) || false}
-                                        onChange={e => onCheckboxChange('foundationalData.interests', interest, e.target.checked)}
-                                    />
-                                    {interest}
-                                </label>
-                            ))}
+                    <CollapsibleSection title="Health Status / Interests" defaultOpen>
+                        <TextareaInput path="healthNotes" label="Health Notes" placeholder="Any specific health information..." data={hpcData} onChange={onDataChange} />
+                        <div className="mt-2">
+                            <label className="font-semibold text-xs mb-1 block">Student's Interests</label>
+                            <div className="grid grid-cols-2 gap-1 text-xs">
+                                {interests.map(interest => (
+                                    <label key={interest} className="flex items-center gap-2 p-2 bg-background/50 rounded">
+                                        <input type="checkbox"
+                                            checked={hpcData.foundationalData?.interests?.includes(interest) || false}
+                                            onChange={e => onCheckboxChange('foundationalData.interests', interest, e.target.checked)}
+                                        />
+                                        {interest}
+                                    </label>
+                                ))}
+                            </div>
+                            <TextInput path="foundationalData.otherInterest" label="Other interests:" data={hpcData} onChange={onDataChange} />
                         </div>
-                        <TextInput path="foundationalData.otherInterest" label="Other interests:" data={hpcData} onChange={onDataChange} />
                     </CollapsibleSection>
-                    <CollapsibleSection title="Teacher's Observational Notes">
+                    
+                    <CollapsibleSection title="Teacher's Observational Notes & Summary">
                         {domains.map(domain => (
-                            <TextareaInput key={domain} path={`foundationalData.domainAssessments.${domain}.observationalNotes`} label={domain} placeholder="Observational notes..." rows={2} data={hpcData} onChange={onDataChange} />
+                            <div key={domain} className="p-2 border-b last:border-b-0">
+                                <h4 className="font-bold text-sm mb-2">{domain}</h4>
+                                <div className="space-y-2">
+                                    <PerformanceLevelSelector path={`summaries.${domain}.awareness`} label="Awareness" data={hpcData} onChange={onDataChange} />
+                                    <PerformanceLevelSelector path={`summaries.${domain}.sensitivity`} label="Sensitivity" data={hpcData} onChange={onDataChange} />
+                                    <PerformanceLevelSelector path={`summaries.${domain}.creativity`} label="Creativity" data={hpcData} onChange={onDataChange} />
+                                    <TextareaInput 
+                                        path={`foundationalData.domainAssessments.${domain}.observationalNotes`}
+                                        label="Observational Notes"
+                                        placeholder={`Notes for ${domain}...`}
+                                        rows={2}
+                                        data={hpcData}
+                                        onChange={onDataChange}
+                                    />
+                                </div>
+                            </div>
                         ))}
                     </CollapsibleSection>
                 </div>
@@ -257,9 +303,9 @@ const Holistic: React.FC = () => {
                 grade: student.className,
                 summaries: {},
                 attendance: {},
-                foundationalData: stage === 'Foundational' ? { interests: [] } : {},
-                preparatoryData: stage === 'Preparatory' ? {} : {},
-                middleData: stage === 'Middle' ? {} : {},
+                foundationalData: stage === 'Foundational' ? { interests: [], domainAssessments: {} } : undefined,
+                preparatoryData: stage === 'Preparatory' ? {} : undefined,
+                middleData: stage === 'Middle' ? {} : undefined,
             };
         }
         setHpcData(data);
