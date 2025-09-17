@@ -1,3 +1,4 @@
+
 export interface SchoolDetails {
   id: number;
   name: string;
@@ -119,18 +120,31 @@ export interface PreparatoryPartA2 {
 }
 
 export interface PreparatoryPartA3 {
-  [key: string]: HpcSentiment;
+  participatesInClass?: HpcSentiment;
+  asksQuestions?: HpcSentiment;
+  listensAttentively?: HpcSentiment;
+  takesInitiative?: HpcSentiment;
+  worksIndependently?: HpcSentiment;
+  worksInGroups?: HpcSentiment;
+  isOrganized?: HpcSentiment;
+  isPunctual?: HpcSentiment;
+  respectsOthers?: HpcSentiment;
+  isResponsible?: HpcSentiment;
 }
 
 export interface ParentFeedback {
-  [key: string]: HpcSentiment | string;
+  childIsHappy?: HpcSentiment;
+  childSharesLearning?: HpcSentiment;
+  childFeelsSafe?: HpcSentiment;
+  childGetsHelp?: HpcSentiment;
+  parentObservesGrowth?: HpcSentiment;
+  parentSuggestions?: string;
 }
 
 export interface PreparatoryData {
   partA2?: PreparatoryPartA2;
   partA3?: PreparatoryPartA3;
   parentFeedback?: ParentFeedback;
-  // FIX: Added missing selfAssessment and peerAssessment properties to align with usage in HPCPreparatoryCard.
   selfAssessment?: { [key: string]: string };
   peerAssessment?: { [key: string]: string };
 }
@@ -179,10 +193,27 @@ export interface MiddlePartA3 {
 }
 
 export interface MiddlePartA4 {
-  resourcesAvailable?: { [key: string]: boolean };
+  resourcesAvailable?: {
+    books?: boolean;
+    internet?: boolean;
+    newspaper?: boolean;
+    tv?: boolean;
+    adults?: boolean;
+  };
   resourcesOther?: string;
-  understandingOfChild?: { [key: string]: HpcSentiment };
-  needsSupportWith?: { [key: string]: boolean };
+  understandingOfChild?: {
+    childsStrengths?: HpcSentiment;
+    childsInterests?: HpcSentiment;
+    childsNeeds?: HpcSentiment;
+    childsLearningStyle?: HpcSentiment;
+  };
+  needsSupportWith?: {
+    studyHabits?: boolean;
+    emotionalSupport?: boolean;
+    healthNutrition?: boolean;
+    socialSkills?: boolean;
+    careerGuidance?: boolean;
+  };
   needsSupportOther?: string;
   howParentWillSupport?: string;
 }
@@ -192,7 +223,6 @@ export interface MiddleData {
   partA2?: MiddlePartA2;
   partA3?: MiddlePartA3;
   partA4?: MiddlePartA4;
-  // FIX: Added missing selfAssessment, peerAssessment, and teacherAssessment properties to align with usage in HPCMiddleCard.
   selfAssessment?: { [key: string]: string };
   peerAssessment?: { [key: string]: string };
   teacherAssessment?: { [key: string]: string };
