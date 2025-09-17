@@ -1,4 +1,3 @@
-
 // types.ts
 
 export interface SchoolDetails {
@@ -77,32 +76,58 @@ export interface DailyLog {
 // ===================================
 
 type HpcPerformanceLevel = 'Beginner' | 'Proficient' | 'Advanced' | 'Stream' | 'Mountain' | 'Sky' | '';
+// FIX: Export HpcSentiment type
+export type HpcSentiment = 'Yes' | 'Sometimes' | 'No' | 'Not sure';
 
 // General
 interface HpcAttendance {
     [month: string]: { working?: number; present?: number; reason?: string };
 }
 
-// Universal Parent Feedback (Prep & Middle)
-interface ParentFeedback {
-    resources?: string[];
-    childUnderstanding?: { [key: string]: string };
+// Universal Parent Feedback
+// FIX: Export ParentFeedback interface
+export interface ParentFeedback {
+    resourcesAvailable?: string[];
+    otherResource?: string;
+    childUnderstanding?: {
+      motivated?: HpcSentiment;
+      followsSchedule?: HpcSentiment;
+      findsDifficult?: HpcSentiment;
+      makingProgress?: HpcSentiment;
+      // Preparatory specific
+      findsWelcoming?: HpcSentiment;
+      participates?: HpcSentiment;
+      gettingSupport?: HpcSentiment;
+      canTalkAboutFeels?: HpcSentiment;
+      canCalmDown?: HpcSentiment;
+      understandsFriends?: HpcSentiment;
+      respectsOpinions?: HpcSentiment;
+      canHelpFriends?: HpcSentiment;
+      canMakeFeelBetter?: HpcSentiment;
+    };
     supportNeeded?: string[];
     otherSupport?: string;
     supportAtHome?: string;
 }
 
 // Universal Subject/Domain Assessment
-interface HpcTeacherFeedback {
-    observationalNotes?: string;
-}
-
 interface HpcSubjectAssessment {
+    // Part B fields for Middle/Preparatory
     curricularGoals?: string[];
     competencies?: string[];
     approach?: string[];
     activity?: string;
     assessmentQuestion?: string;
+    
+    // Middle stage specific progress wheel data
+    selfAssessment?: { awareness: number; sensitivity: number; creativity: number };
+    peerAssessment?: { awareness: number; sensitivity: number; creativity: number };
+    teacherAssessment?: { awareness: HpcPerformanceLevel; sensitivity: HpcPerformanceLevel; creativity: HpcPerformanceLevel };
+    
+    areasOfStrength?: string[];
+    barriersToSuccess?: string[];
+    howToHelp?: string;
+    
     observationalNotes?: string;
 }
 
@@ -112,12 +137,14 @@ interface HpcSubjectAssessment {
 // Foundational Stage
 interface FoundationalData {
     interests?: string[];
+    otherInterest?: string;
     domainAssessments?: { [domain: string]: { observationalNotes?: string } };
 }
 
 // Preparatory Stage
 interface PreparatoryPartA2 {
-    myFamily?: string; // image data
+    myFamily?: string;
+    myFamilyDraw?: string; // image data
     handDiagram?: { iLikeTo?: string; iAmGoodAt?: string; iAmNotSoGoodAt?: string; iWouldLikeToImprove?: string; iDontLikeTo?: string; };
     favoriteThings?: { food?: string; games?: string; festivals?: string; };
     whenIGrowUp?: string;
@@ -125,11 +152,23 @@ interface PreparatoryPartA2 {
     threeThingsToLearn?: string;
 }
 
+// FIX: Create a specific interface for Preparatory Part A3 to improve type safety
+interface PreparatoryPartA3 {
+    canTalkAboutFeelings?: HpcSentiment;
+    canCalmDown?: HpcSentiment;
+    understandsFriends?: HpcSentiment;
+    respectsOpinions?: HpcSentiment;
+    canHelpFriends?: HpcSentiment;
+    canMakeFeelBetter?: HpcSentiment;
+    doesWell?: HpcSentiment;
+}
+
 interface PreparatoryData {
     partA2?: PreparatoryPartA2;
-    partA3?: { [key: string]: string }; // How do I feel at school?
-    peerFeedback1?: { [key: string]: string };
-    peerFeedback2?: { [key: string]: string };
+    // FIX: Use the specific PreparatoryPartA3 interface instead of a generic index signature
+    partA3?: PreparatoryPartA3; // How do I feel at school?
+    peerFeedback1?: { [key: string]: HpcSentiment };
+    peerFeedback2?: { [key: string]: HpcSentiment };
     parentFeedback?: ParentFeedback;
     subjectAssessments?: { [subject: string]: HpcSubjectAssessment };
 }
@@ -138,9 +177,9 @@ interface PreparatoryData {
 interface MiddlePartA2 {
     iLiveWith?: string; weStayAt?: string; freeTimeDoing?: string;
     iAmResponsible?: string; couldDoBetter?: string; iCareAboutOthers?: string; feelProud?: string;
-    academicGoal?: { importantBecause?: string; steps?: string; };
-    personalGoal?: { importantBecause?: string; steps?: string; };
-    learnings?: { atSchool?: string; outsideSchool?: string; };
+    academicGoal?: { importantBecause?: string; step1?: string; step2?: string };
+    personalGoal?: { importantBecause?: string; step1?: string; step2?: string };
+    learnings?: { atSchool1?: string; atSchool2?: string; atSchool3?: string; outside1?: string; outside2?: string; outside3?: string; };
     forMyTeacher?: { helpMeWith?: string; teacherToKnow?: string; };
 }
 

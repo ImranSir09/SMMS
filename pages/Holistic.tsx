@@ -1,30 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Student, HPCReportData } from '../types';
+import { Student, HPCReportData, HpcSentiment, ParentFeedback } from '../types';
 import { HolisticIcon, PlusIcon, SaveIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useToast } from '../contexts/ToastContext';
 
 const ACADEMIC_YEAR = '2024-25';
-
-// Expanded configuration to drive form generation
-const STAGE_CONFIG = {
-    Foundational: {
-        domains: ['Physical Development', 'Socio-emotional Development', 'Cognitive Development', 'Language and Literacy', 'Aesthetic & Cultural', 'Positive Learning Habits'],
-        scale: ['Stream', 'Mountain', 'Sky'],
-        interests: ['Reading', 'Creative writing', 'Dancing or Singing or Playing a musical instrument', 'Gardening', 'Yoga', 'Art', 'Craft', 'Sport or Games', 'Cooking', 'Regular chores at home with significant others']
-    },
-    Preparatory: {
-        learningStandards: ['Language Education (R1)', 'Language Education (R2)', 'Mathematics', 'The World Around Us', 'Art Education', 'Physical Education'],
-        scale: ['Beginner', 'Proficient', 'Advanced'],
-    },
-    Middle: {
-        learningStandards: ['Language 1 (R1)', 'Language 2 (R2)', 'Language 3 (R3)', 'Mathematics', 'Science', 'Social Science', 'Art Education', 'Physical Education', 'Skill Education'],
-        scale: ['Beginner', 'Proficient', 'Advanced'],
-    }
-};
 
 const getStageForClass = (className: string): 'Foundational' | 'Preparatory' | 'Middle' | null => {
     const foundational = ['PP1', 'PP2', 'Balvatika', '1st', '2nd'];
@@ -37,6 +19,7 @@ const getStageForClass = (className: string): 'Foundational' | 'Preparatory' | '
     return null;
 };
 
+// Reusable Form Components
 const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = false }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     return (
@@ -48,6 +31,192 @@ const CollapsibleSection: React.FC<{ title: string; children: React.ReactNode; d
             {isOpen && <div className="p-2 border-t border-border">{children}</div>}
         </div>
     );
+};
+
+const TextInput: React.FC<{ path: string; label: string; placeholder?: string; data: any; onChange: (path: string, value: any) => void; }> = ({ path, label, placeholder, data, onChange }) => (
+    <div>
+        <label className="font-semibold text-xs mb-1 block">{label}</label>
+        <input 
+            type="text"
+            placeholder={placeholder} 
+            className="w-full p-2 text-sm bg-background border border-input rounded"
+            value={path.split('.').reduce((o: any, k) => o?.[k], data) || ''}
+            onChange={e => onChange(path, e.target.value)}
+        />
+    </div>
+);
+
+const TextareaInput: React.FC<{ path: string, placeholder: string, label: string, rows?: number; data: any; onChange: (path: string, value: any) => void; }> = ({path, placeholder, label, rows=3, data, onChange}) => (
+    <div>
+        <label className="font-semibold text-xs mb-1 block">{label}</label>
+        <textarea 
+            placeholder={placeholder} 
+            className="w-full p-2 text-sm bg-background border border-input rounded"
+            style={{ minHeight: `${rows * 1.5}rem`}}
+            value={path.split('.').reduce((o: any, k) => o?.[k], data) || ''}
+            onChange={e => onChange(path, e.target.value)}
+        />
+    </div>
+);
+
+const SentimentRadioGroup: React.FC<{ path: string, question: string, data: any, onChange: (path: string, value: any) => void; }> = ({ path, question, data, onChange }) => (
+    <div className="p-2 border rounded-md my-1">
+        <p className="text-xs font-medium mb-1">{question}</p>
+        <div className="flex items-center justify-around text-xs">
+            {(['Yes', 'Sometimes', 'No', 'Not sure'] as HpcSentiment[]).map(option => (
+                <label key={option} className="flex items-center gap-1">
+                    <input type="radio" name={path} value={option} 
+                        checked={path.split('.').reduce((o: any, k) => o?.[k], data) === option}
+                        onChange={() => onChange(path, option)}
+                    />
+                    {option}
+                </label>
+            ))}
+        </div>
+    </div>
+);
+
+// Full HPC Form Component
+const HpcForm: React.FC<{ hpcData: Partial<HPCReportData>; onDataChange: (path: string, value: any) => void; onCheckboxChange: (path: string, value: string, checked: boolean) => void; }> = ({ hpcData, onDataChange, onCheckboxChange }) => {
+    if (!hpcData || !hpcData.stage) return null;
+
+    const renderParentPartnershipForm = (stage: 'preparatory' | 'middle') => {
+        const parentData = (hpcData as any)[`${stage}Data`]?.parentFeedback || {};
+        const path = `${stage}Data.parentFeedback`;
+        
+        const resourceOptions = ["Books and Magazines", "Newspapers", "Toys, Games and sports", "Phone and Computer", "Internet", "Public Broadcast System", "Resources for CWSN"];
+        const supportOptions = ["Languages (R1, R2, R3)", "Building self-belief & self-reliance", "Managing difficult emotions like anger", "Skill Guidance/Digital Literacy", "Mathematics", "Science", "Social Science", "Developing social skills & conflict resolution", "Developing effective study skills like time management"];
+
+        const understandingQuestions: { key: keyof NonNullable<ParentFeedback['childUnderstanding']>, label: string }[] = [
+            { key: 'motivated', label: "1. My child seems motivated to learn and engage with new concepts learnt at school." },
+            { key: 'followsSchedule', label: "2. My child follows a schedule at home that includes curriculum and other activities, social connectivity, and screen time." },
+            { key: 'findsDifficult', label: "3. My child finds the grade-level curriculum difficult and needs additional support." },
+            { key: 'makingProgress', label: "4. My child is making good progress as per his/her grade." },
+        ];
+        
+        return (
+             <CollapsibleSection title="Part A(4): Parent-Teacher Partnership Card">
+                <div className="space-y-3 text-xs">
+                    <div>
+                        <p className="font-semibold mb-1">Resources available to your child at home:</p>
+                        <div className="grid grid-cols-2 gap-1">
+                            {resourceOptions.map(res => (
+                                <label key={res} className="flex items-center gap-2 p-1 bg-background/50 rounded">
+                                    <input type="checkbox" checked={parentData.resourcesAvailable?.includes(res) || false} onChange={e => onCheckboxChange(`${path}.resourcesAvailable`, res, e.target.checked)} /> {res}
+                                </label>
+                            ))}
+                        </div>
+                         <TextInput path={`${path}.otherResource`} label="Any other resource:" data={hpcData} onChange={onDataChange} />
+                    </div>
+                    <div>
+                        <p className="font-semibold mb-1">Understanding of my Child:</p>
+                        {understandingQuestions.map(q => <SentimentRadioGroup key={q.key} path={`${path}.childUnderstanding.${q.key}`} question={q.label} data={hpcData} onChange={onDataChange} />)}
+                    </div>
+                    <div>
+                        <p className="font-semibold mb-1">At school, my child needs support with:</p>
+                        <div className="grid grid-cols-2 gap-1">
+                            {supportOptions.map(opt => (
+                                <label key={opt} className="flex items-center gap-2 p-1 bg-background/50 rounded">
+                                    <input type="checkbox" checked={parentData.supportNeeded?.includes(opt) || false} onChange={e => onCheckboxChange(`${path}.supportNeeded`, opt, e.target.checked)} /> {opt}
+                                </label>
+                            ))}
+                        </div>
+                        <TextInput path={`${path}.otherSupport`} label="Any other support needed:" data={hpcData} onChange={onDataChange} />
+                    </div>
+                    <TextareaInput path={`${path}.supportAtHome`} label="Based on my discussion with the teacher, I will support my child at home by:" placeholder="..." data={hpcData} onChange={onDataChange} />
+                </div>
+             </CollapsibleSection>
+        )
+    };
+
+    switch(hpcData.stage) {
+        case 'Preparatory':
+            const prepQuestions = [
+                { key: 'canTalkAboutFeelings', label: '1. I can talk about how I feel, e.g., happy, confident, upset, or angry.' },
+                { key: 'canCalmDown', label: '2. I can calm myself down during difficult situations.' },
+                { key: 'understandsFriends', label: '3. I can understand how my friends feel.' },
+                { key: 'respectsOpinions', label: "4. I respect everyone's opinions." },
+                { key: 'canHelpFriends', label: "5. I can help my friends make up after a fight." },
+                { key: 'canMakeFeelBetter', label: "6. When someone is sad, I can make them feel better." },
+                { key: 'doesWell', label: "7. I think I do well at school." }
+            ];
+             return (
+                <div className="space-y-2">
+                    <CollapsibleSection title="Part A(2): All About Me">
+                        <TextareaInput path="preparatoryData.partA2.whenIGrowUp" label="When I grow up I want to be..." placeholder="..." data={hpcData} onChange={onDataChange} />
+                        <TextareaInput path="preparatoryData.partA2.myIdol" label="One person who inspires me is..." placeholder="..." data={hpcData} onChange={onDataChange} />
+                        <TextareaInput path="preparatoryData.partA2.threeThingsToLearn" label="Three things I want to learn this school year:" placeholder="..." data={hpcData} onChange={onDataChange} />
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Part A(3): How do I feel at school?">
+                        {prepQuestions.map(q => <SentimentRadioGroup key={q.key} path={`preparatoryData.partA3.${q.key}`} question={q.label} data={hpcData} onChange={onDataChange} />)}
+                    </CollapsibleSection>
+                    {renderParentPartnershipForm('preparatory')}
+                </div>
+            );
+        case 'Middle':
+             return (
+                <div className="space-y-2">
+                     <CollapsibleSection title="Part A(2): All About Me!">
+                         <div className="space-y-2">
+                             <TextInput path="middleData.partA2.iLiveWith" label="I live with my..." data={hpcData} onChange={onDataChange} />
+                             <TextInput path="middleData.partA2.weStayAt" label="We stay at..." data={hpcData} onChange={onDataChange} />
+                             {/* FIX: Add missing placeholder prop */}
+<TextareaInput path="middleData.partA2.freeTimeDoing" label="I spend my free time doing..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                             {/* FIX: Add missing placeholder prop */}
+<TextareaInput path="middleData.partA2.iAmResponsible" label="I am responsible..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                             {/* FIX: Add missing placeholder prop */}
+<TextareaInput path="middleData.partA2.couldDoBetter" label="I could do better specially when it comes to..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                             {/* FIX: Add missing placeholder prop */}
+<TextareaInput path="middleData.partA2.iCareAboutOthers" label="I care about others. I show it by..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                             {/* FIX: Add missing placeholder prop */}
+<TextareaInput path="middleData.partA2.feelProud" label="I feel proud of myself when..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                         </div>
+                     </CollapsibleSection>
+                      <CollapsibleSection title="Part A(3): My Ambition Card">
+                        <div className="space-y-2">
+                            <TextInput path="middleData.partA3.myAmbitionIs" label="My ambition is..." data={hpcData} onChange={onDataChange} />
+                            {/* FIX: Add missing placeholder prop */}
+<TextareaInput path="middleData.partA3.fiveSkills" label="5 skills I need to achieve my ambition:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
+                            {/* FIX: Add missing placeholder prop */}
+<TextareaInput path="middleData.partA3.habitsToBe" label="To achieve my ambition, I need my habits to be:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
+                            {/* FIX: Add missing placeholder prop */}
+<TextareaInput path="middleData.partA3.achieveAmbitionBy" label="I will achieve my ambition by:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
+                            {/* FIX: Add missing placeholder prop */}
+<TextareaInput path="middleData.partA3.subjectsToFocusOn" label="Subjects I need to focus on:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
+                        </div>
+                     </CollapsibleSection>
+                     {renderParentPartnershipForm('middle')}
+                </div>
+             )
+        default:
+            // The Foundational form is simple enough to not need its own component
+            const interests = ['Reading', 'Creative writing', 'Dancing or Singing or Playing a musical instrument', 'Gardening', 'Yoga', 'Art', 'Craft', 'Sport or Games', 'Cooking', 'Regular chores at home with significant others'];
+            const domains = ['Physical Development', 'Socio-emotional Development', 'Cognitive Development', 'Language and Literacy', 'Aesthetic & Cultural', 'Positive Learning Habits'];
+            return (
+                <div className="space-y-2">
+                    <TextareaInput path="healthNotes" label="Health Notes" placeholder="Any specific health information..." data={hpcData} onChange={onDataChange} />
+                    <CollapsibleSection title="Student's Interests" defaultOpen={true}>
+                         <div className="grid grid-cols-2 gap-1 text-xs">
+                            {interests.map(interest => (
+                                <label key={interest} className="flex items-center gap-2 p-2 bg-background/50 rounded">
+                                    <input type="checkbox"
+                                        checked={hpcData.foundationalData?.interests?.includes(interest) || false}
+                                        onChange={e => onCheckboxChange('foundationalData.interests', interest, e.target.checked)}
+                                    />
+                                    {interest}
+                                </label>
+                            ))}
+                        </div>
+                        <TextInput path="foundationalData.otherInterest" label="Other interests:" data={hpcData} onChange={onDataChange} />
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Teacher's Observational Notes">
+                        {domains.map(domain => (
+                            <TextareaInput key={domain} path={`foundationalData.domainAssessments.${domain}.observationalNotes`} label={domain} placeholder="Observational notes..." rows={2} data={hpcData} onChange={onDataChange} />
+                        ))}
+                    </CollapsibleSection>
+                </div>
+            );
+    }
 };
 
 const Holistic: React.FC = () => {
@@ -88,9 +257,9 @@ const Holistic: React.FC = () => {
                 grade: student.className,
                 summaries: {},
                 attendance: {},
-                foundationalData: stage === 'Foundational' ? { interests: [] } : undefined,
-                preparatoryData: stage === 'Preparatory' ? {} : undefined,
-                middleData: stage === 'Middle' ? {} : undefined,
+                foundationalData: stage === 'Foundational' ? { interests: [] } : {},
+                preparatoryData: stage === 'Preparatory' ? {} : {},
+                middleData: stage === 'Middle' ? {} : {},
             };
         }
         setHpcData(data);
@@ -106,12 +275,10 @@ const Holistic: React.FC = () => {
         setHpcData(prev => {
             if (!prev) return null;
             const keys = path.split('.');
-            const newState = JSON.parse(JSON.stringify(prev)); // Deep copy
+            const newState = JSON.parse(JSON.stringify(prev));
             let current: any = newState;
             for (let i = 0; i < keys.length - 1; i++) {
-                if (current[keys[i]] === undefined || current[keys[i]] === null) {
-                    current[keys[i]] = {};
-                }
+                if (current[keys[i]] === undefined || current[keys[i]] === null) current[keys[i]] = {};
                 current = current[keys[i]];
             }
             current[keys[keys.length - 1]] = value;
@@ -131,11 +298,8 @@ const Holistic: React.FC = () => {
             }
             const arrayKey = keys[keys.length - 1];
             let currentArray = current[arrayKey] || [];
-            if(checked) {
-                currentArray = [...currentArray, value];
-            } else {
-                currentArray = currentArray.filter((item: string) => item !== value);
-            }
+            if(checked) currentArray = [...currentArray, value];
+            else currentArray = currentArray.filter((item: string) => item !== value);
             current[arrayKey] = [...new Set(currentArray)];
             return newState;
         });
@@ -150,121 +314,6 @@ const Holistic: React.FC = () => {
         } catch (error) {
             console.error("Failed to save HPC data:", error);
             addToast('Failed to save data.', 'error');
-        }
-    };
-
-    const renderForm = () => {
-        if (!hpcData) return null;
-        const TextareaInput: React.FC<{ path: string, placeholder: string, label: string, rows?: number }> = ({path, placeholder, label, rows=3}) => (
-            <div>
-                <label className="font-semibold text-xs mb-1 block">{label}</label>
-                <textarea 
-                    placeholder={placeholder} 
-                    className="w-full p-2 text-sm bg-background border border-input rounded"
-                    style={{ minHeight: `${rows * 1.5}rem`}}
-                    value={path.split('.').reduce((o: any, k) => o?.[k], hpcData) || ''}
-                    onChange={e => handleDataChange(path, e.target.value)}
-                />
-            </div>
-        );
-        
-        switch(hpcData.stage) {
-            case 'Foundational':
-                 const MONTHS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-                return (
-                    <div className="space-y-2">
-                        <CollapsibleSection title="Part A: Health & Interests" defaultOpen={true}>
-                            <div className="space-y-2">
-                                <TextareaInput path="healthNotes" label="Health Notes" placeholder="Any specific health information..." />
-                                <div>
-                                    <label className="font-semibold text-xs mb-1 block">Student's Interests</label>
-                                    <div className="grid grid-cols-2 gap-1 text-xs">
-                                        {STAGE_CONFIG.Foundational.interests.map(interest => (
-                                            <label key={interest} className="flex items-center gap-2 p-2 bg-background/50 rounded">
-                                                <input type="checkbox"
-                                                    checked={hpcData.foundationalData?.interests?.includes(interest) || false}
-                                                    onChange={e => handleCheckboxChange('foundationalData.interests', interest, e.target.checked)}
-                                                    className="w-4 h-4"
-                                                />
-                                                {interest}
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </CollapsibleSection>
-                         <CollapsibleSection title="Part A: Attendance">
-                            <div className="grid grid-cols-3 gap-2 text-xs">
-                                <div className="font-bold">Month</div><div className="font-bold text-center">Working</div><div className="font-bold text-center">Present</div>
-                                {MONTHS.map(month => {
-                                    const monthKey = month.toLowerCase();
-                                    return (
-                                        <React.Fragment key={month}>
-                                            <div className="font-semibold flex items-center">{month}</div>
-                                            <div><input type="number" placeholder="WD" className="w-full p-2 text-sm text-center bg-background border border-input rounded" value={hpcData.attendance?.[monthKey]?.working ?? ''} onChange={e => handleDataChange(`attendance.${monthKey}.working`, e.target.valueAsNumber)} /></div>
-                                            <div><input type="number" placeholder="PD" className="w-full p-2 text-sm text-center bg-background border border-input rounded" value={hpcData.attendance?.[monthKey]?.present ?? ''} onChange={e => handleDataChange(`attendance.${monthKey}.present`, e.target.valueAsNumber)} /></div>
-                                        </React.Fragment>
-                                    );
-                                })}
-                            </div>
-                        </CollapsibleSection>
-                        <CollapsibleSection title="Part B: Domain Assessments (Teacher's Notes)">
-                            {STAGE_CONFIG.Foundational.domains.map(domain => (
-                                <div key={domain} className="p-1 my-1 border rounded">
-                                    <TextareaInput path={`foundationalData.domainAssessments.${domain}.observationalNotes`} label={domain} placeholder="Observational notes..." rows={2} />
-                                </div>
-                            ))}
-                        </CollapsibleSection>
-                         <CollapsibleSection title="Part C: Summary Assessment">
-                            {STAGE_CONFIG.Foundational.domains.map(domain => (
-                                <div key={domain} className="p-1 my-1 border rounded">
-                                    <h5 className="font-semibold text-xs mb-1">{domain}</h5>
-                                     <div className="grid grid-cols-3 gap-1">
-                                         {(['awareness', 'sensitivity', 'creativity'] as const).map(ability => (
-                                            <select key={ability} value={hpcData.summaries?.[domain]?.[ability] || ''} onChange={e => handleDataChange(`summaries.${domain}.${ability}`, e.target.value)} className="w-full p-2 text-sm bg-background border border-input rounded">
-                                                 <option value="">{ability.charAt(0).toUpperCase() + ability.slice(1)}</option>
-                                                 {STAGE_CONFIG.Foundational.scale.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                            </select>
-                                         ))}
-                                     </div>
-                                </div>
-                            ))}
-                        </CollapsibleSection>
-                    </div>
-                );
-            case 'Preparatory':
-            case 'Middle':
-                const stageKey = hpcData.stage!.toLowerCase() as 'preparatory' | 'middle';
-                const standards = hpcData.stage === 'Preparatory' ? STAGE_CONFIG.Preparatory.learningStandards : STAGE_CONFIG.Middle.learningStandards;
-                const scale = hpcData.stage === 'Preparatory' ? STAGE_CONFIG.Preparatory.scale : STAGE_CONFIG.Middle.scale;
-                 return (
-                     <div className="space-y-2">
-                        <CollapsibleSection title="Part B: Teacher's Observational Notes" defaultOpen={true}>
-                             {standards.map(standard => (
-                                <div key={standard} className="p-1 my-1 border rounded">
-                                    <TextareaInput path={`${stageKey}Data.subjectAssessments.${standard}.observationalNotes`} label={standard} placeholder="Observational notes..." rows={2} />
-                                </div>
-                            ))}
-                        </CollapsibleSection>
-                         <CollapsibleSection title="Part C: Summary Assessment">
-                            {standards.map(standard => (
-                                <div key={standard} className="p-1 my-1 border rounded">
-                                    <h5 className="font-semibold text-xs mb-1">{standard}</h5>
-                                     <div className="grid grid-cols-3 gap-1">
-                                        {(['awareness', 'sensitivity', 'creativity'] as const).map(ability => (
-                                            <select key={ability} value={hpcData.summaries?.[standard]?.[ability] || ''} onChange={e => handleDataChange(`summaries.${standard}.${ability}`, e.target.value)} className="w-full p-2 text-sm bg-background border border-input rounded">
-                                                 <option value="">{ability.charAt(0).toUpperCase() + ability.slice(1)}</option>
-                                                 {scale.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                            </select>
-                                         ))}
-                                     </div>
-                                </div>
-                            ))}
-                        </CollapsibleSection>
-                    </div>
-                );
-            default:
-                return <div>Configuration for this stage is not available.</div>;
         }
     };
 
@@ -298,7 +347,7 @@ const Holistic: React.FC = () => {
                 title={`HPC Entry for ${selectedStudent?.name}`}
             >
                 <div className="p-2 space-y-4">
-                    {renderForm()}
+                    {hpcData && <HpcForm hpcData={hpcData} onDataChange={handleDataChange} onCheckboxChange={handleCheckboxChange} />}
                 </div>
                  <footer className="flex-shrink-0 flex items-center justify-end p-2 border-t border-border gap-2 bg-card">
                     <button onClick={handleSave} className="py-2 px-4 rounded-md bg-success text-success-foreground hover:bg-success-hover text-sm font-semibold flex items-center gap-1.5">

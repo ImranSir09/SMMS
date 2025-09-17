@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Student, SchoolDetails, HPCReportData } from '../types';
 
@@ -87,20 +86,20 @@ const HPCPreparatoryCard: React.FC<HPCPreparatoryCardProps> = ({ student, school
             <div className="A4-page bg-white shadow-lg p-6 flex flex-col my-4">
                  <header className="text-center mb-4"><h1 className="text-xl font-bold">HOLISTIC PROGRESS CARD (HPC) - PREPARATORY STAGE</h1><p className="text-base">Academic Year: {hpcData.academicYear}</p></header>
                  <section>
-                    <h2 className="text-center font-bold text-base text-orange-700 mb-2">PART-A: GENERAL INFORMATION</h2>
+                    <h2 className="text-center font-bold text-base text-orange-700 mb-2">PART-A: GENERAL INFORMATION (Summary)</h2>
+                     <div className="text-center text-sm p-2 border rounded-md">
+                        <p><strong>Student:</strong> {student.name} | <strong>Class:</strong> {student.className} | <strong>Adm No:</strong> {student.admissionNo}</p>
+                        <p className="mt-2 italic">Note: Full Part A & B details are available in the comprehensive school record.</p>
+                    </div>
                  </section>
-                  <section className="flex-grow">
-                    <p className="text-sm font-bold text-center p-4">Note: The detailed graphical sections for Part A (All About Me, How I Feel at School, Peer Feedback, Parent Feedback) and Part B (Individual Subject Assessments) are part of the full report but are omitted in this summary view. The complete, formatted PDF will include all sections based on the available data.</p>
+                  <section className="flex-grow mt-4">
+                     <h1 className="text-xl font-bold text-center mb-2">PART-C: SUMMARY FOR THE ACADEMIC YEAR</h1>
+                     <div className="space-y-3">
+                        {summaryStandards.map(standard => (
+                            <SummarySection key={standard} standard={standard} hpcData={hpcData} />
+                        ))}
+                     </div>
                   </section>
-            </div>
-
-            <div className="A4-page bg-white shadow-lg p-6 flex flex-col text-sm my-4">
-                 <header className="text-center mb-4"><h1 className="text-xl font-bold">PART-C: SUMMARY FOR THE ACADEMIC YEAR</h1></header>
-                 <div className="space-y-3">
-                    {summaryStandards.map(standard => (
-                        <SummarySection key={standard} standard={standard} hpcData={hpcData} />
-                    ))}
-                 </div>
                  <footer className="mt-auto pt-16 flex justify-between items-end"><div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Parent's Signature</p></div><div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Teacher's Signature</p></div><div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Principal's Signature</p></div></footer>
             </div>
          </div>
