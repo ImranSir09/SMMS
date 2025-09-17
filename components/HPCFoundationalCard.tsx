@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Student, SchoolDetails, HPCReportData } from '../types';
 
@@ -40,7 +41,8 @@ const HPCFoundationalCard: React.FC<HPCFoundationalCardProps> = ({ student, scho
                 <td className="border p-1">{renderCircles(summary?.awareness)}</td>
                 <td className="border p-1">{renderCircles(summary?.sensitivity)}</td>
                 <td className="border p-1">{renderCircles(summary?.creativity)}</td>
-                <td className="border p-1 text-left text-[10px] leading-tight min-h-[3rem] align-top">{hpcData.foundationalData?.domainAssessments?.[domain]?.observationalNotes || ''}</td>
+                {/* FIX: Correctly access observationalNotes from the 'summary' object, as 'domainAssessments' does not exist on 'foundationalData'. */}
+                <td className="border p-1 text-left text-[10px] leading-tight min-h-[3rem] align-top">{summary.observationalNotes || ''}</td>
             </tr>
         );
     };

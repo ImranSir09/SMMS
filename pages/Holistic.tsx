@@ -1,11 +1,10 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Student, HPCReportData } from '../types';
+import { Student, HPCReportData, HpcPerformanceLevel, HpcSentiment, ParentFeedback, PreparatoryPartA3, HpcSubjectAssessment } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import Card from '../components/Card';
-import { SaveIcon, UsersIcon } from '../components/icons';
+import { SaveIcon, UsersIcon, PaletteIcon, HeartHandIcon, FlaskConicalIcon, ArrowRightIcon } from '../components/icons';
 import { useNavigate } from 'react-router-dom';
 
 const ACADEMIC_YEAR = '2024-25';
@@ -26,13 +25,57 @@ const defaultHpcData = (student: Student, stage: 'Foundational' | 'Preparatory' 
     academicYear: ACADEMIC_YEAR,
     stage,
     summaries: {},
-    healthNotes: '',
     attendance: {},
-    foundationalData: { interests: [], domainAssessments: {} },
-    preparatoryData: { selfAssessment: {}, peerAssessment: {} },
-    middleData: { selfAssessment: {}, peerAssessment: {}, teacherAssessment: {} }
+    foundationalData: { interests: [] },
+    preparatoryData: { partA2: { thingsToLearn: [] }, partA3: {}, parentFeedback: {} },
+    middleData: { 
+        partA1: {}, 
+        partA2: { academicGoalSteps: [], personalGoalSteps: [], thingsLearntAtSchool: [], thingsLearntOutsideSchool: [] }, 
+        partA3: {}, 
+        partA4: { resourcesAvailable: {}, understandingOfChild: {}, needsSupportWith: {} } 
+    },
+    subjectAssessments: {},
 });
 
+const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-primary text-sm transition-colors";
+const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
+const checkboxLabelStyle = "flex items-center gap-2 text-sm cursor-pointer";
+
+// Reusable Collapsible Section with its own state
+const CollapsibleSection: React.FC<{ title: string; children: ReactNode, initiallyOpen?: boolean }> = ({ title, children, initiallyOpen = false }) => {
+    const [isOpen, setIsOpen] = useState(initiallyOpen);
+    return (
+        <div className="border border-border rounded-lg">
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex justify-between items-center p-2 bg-background/50 hover:bg-black/5 dark:hover:bg-white/5"
+            >
+                <h3 className="font-semibold text-sm">{title}</h3>
+                <ArrowRightIcon className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+            </button>
+            {isOpen && <div className="p-3 border-t border-border">{children}</div>}
+        </div>
+    );
+};
+
+// Foundational Stage Form
+const FoundationalForm: React.FC<{ data: HPCReportData, setData: React.Dispatch<React.SetStateAction<HPCReportData | null>> }> = ({ data, setData }) => {
+    // Component logic here...
+    return <div>Foundational Stage Form Placeholder</div>;
+};
+
+// Preparatory Stage Form
+const PreparatoryForm: React.FC<{ data: HPCReportData, setData: React.Dispatch<React.SetStateAction<HPCReportData | null>> }> = ({ data, setData }) => {
+    // Component logic here...
+    return <div>Preparatory Stage Form Placeholder</div>;
+};
+
+// Middle Stage Form
+const MiddleForm: React.FC<{ data: HPCReportData, setData: React.Dispatch<React.SetStateAction<HPCReportData | null>> }> = ({ data, setData }) => {
+    // Component logic here...
+    return <div>Middle Stage Form Placeholder</div>;
+};
 
 const Holistic: React.FC = () => {
     const { addToast } = useToast();
@@ -76,7 +119,6 @@ const Holistic: React.FC = () => {
         }
     };
     
-    // Placeholder for stage-specific forms
     const renderFormForStage = () => {
         if (!selectedStudent || !hpcData) {
             return <div className="text-center p-4 text-sm text-foreground/60">Select a student to view or enter HPC data.</div>;
@@ -87,23 +129,16 @@ const Holistic: React.FC = () => {
             return <div className="text-center p-4 text-sm text-red-500">HPC is not configured for class {selectedStudent.className}.</div>;
         }
 
-        // Here you would render a specific form component for each stage
-        // For simplicity, we'll use a placeholder.
-        return (
-            <div className="p-4 space-y-4">
-                <h3 className="font-bold text-lg">{stage} Stage Entry</h3>
-                <p>Editing data for <span className="font-semibold">{selectedStudent.name}</span>.</p>
-                <textarea 
-                    className="p-3 w-full bg-background border border-input rounded-md text-sm h-48"
-                    placeholder="Enter observational notes, assessments, etc. here. This is a placeholder for the detailed form."
-                    value={hpcData.healthNotes || ''}
-                    onChange={e => setHpcData(prev => prev ? {...prev, healthNotes: e.target.value} : null)}
-                />
-                <p className="text-xs text-foreground/60">
-                    Note: This is a simplified form. The full HPC includes detailed domains, assessments, and attendance. You can view the full card by printing it.
-                </p>
-            </div>
-        );
+        switch(stage) {
+            case 'Foundational':
+                return <FoundationalForm data={hpcData} setData={setHpcData} />;
+            case 'Preparatory':
+                 return <PreparatoryForm data={hpcData} setData={setHpcData} />;
+            case 'Middle':
+                 return <MiddleForm data={hpcData} setData={setHpcData} />;
+            default:
+                return null;
+        }
     };
 
 
@@ -134,8 +169,11 @@ const Holistic: React.FC = () => {
 
             {hpcData ? (
                  <Card>
+                    <div className="p-2 border-b border-border">
+                        <h3 className="font-bold text-md text-center">{hpcData.stage} Stage Entry for {selectedStudent?.name}</h3>
+                    </div>
                     {renderFormForStage()}
-                    <div className="p-4 border-t border-border flex justify-end items-center gap-2">
+                    <div className="p-4 border-t border-border flex justify-end items-center gap-2 bg-card">
                          <button onClick={() => navigate(`/print/hpc/${selectedStudentId}`)} className="py-2 px-4 text-sm font-semibold rounded-md bg-purple-600 text-white">
                             Print HPC
                         </button>
@@ -149,7 +187,7 @@ const Holistic: React.FC = () => {
                     <UsersIcon className="w-12 h-12 text-foreground/20 mb-2" />
                     <h3 className="text-md font-semibold">Holistic Progress Card Entry</h3>
                     <p className="mt-1 text-xs text-foreground/60">
-                        Please select a class and then a student to begin entering their holistic development data for the year.
+                        Please select a class and then a student to begin.
                     </p>
                 </Card>
             )}
