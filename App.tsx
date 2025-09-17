@@ -35,29 +35,19 @@ const App: React.FC = () => {
   }, [theme]);
 
   useEffect(() => {
-    // Register the service worker for PWA functionality
     if ('serviceWorker' in navigator) {
-      const registerSW = () => {
-        // Construct an absolute URL for the service worker script
-        const swUrl = `${window.location.origin}/sw.js`;
-        navigator.serviceWorker.register(swUrl)
-          .then(registration => {
-            console.log('Service Worker registered with scope:', registration.scope);
-          })
-          .catch(error => {
-            console.error('Service Worker registration failed:', error);
-          });
+      const registerServiceWorker = () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => console.log('Service Worker registered successfully:', registration))
+          .catch(error => console.error('Service Worker registration failed:', error));
       };
-
-      // The 'load' event has likely already fired by the time this effect runs,
-      // but this check is a robust way to handle it.
-      if (document.readyState === 'complete') {
-        registerSW();
-      } else {
-        window.addEventListener('load', registerSW);
-        // Clean up the event listener when the component unmounts
-        return () => window.removeEventListener('load', registerSW);
-      }
+      
+      // The 'load' event is the safest moment to register the service worker.
+      window.addEventListener('load', registerServiceWorker);
+      
+      return () => {
+        window.removeEventListener('load', registerServiceWorker);
+      };
     }
   }, []);
 

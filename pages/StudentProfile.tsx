@@ -6,7 +6,6 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Student, Mark, Exam } from '../types';
 import Card from '../components/Card';
-// FIX: Replaced non-existent IdCardIcon with CertificateIcon.
 import { EditIcon, TrashIcon, CertificateIcon, UserIcon, HeartHandIcon, CreditCardIcon, BarChart3Icon, HolisticIcon } from '../components/icons';
 import LineChart from '../components/LineChart';
 import Modal from '../components/Modal';

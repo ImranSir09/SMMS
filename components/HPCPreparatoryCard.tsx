@@ -10,7 +10,7 @@ interface HPCPreparatoryCardProps {
 
 const STAGE_CONFIG = {
     Preparatory: {
-        learningStandards: ['Language Education (R1)', 'Language Education (R2)', 'Mathematics', 'The World Around Us', 'Art Education', 'Physical Education', 'Overall'],
+        learningStandards: ['Language (R1)', 'Language (R2)', 'Mathematics', 'The World Around Us', 'Art Education', 'Physical Education', 'Overall'],
     },
 };
 
@@ -39,7 +39,7 @@ const SummarySection: React.FC<{ standard: string; hpcData: HPCReportData }> = (
 
     return (
         <div className="border border-gray-400 p-2 rounded-md break-inside-avoid-page">
-            <h3 className="font-bold mb-2 col-span-full">{standard}</h3>
+            <h3 className="font-bold mb-2 col-span-full">{standard.replace('Education', '')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4">
                 <div className="flex flex-col items-center">
                     <h4 className="font-semibold text-center text-xs mb-1">Performance Level Descriptors</h4>
@@ -90,7 +90,7 @@ const HPCPreparatoryCard: React.FC<HPCPreparatoryCardProps> = ({ student, school
                     <h2 className="text-center font-bold text-base text-orange-700 mb-2">PART-A: GENERAL INFORMATION</h2>
                  </section>
                   <section className="flex-grow">
-                    <p className="text-sm font-bold text-center p-4">Note: The detailed graphical sections for Part A (All About Me, How I Feel at School, Peer Feedback, Parent Feedback) and Part B (Individual Subject Assessments) are part of the full report but are omitted in this summary view for data entry. The complete, formatted PDF will include all sections based on the available data.</p>
+                    <p className="text-sm font-bold text-center p-4">Note: The detailed graphical sections for Part A (All About Me, How I Feel at School, Peer Feedback, Parent Feedback) and Part B (Individual Subject Assessments) are part of the full report but are omitted in this summary view. The complete, formatted PDF will include all sections based on the available data.</p>
                   </section>
             </div>
 

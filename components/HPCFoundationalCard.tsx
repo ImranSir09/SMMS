@@ -8,21 +8,10 @@ interface HPCFoundationalCardProps {
   hpcData: HPCReportData;
 }
 
-// FIX: Added STAGE_CONFIG to resolve reference error.
 const STAGE_CONFIG = {
     Foundational: {
         domains: ['Physical Development', 'Socio-emotional Development', 'Cognitive Development', 'Language and Literacy', 'Aesthetic & Cultural', 'Positive Learning Habits'],
-        scale: ['Stream', 'Mountain', 'Sky'],
-        interests: ['Reading', 'Creative writing', 'Dancing or Singing or Playing a musical instrument', 'Gardening', 'Yoga', 'Art', 'Craft', 'Sport or Games', 'Cooking', 'Regular chores at home with significant others']
     },
-    Preparatory: {
-        learningStandards: ['Language Education (R1)', 'Language Education (R2)', 'Mathematics', 'The World Around Us', 'Art Education', 'Physical Education'],
-        scale: ['Beginner', 'Proficient', 'Advanced'],
-    },
-    Middle: {
-        learningStandards: ['Language 1 (R1)', 'Language 2 (R2)', 'Language 3 (R3)', 'Mathematics', 'Science', 'Social Science', 'Art Education', 'Physical Education', 'Skill Education'],
-        scale: ['Beginner', 'Proficient', 'Advanced'],
-    }
 };
 
 const HPCFoundationalCard: React.FC<HPCFoundationalCardProps> = ({ student, schoolDetails, hpcData }) => {
@@ -35,8 +24,7 @@ const HPCFoundationalCard: React.FC<HPCFoundationalCardProps> = ({ student, scho
     );
     
     const SummaryRow: React.FC<{ domain: string }> = ({ domain }) => {
-        const summary = hpcData.summaries[domain];
-        const ratingMap = { Stream: 'S', Mountain: 'M', Sky: 'A' };
+        const summary = hpcData.summaries[domain] || {};
         
         const renderCircles = (levelValue?: string) => (
              <div className="flex justify-center items-center gap-1">
@@ -106,7 +94,7 @@ const HPCFoundationalCard: React.FC<HPCFoundationalCardProps> = ({ student, scho
                          <thead className="bg-orange-100 text-sm"><tr><th className="border p-1 w-1/4">Domains of Development</th><th className="border p-1">Awareness</th><th className="border p-1">Sensitivity</th><th className="border p-1">Creativity</th><th className="border p-1 w-1/3">Key Performance Descriptors (Teacher's Notes)</th></tr></thead>
                          <tbody>{STAGE_CONFIG.Foundational.domains.map(domain => (<SummaryRow key={domain} domain={domain} />))}</tbody>
                      </table>
-                     <div className="mt-4"><p className="font-bold">Key:</p><p><span className="font-bold inline-block w-5 text-center">S</span> = Stream (Beginning to develop ability)</p><p><span className="font-bold inline-block w-5 text-center">M</span> = Mountain (Developing ability well)</p><p><span className="font-bold inline-block w-5 text-center">A</span> = Sky (Achieved desired learning outcome)</p></div>
+                     <div className="mt-4"><p className="font-bold">Key:</p><p><span className="font-bold inline-block w-5 text-center">Circles represent proficiency:</span> 1st for Stream, 2nd for Mountain, 3rd for Sky.</p></div>
                  </section>
 
                  <footer className="mt-auto pt-8 flex justify-between items-end"><div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Parent's Signature</p></div><div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Teacher's Signature</p></div><div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Principal's Signature</p></div></footer>

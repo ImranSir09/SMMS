@@ -1,3 +1,4 @@
+
 // types.ts
 
 export interface SchoolDetails {
@@ -71,21 +72,29 @@ export interface DailyLog {
   riceConsumed: number;
 }
 
-// HPC Data Structures Reworked
+
+// HOLISTIC PROGRESS CARD (HPC) TYPES
+// ===================================
 
 type HpcPerformanceLevel = 'Beginner' | 'Proficient' | 'Advanced' | 'Stream' | 'Mountain' | 'Sky' | '';
 
+// General
+interface HpcAttendance {
+    [month: string]: { working?: number; present?: number; reason?: string };
+}
+
+// Universal Parent Feedback (Prep & Middle)
+interface ParentFeedback {
+    resources?: string[];
+    childUnderstanding?: { [key: string]: string };
+    supportNeeded?: string[];
+    otherSupport?: string;
+    supportAtHome?: string;
+}
+
+// Universal Subject/Domain Assessment
 interface HpcTeacherFeedback {
-    areasOfStrength?: string[];
-    barriersToSuccess?: string[];
-    helpProgressFurther?: string;
-    observations?: string;
-    // For Middle Stage Wheel
-    wheel?: {
-        awareness?: { teacher: HpcPerformanceLevel, student: HpcPerformanceLevel, peer: HpcPerformanceLevel };
-        sensitivity?: { teacher: HpcPerformanceLevel, student: HpcPerformanceLevel, peer: HpcPerformanceLevel };
-        creativity?: { teacher: HpcPerformanceLevel, student: HpcPerformanceLevel, peer: HpcPerformanceLevel };
-    }
+    observationalNotes?: string;
 }
 
 interface HpcSubjectAssessment {
@@ -94,65 +103,58 @@ interface HpcSubjectAssessment {
     approach?: string[];
     activity?: string;
     assessmentQuestion?: string;
-    rubric?: {
-        awareness?: HpcPerformanceLevel;
-        sensitivity?: HpcPerformanceLevel;
-        creativity?: HpcPerformanceLevel;
-    };
-    selfReflection?: { [key: string]: string }; // Map statement to response
-    peerFeedback?: { [key: string]: string };
-    teacherFeedback?: HpcTeacherFeedback;
     observationalNotes?: string;
-    challenges?: string;
-    howOvercame?: string;
 }
 
-export interface FoundationalData {
+// STAGE-SPECIFIC DATA STRUCTURES
+// --------------------------------
+
+// Foundational Stage
+interface FoundationalData {
     interests?: string[];
-    // Part A2: Me and My Surroundings is too graphical to model as data entry for now.
-    domainAssessments?: { [domain: string]: HpcSubjectAssessment };
+    domainAssessments?: { [domain: string]: { observationalNotes?: string } };
 }
 
-export interface PreparatoryData {
-     partA2?: {
-        myNameIs?: string;
-        iAmYearsOld?: string;
-        myFamily?: string; // image data
-        handDiagram?: { iLikeTo?: string; iAmGoodAt?: string; iAmNotSoGoodAt?: string; iWouldLikeToImprove?: string; iDontLikeTo?: string; };
-        favoriteThings?: { food?: string; games?: string; festivals?: string; };
-        whenIGrowUp?: string;
-        myIdol?: string;
-        threeThingsToLearn?: string;
-    };
+// Preparatory Stage
+interface PreparatoryPartA2 {
+    myFamily?: string; // image data
+    handDiagram?: { iLikeTo?: string; iAmGoodAt?: string; iAmNotSoGoodAt?: string; iWouldLikeToImprove?: string; iDontLikeTo?: string; };
+    favoriteThings?: { food?: string; games?: string; festivals?: string; };
+    whenIGrowUp?: string;
+    myIdol?: string;
+    threeThingsToLearn?: string;
+}
+
+interface PreparatoryData {
+    partA2?: PreparatoryPartA2;
     partA3?: { [key: string]: string }; // How do I feel at school?
     peerFeedback1?: { [key: string]: string };
     peerFeedback2?: { [key: string]: string };
-    parentFeedback?: {
-        resources?: string[];
-        childUnderstanding?: { [key: string]: string };
-        supportNeeded?: string[];
-        otherSupport?: string;
-        supportAtHome?: string;
-    };
+    parentFeedback?: ParentFeedback;
     subjectAssessments?: { [subject: string]: HpcSubjectAssessment };
 }
 
-export interface MiddleData {
-    partA2?: {
-        iLiveWith?: string; weStayAt?: string; freeTimeDoing?: string;
-        iAmResponsible?: string; couldDoBetter?: string; iCareAboutOthers?: string; feelProud?: string;
-        academicGoal?: { importantBecause?: string; steps?: string; };
-        personalGoal?: { importantBecause?: string; steps?: string; };
-        learnings?: { atSchool?: string; outsideSchool?: string; };
-        forMyTeacher?: { helpMeWith?: string; teacherToKnow?: string; };
-    };
-    partA3?: {
-        myAmbitionIs?: string; fiveSkills?: string; habitsToBe?: string;
-        achieveAmbitionBy?: string; subjectsToFocusOn?: string;
-        guidanceFrom?: string; personWillHelpBy?: string; willLearnNew?: string;
-        willFeel?: string; parentsWillFeel?: string;
-    };
-    partA4?: PreparatoryData['parentFeedback'];
+// Middle Stage
+interface MiddlePartA2 {
+    iLiveWith?: string; weStayAt?: string; freeTimeDoing?: string;
+    iAmResponsible?: string; couldDoBetter?: string; iCareAboutOthers?: string; feelProud?: string;
+    academicGoal?: { importantBecause?: string; steps?: string; };
+    personalGoal?: { importantBecause?: string; steps?: string; };
+    learnings?: { atSchool?: string; outsideSchool?: string; };
+    forMyTeacher?: { helpMeWith?: string; teacherToKnow?: string; };
+}
+
+interface MiddlePartA3 {
+    myAmbitionIs?: string; fiveSkills?: string; habitsToBe?: string;
+    achieveAmbitionBy?: string; subjectsToFocusOn?: string;
+    guidanceFrom?: string; personWillHelpBy?: string; willLearnNew?: string;
+    willFeel?: string; parentsWillFeel?: string;
+}
+
+interface MiddleData {
+    partA2?: MiddlePartA2;
+    partA3?: MiddlePartA3;
+    parentFeedback?: ParentFeedback;
     subjectAssessments?: { [subject: string]: HpcSubjectAssessment };
 }
 
@@ -165,10 +167,9 @@ export interface HPCReportData {
   stage: 'Foundational' | 'Preparatory' | 'Middle';
   grade: string;
   
-  // Part A1 General Info 
-  healthNotes?: string; // foundational
-  attendance?: { [month: string]: { working?: number; present?: number; reason?: string } };
-  interests?: string[]; // foundational
+  // Part A1 General Info (shared across stages)
+  healthNotes?: string; // Foundational
+  attendance?: HpcAttendance;
   
   // School/Student info for Middle/Preparatory Stage Part A1
   village?: string; brc?: string; crc?: string; teacherCode?: string; apaarId?: string;
@@ -188,7 +189,6 @@ export interface HPCReportData {
       awareness?: HpcPerformanceLevel; 
       sensitivity?: HpcPerformanceLevel;
       creativity?: HpcPerformanceLevel;
-      notes?: string;
     }
   };
 }
