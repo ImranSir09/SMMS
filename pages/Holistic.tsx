@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -158,7 +159,7 @@ const Holistic: React.FC = () => {
                 <label className="font-semibold text-xs mb-1 block">{label}</label>
                 <textarea 
                     placeholder={placeholder} 
-                    className="w-full p-1 text-xs bg-background border border-input rounded"
+                    className="w-full p-2 text-sm bg-background border border-input rounded"
                     style={{ height: `${rows * 1.5}rem`}}
                     value={path.split('.').reduce((o, k) => o?.[k], hpcData) || ''}
                     onChange={e => handleDataChange(path, e.target.value)}
@@ -178,10 +179,11 @@ const Holistic: React.FC = () => {
                                     <label className="font-semibold text-xs mb-1 block">Student's Interests</label>
                                     <div className="grid grid-cols-2 gap-1 text-xs">
                                         {STAGE_CONFIG.Foundational.interests.map(interest => (
-                                            <label key={interest} className="flex items-center gap-1 p-1 bg-background/50 rounded">
+                                            <label key={interest} className="flex items-center gap-2 p-2 bg-background/50 rounded">
                                                 <input type="checkbox"
                                                     checked={hpcData.foundationalData?.interests?.includes(interest) || false}
                                                     onChange={e => handleCheckboxChange('foundationalData.interests', interest, e.target.checked)}
+                                                    className="w-4 h-4"
                                                 />
                                                 {interest}
                                             </label>
@@ -198,8 +200,8 @@ const Holistic: React.FC = () => {
                                     return (
                                         <React.Fragment key={month}>
                                             <div className="font-semibold flex items-center">{month}</div>
-                                            <div><input type="number" placeholder="WD" className="w-full p-1 text-xs text-center bg-background border border-input rounded" value={hpcData.attendance?.[monthKey]?.working ?? ''} onChange={e => handleDataChange(`attendance.${monthKey}.working`, e.target.valueAsNumber)} /></div>
-                                            <div><input type="number" placeholder="PD" className="w-full p-1 text-xs text-center bg-background border border-input rounded" value={hpcData.attendance?.[monthKey]?.present ?? ''} onChange={e => handleDataChange(`attendance.${monthKey}.present`, e.target.valueAsNumber)} /></div>
+                                            <div><input type="number" placeholder="WD" className="w-full p-2 text-sm text-center bg-background border border-input rounded" value={hpcData.attendance?.[monthKey]?.working ?? ''} onChange={e => handleDataChange(`attendance.${monthKey}.working`, e.target.valueAsNumber)} /></div>
+                                            <div><input type="number" placeholder="PD" className="w-full p-2 text-sm text-center bg-background border border-input rounded" value={hpcData.attendance?.[monthKey]?.present ?? ''} onChange={e => handleDataChange(`attendance.${monthKey}.present`, e.target.valueAsNumber)} /></div>
                                         </React.Fragment>
                                     );
                                 })}
@@ -218,7 +220,7 @@ const Holistic: React.FC = () => {
                                     <h5 className="font-semibold text-xs mb-1">{domain}</h5>
                                      <div className="grid grid-cols-3 gap-1">
                                          {['awareness', 'sensitivity', 'creativity'].map(ability => (
-                                            <select key={ability} value={hpcData.summaries?.[domain]?.[ability as keyof typeof hpcData.summaries[string]] || ''} onChange={e => handleDataChange(`summaries.${domain}.${ability}`, e.target.value)} className="w-full p-1 text-xs bg-background border border-input rounded">
+                                            <select key={ability} value={hpcData.summaries?.[domain]?.[ability as keyof typeof hpcData.summaries[string]] || ''} onChange={e => handleDataChange(`summaries.${domain}.${ability}`, e.target.value)} className="w-full p-2 text-sm bg-background border border-input rounded">
                                                  <option value="">{ability.charAt(0).toUpperCase() + ability.slice(1)}</option>
                                                  {STAGE_CONFIG.Foundational.scale.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                             </select>
@@ -248,7 +250,7 @@ const Holistic: React.FC = () => {
                                      <h5 className="font-semibold text-xs mb-1">{standard}</h5>
                                      <div className="grid grid-cols-3 gap-1">
                                          {['awareness', 'sensitivity', 'creativity'].map(ability => (
-                                            <select key={ability} value={hpcData.summaries?.[standard]?.[ability as keyof typeof hpcData.summaries[string]] || ''} onChange={e => handleDataChange(`summaries.${standard}.${ability}`, e.target.value)} className="w-full p-1 text-xs bg-background border border-input rounded">
+                                            <select key={ability} value={hpcData.summaries?.[standard]?.[ability as keyof typeof hpcData.summaries[string]] || ''} onChange={e => handleDataChange(`summaries.${standard}.${ability}`, e.target.value)} className="w-full p-2 text-sm bg-background border border-input rounded">
                                                  <option value="">{ability.charAt(0).toUpperCase() + ability.slice(1)}</option>
                                                  {scale.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                             </select>
@@ -270,7 +272,7 @@ const Holistic: React.FC = () => {
                 <select 
                     value={activeClass || ''} 
                     onChange={e => setActiveClass(e.target.value)}
-                    className="p-2 text-sm bg-background border border-input rounded-md w-full"
+                    className="p-3 text-sm bg-background border border-input rounded-md w-full"
                 >
                     <option value="" disabled>-- Select a Class --</option>
                     {classTabs?.map(c => <option key={c} value={c}>Class {c}</option>)}
@@ -301,7 +303,7 @@ const Holistic: React.FC = () => {
                     {renderForm()}
                 </div>
                 <footer className="p-2 border-t border-border flex justify-end">
-                    <button onClick={handleSave} className="py-2 px-4 rounded-md bg-primary text-primary-foreground flex items-center gap-2">
+                    <button onClick={handleSave} className="py-3 px-5 rounded-md bg-primary text-primary-foreground flex items-center gap-2 text-sm font-semibold">
                         <SaveIcon className="w-4 h-4"/> Save Data
                     </button>
                 </footer>

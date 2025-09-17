@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import { db } from '../services/db';
@@ -10,7 +11,7 @@ interface DailyLogModalProps {
   existingLog: DailyLog | null;
 }
 
-const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
+const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-sm font-medium text-foreground/80 mb-1";
 
 const DailyLogModal: React.FC<DailyLogModalProps> = ({ isOpen, onClose, date, existingLog }) => {
@@ -102,8 +103,8 @@ const DailyLogModal: React.FC<DailyLogModalProps> = ({ isOpen, onClose, date, ex
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <button type="button" onClick={onClose} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white transition-colors">Cancel</button>
-            <button type="submit" className="py-2 px-4 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground transition-colors">Save Entry</button>
+            <button type="button" onClick={onClose} className="py-3 px-5 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white transition-colors font-semibold text-sm">Cancel</button>
+            <button type="submit" className="py-3 px-5 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground transition-colors font-semibold text-sm">Save Entry</button>
           </div>
         </form>
       </div>

@@ -5,9 +5,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import Card from '../components/Card';
-import { StudentsIcon, StaffIcon, ExamsIcon, SchoolIcon, BarChart3Icon, PieChartIcon, BriefcaseIcon, UsersIcon } from '../components/icons';
+import { StudentsIcon, ExamsIcon, SchoolIcon, BarChart3Icon, PieChartIcon, UsersIcon } from '../components/icons';
 import HorizontalBarChart from '../components/HorizontalBarChart';
-import { Student, Staff } from '../types';
+import { Student } from '../types';
 import { useAppData } from '../hooks/useAppData';
 
 type StatCardProps = {
@@ -39,20 +39,16 @@ const Dashboard: React.FC = () => {
             maleCount,
             femaleCount,
             otherCount,
-            staffCount,
             examCount,
             recentStudents,
-            recentStaff,
             classNames,
         ] = await Promise.all([
             db.students.count(),
             db.students.where({ gender: 'Male' }).count(),
             db.students.where({ gender: 'Female' }).count(),
             db.students.where({ gender: 'Other' }).count(),
-            db.staff.count(),
             db.exams.count(),
             db.students.orderBy('id').reverse().limit(4).toArray(),
-            db.staff.orderBy('id').reverse().limit(4).toArray(),
             db.students.orderBy('className').uniqueKeys(),
         ]);
         
@@ -66,24 +62,22 @@ const Dashboard: React.FC = () => {
         return {
             studentCount,
             genderCounts: { male: maleCount, female: femaleCount, other: otherCount },
-            staffCount,
             examCount,
             recentStudents,
-            recentStaff,
             chartData: classCounts.sort((a,b) => b.value - a.value),
         };
     }, []);
 
     const QuickListItem: React.FC<{ photo: string | null; name: string; detail: string; onClick: () => void; }> = ({ photo, name, detail, onClick }) => (
-        <li onClick={onClick} className="flex items-center gap-2 p-1 rounded-md cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <li onClick={onClick} className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
             {photo ? (
-                <img src={photo} alt={name} className="w-8 h-8 rounded-full object-cover"/>
+                <img src={photo} alt={name} className="w-10 h-10 rounded-full object-cover"/>
             ) : (
-                 <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
+                 <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
             )}
             <div className="truncate">
-                <p className="font-semibold text-xs truncate">{name}</p>
-                <p className="text-[10px] text-foreground/60 truncate">{detail}</p>
+                <p className="font-semibold text-sm truncate">{name}</p>
+                <p className="text-xs text-foreground/60 truncate">{detail}</p>
             </div>
         </li>
     );
@@ -125,7 +119,7 @@ const Dashboard: React.FC = () => {
                 {/* At a Glance */}
                 <Card className="col-span-2 p-2 space-y-2">
                     <SectionHeader icon={<BarChart3Icon className="w-4 h-4 text-foreground/60" />} title="At a Glance" />
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                         <StatCard
                             icon={<StudentsIcon />}
                             label="Students"
@@ -141,7 +135,6 @@ const Dashboard: React.FC = () => {
                             }
                             onClick={() => navigate('/students')}
                         />
-                        <StatCard icon={<StaffIcon />} label="Staff" value={dashboardData?.staffCount} onClick={() => navigate('/staff')} />
                         <StatCard icon={<ExamsIcon />} label="Exams" value={dashboardData?.examCount} onClick={() => navigate('/exams')} />
                     </div>
                 </Card>
@@ -152,24 +145,8 @@ const Dashboard: React.FC = () => {
                     <HorizontalBarChart data={dashboardData?.chartData || []} />
                 </Card>
 
-                {/* Recently Added Staff */}
-                <Card className="p-2 flex flex-col">
-                     <SectionHeader 
-                        icon={<BriefcaseIcon className="w-4 h-4 text-foreground/60" />} 
-                        title="Recent Staff" 
-                        action={<span onClick={() => navigate('/staff')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>}
-                    />
-                    {dashboardData && dashboardData.recentStaff.length > 0 ? (
-                        <ul className="space-y-1 overflow-y-auto">
-                            {dashboardData.recentStaff.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={s.designation} onClick={() => navigate(`/staff/${s.id}`)} />)}
-                        </ul>
-                    ) : (
-                        <p className="text-center text-xs text-foreground/60 pt-2">No staff added yet.</p>
-                    )}
-                </Card>
-
                 {/* Recently Added Students */}
-                <Card className="p-2 flex flex-col">
+                <Card className="col-span-2 p-2 flex flex-col">
                       <SectionHeader 
                         icon={<UsersIcon className="w-4 h-4 text-foreground/60" />} 
                         title="Recent Students" 

@@ -64,13 +64,6 @@
       "description": "Quickly add a new student record",
       "url": "/#/students",
       "icons": [{ "src": "https://via.placeholder.com/192.png?text=Student", "sizes": "192x192" }]
-    },
-    {
-      "name": "Add Staff",
-      "short_name": "New Staff",
-      "description": "Quickly add a new staff record",
-      "url": "/#/staff",
-      "icons": [{ "src": "https://via.placeholder.com/192.png?text=Staff", "sizes": "192x192" }]
     }
   ],
   "screenshots": [

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +11,7 @@ import SubjectTopperList from '../components/SubjectTopperList';
 import { Student } from '../types';
 
 const SUBJECTS = ['English', 'Math', 'Science', 'Social Science', 'Urdu', 'Kashmiri'];
-const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs transition-colors";
+const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
 const Reports: React.FC = () => {
     const { schoolDetails } = useAppData();
@@ -119,7 +120,7 @@ const Reports: React.FC = () => {
                     <button 
                         onClick={handleGenerateTopperList} 
                         disabled={isGeneratingTopperList}
-                        className="w-full py-2 px-4 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
+                        className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
                     >
                         {isGeneratingTopperList ? 'Generating...' : 'Generate Topper List PDF'}
                     </button>
@@ -143,7 +144,7 @@ const Reports: React.FC = () => {
                     <button 
                         onClick={handleGenerateRollStatement} 
                         disabled={!selectedClass}
-                        className="w-full py-2 px-4 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
+                        className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
                     >
                         Generate Roll Statement PDF
                     </button>

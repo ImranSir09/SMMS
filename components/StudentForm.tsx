@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Student } from '../types';
 import PhotoUploadModal from './PhotoUploadModal';
@@ -6,9 +7,9 @@ const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5
 const CATEGORY_OPTIONS = ['General', 'SC', 'ST', 'OBC', 'Other'];
 const BLOOD_GROUP_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
+const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-sm font-medium text-foreground/80 mb-1";
-const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors";
+const buttonStyle = "py-3 px-5 rounded-md text-sm font-semibold transition-colors";
 const successButtonStyle = `${buttonStyle} bg-success text-success-foreground hover:bg-success-hover`;
 const secondaryButtonStyle = `${buttonStyle} bg-gray-500/80 hover:bg-gray-500 text-white`;
 
@@ -100,7 +101,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
                     )}
                     <div className="flex flex-col gap-2">
                         <label className={labelStyle}>Student Photo</label>
-                        <button type="button" onClick={() => setIsPhotoModalOpen(true)} className={`${secondaryButtonStyle} text-xs`}>
+                        <button type="button" onClick={() => setIsPhotoModalOpen(true)} className={`${secondaryButtonStyle} text-sm`}>
                             Upload / Crop Photo
                         </button>
                     </div>

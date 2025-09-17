@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -181,8 +182,8 @@ const ExamMarks: React.FC = () => {
 
     const headerCellStyle = "p-1.5 border-b border-border text-center font-semibold sticky top-0 bg-background z-20";
     const cellStyle = "p-0.5 border-b border-border text-center align-middle";
-    const studentNameCellStyle = `${cellStyle} text-left font-medium sticky left-0 bg-background z-10`;
-    const inputMarkStyle = "w-full text-center bg-transparent p-1 rounded-md focus:outline-none focus:ring-1 focus:ring-primary";
+    const studentNameCellStyle = `${cellStyle} text-left font-medium sticky left-0 bg-background z-10 p-2`;
+    const inputMarkStyle = "w-full h-full text-center bg-transparent p-2 rounded-md focus:outline-none focus:ring-1 focus:ring-primary";
 
     if (!exam) return <div className="p-4 text-center">Loading exam data...</div>;
 
@@ -199,7 +200,7 @@ const ExamMarks: React.FC = () => {
                         <button
                             key={subject}
                             onClick={() => setActiveSubject(subject)}
-                            className={`flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${activeSubject === subject ? 'bg-primary text-primary-foreground shadow' : 'hover:bg-primary/10'}`}
+                            className={`flex-shrink-0 px-4 py-2 text-sm font-semibold rounded-md transition-colors ${activeSubject === subject ? 'bg-primary text-primary-foreground shadow' : 'hover:bg-primary/10'}`}
                         >
                             {subject}
                         </button>
@@ -241,8 +242,8 @@ const ExamMarks: React.FC = () => {
                                     ))}
                                     <td className={`${cellStyle} font-bold`}>{total}</td>
                                     <td className={cellStyle}>
-                                        <button onClick={() => handleGeneratePdf(student)} disabled={isGeneratingPdf === student.id} className="p-1.5 text-primary disabled:opacity-50">
-                                            {isGeneratingPdf === student.id ? '...' : <PrintIcon className="w-4 h-4" />}
+                                        <button onClick={() => handleGeneratePdf(student)} disabled={isGeneratingPdf === student.id} className="p-2 text-primary disabled:opacity-50">
+                                            {isGeneratingPdf === student.id ? '...' : <PrintIcon className="w-5 h-5" />}
                                         </button>
                                     </td>
                                 </tr>

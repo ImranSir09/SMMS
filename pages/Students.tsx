@@ -14,7 +14,7 @@ import { useToast } from '../contexts/ToastContext';
 
 const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 
-const buttonStyle = "py-2 px-3 rounded-md text-xs font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-1";
+const buttonStyle = "py-3 px-4 rounded-md text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-1";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
 const secondaryButtonStyle = `${buttonStyle} bg-gray-600 hover:bg-gray-700 text-white`;
 
@@ -115,7 +115,7 @@ const Students: React.FC = () => {
                 <select 
                     value={activeClass || ''} 
                     onChange={e => setActiveClass(e.target.value)}
-                    className="p-2 text-sm bg-background border border-input rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="p-3 text-sm bg-background border border-input rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                     <option value="" disabled>-- Select a Class --</option>
                     {classTabs?.map(c => <option key={c} value={c}>Class {c}</option>)}
@@ -126,13 +126,13 @@ const Students: React.FC = () => {
                 </div>
             </div>
              <div className="relative mb-2">
-                <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50"/>
+                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/50"/>
                 <input
                     type="text"
                     placeholder={`Search in Class ${activeClass}...`}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="p-2 pl-8 text-sm bg-background border border-input rounded-md w-full"
+                    className="p-3 pl-10 text-sm bg-background border border-input rounded-md w-full"
                 />
             </div>
 
@@ -163,9 +163,9 @@ const Students: React.FC = () => {
             )}
 
             <div className="flex-shrink-0 flex items-center justify-center gap-2 pt-2 text-sm">
-                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 disabled:opacity-50"><ArrowLeftIcon className="w-4 h-4"/></button>
+                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-3 rounded-full disabled:opacity-50"><ArrowLeftIcon className="w-5 h-5"/></button>
                 <span className="text-foreground/80 font-semibold">Page {currentPage} of {totalPages || 1}</span>
-                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="p-2 disabled:opacity-50"><ArrowRightIcon className="w-4 h-4"/></button>
+                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="p-3 rounded-full disabled:opacity-50"><ArrowRightIcon className="w-5 h-5"/></button>
             </div>
             
             <Modal

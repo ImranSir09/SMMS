@@ -23,7 +23,7 @@ const EXAM_OPTIONS = [
     'Summative Assessment',
 ];
 
-const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
+const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
 const Exams: React.FC = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -86,12 +86,12 @@ const Exams: React.FC = () => {
                          <p className="text-foreground/80 text-xs">Class: {exam.className}</p>
                        </div>
                        <div className="mt-3 flex justify-between items-center">
-                            <button onClick={() => navigate(`/exams/${exam.id}`)} className="flex items-center gap-1 py-1 px-2 rounded-md bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold transition-colors">
-                                <ClipboardListIcon className="w-3 h-3" />
+                            <button onClick={() => navigate(`/exams/${exam.id}`)} className="flex items-center gap-1 py-2 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors">
+                                <ClipboardListIcon className="w-3.5 h-3.5" />
                                 Marks
                             </button>
-                            <button onClick={() => handleDeleteExam(exam.id!)} className="p-1 text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
-                                <TrashIcon className="w-3.5 h-3.5" />
+                            <button onClick={() => handleDeleteExam(exam.id!)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full transition-colors">
+                                <TrashIcon className="w-4 h-4" />
                             </button>
                        </div>
                     </Card>
@@ -136,7 +136,7 @@ const Exams: React.FC = () => {
                     <div className="flex justify-end pt-2">
                         <button 
                             onClick={handleSaveExam}
-                            className="py-2 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors"
+                            className="py-3 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors"
                         >
                             Create & Go to Marks
                         </button>

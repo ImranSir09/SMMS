@@ -32,21 +32,6 @@ export interface Student {
   ifscCode?: string;
 }
 
-export interface Staff {
-  id?: number;
-  name: string;
-  staffId: string;
-  dob: string;
-  photo: string | null;
-  qualification: string;
-  designation: string;
-  contact: string;
-  joiningDate: string;
-  cpisCode?: string;
-  subjects: string;
-  teachingAssignments: Array<{ className: string; subject: string; }>;
-}
-
 export interface Exam {
   id?: number;
   name: string;

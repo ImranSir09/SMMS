@@ -7,8 +7,8 @@ import Card from '../components/Card';
 import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon } from '../components/icons';
 import { useToast } from '../contexts/ToastContext';
 
-const inputStyle = "p-2 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-xs transition-colors";
-const buttonStyle = "py-2 px-4 rounded-md text-sm font-semibold transition-colors";
+const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
+const buttonStyle = "py-3 px-5 rounded-md text-sm font-semibold transition-colors";
 const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground hover:bg-primary-hover`;
 
 
@@ -208,40 +208,40 @@ const Settings: React.FC = () => {
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">School Name</label>
                         <div className="relative">
-                            <BuildingIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
-                            <input name="name" value={details.name || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                            <BuildingIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                            <input name="name" value={details.name || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
                         </div>
                         {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                     </div>
                      <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Official Email</label>
                         <div className="relative">
-                            <MailIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
-                            <input name="email" type="email" value={details.email || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                            <MailIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                            <input name="email" type="email" value={details.email || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
                         </div>
                         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Phone Number</label>
                         <div className="relative">
-                             <PhoneIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
-                             <input name="phone" type="tel" value={details.phone || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                             <PhoneIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                             <input name="phone" type="tel" value={details.phone || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
                         </div>
                         {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">UDISE Code</label>
                         <div className="relative">
-                            <HashIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
-                            <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                            <HashIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                            <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
                         </div>
                         {errors.udiseCode && <p className="text-red-500 text-xs mt-1">{errors.udiseCode}</p>}
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Address</label>
                         <div className="relative">
-                            <MapPinIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/50" />
-                            <input name="address" value={details.address || ''} onChange={handleChange} className={`${inputStyle} pl-8`} />
+                            <MapPinIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                            <input name="address" value={details.address || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
                         </div>
                         {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
                     </div>

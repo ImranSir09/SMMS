@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Modal from './Modal';
 import { UploadIcon } from './icons';
@@ -205,14 +206,14 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose, ti
         )}
         
         <div className="w-full grid grid-cols-2 gap-2 mt-2">
-            <button onClick={onClose} className="py-2 px-4 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm font-semibold transition-colors">
+            <button onClick={onClose} className="py-3 px-5 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm font-semibold transition-colors">
                 Cancel
             </button>
-            <button onClick={handleSave} disabled={!imageSrc} className="py-2 px-4 rounded-md bg-success text-success-foreground hover:bg-success-hover text-sm font-semibold transition-colors disabled:opacity-50">
+            <button onClick={handleSave} disabled={!imageSrc} className="py-3 px-5 rounded-md bg-success text-success-foreground hover:bg-success-hover text-sm font-semibold transition-colors disabled:opacity-50">
                 Save Photo
             </button>
         </div>
-        {imageSrc && <button onClick={() => setImageSrc(null)} className="text-sm text-primary hover:underline">Choose another image</button>}
+        {imageSrc && <button onClick={() => setImageSrc(null)} className="text-sm text-primary hover:underline p-2">Choose another image</button>}
       </div>
     </Modal>
   );
