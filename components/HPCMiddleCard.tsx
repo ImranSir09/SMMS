@@ -34,7 +34,8 @@ const HPCMiddleCard: React.FC<HPCMiddleCardProps> = ({ student, schoolDetails, h
         return (
              <tr className="text-center">
                 <td className="border p-1 text-left font-semibold">{domain}</td>
-                <td className="border p-1 h-10 text-left align-top text-[10px] leading-tight">{summary.awareness}</td>
+                {/* FIX: Changed to display 'teacherRemarks' instead of 'awareness' to match the data saved from the form and the table's intent. */}
+                <td className="border p-1 h-10 text-left align-top text-[10px] leading-tight">{summary.teacherRemarks}</td>
             </tr>
         );
     };
