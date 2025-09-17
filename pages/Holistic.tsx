@@ -85,13 +85,22 @@ const HpcForm: React.FC<{ hpcData: Partial<HPCReportData>; onDataChange: (path: 
         const path = `${stage}Data.parentFeedback`;
         
         const resourceOptions = ["Books and Magazines", "Newspapers", "Toys, Games and sports", "Phone and Computer", "Internet", "Public Broadcast System", "Resources for CWSN"];
-        const supportOptions = ["Languages (R1, R2, R3)", "Building self-belief & self-reliance", "Managing difficult emotions like anger", "Skill Guidance/Digital Literacy", "Mathematics", "Science", "Social Science", "Developing social skills & conflict resolution", "Developing effective study skills like time management"];
+        const middleSupportOptions = ["Languages (R1, R2, R3)", "Building self-belief & self-reliance", "Managing difficult emotions like anger", "Skill Guidance/Digital Literacy", "Mathematics", "Science", "Social Science", "Developing social skills & conflict resolution", "Developing effective study skills like time management"];
+        const prepSupportOptions = ["Oral communication (R1 or R2)", "Reading", "Numbers and Math", "Self-confidence", "Working with other children", "Working independently at home"];
 
-        const understandingQuestions: { key: keyof NonNullable<ParentFeedback['childUnderstanding']>, label: string }[] = [
+        const middleUnderstandingQuestions: { key: keyof NonNullable<ParentFeedback['childUnderstanding']>, label: string }[] = [
             { key: 'motivated', label: "1. My child seems motivated to learn and engage with new concepts learnt at school." },
             { key: 'followsSchedule', label: "2. My child follows a schedule at home that includes curriculum and other activities, social connectivity, and screen time." },
             { key: 'findsDifficult', label: "3. My child finds the grade-level curriculum difficult and needs additional support." },
             { key: 'makingProgress', label: "4. My child is making good progress as per his/her grade." },
+        ];
+        
+         const prepUnderstandingQuestions: { key: keyof NonNullable<ParentFeedback['childUnderstanding']>, label: string }[] = [
+            { key: 'findsWelcoming', label: "1. My child finds the classroom and school a welcoming and safe space." },
+            { key: 'participates', label: "2. My child participates in academic and other activities in school." },
+            { key: 'findsDifficult', label: "3. My child finds the grade-level curriculum difficult." },
+            { key: 'makingProgress', label: "4. My child is making good progress as per their grade." },
+            { key: 'gettingSupport', label: "5. My child is getting the support needed from school." },
         ];
         
         return (
@@ -110,12 +119,12 @@ const HpcForm: React.FC<{ hpcData: Partial<HPCReportData>; onDataChange: (path: 
                     </div>
                     <div>
                         <p className="font-semibold mb-1">Understanding of my Child:</p>
-                        {understandingQuestions.map(q => <SentimentRadioGroup key={q.key} path={`${path}.childUnderstanding.${q.key}`} question={q.label} data={hpcData} onChange={onDataChange} />)}
+                        {(stage === 'middle' ? middleUnderstandingQuestions : prepUnderstandingQuestions).map(q => <SentimentRadioGroup key={q.key} path={`${path}.childUnderstanding.${q.key}`} question={q.label} data={hpcData} onChange={onDataChange} />)}
                     </div>
                     <div>
                         <p className="font-semibold mb-1">At school, my child needs support with:</p>
                         <div className="grid grid-cols-2 gap-1">
-                            {supportOptions.map(opt => (
+                            {(stage === 'middle' ? middleSupportOptions : prepSupportOptions).map(opt => (
                                 <label key={opt} className="flex items-center gap-2 p-1 bg-background/50 rounded">
                                     <input type="checkbox" checked={parentData.supportNeeded?.includes(opt) || false} onChange={e => onCheckboxChange(`${path}.supportNeeded`, opt, e.target.checked)} /> {opt}
                                 </label>
@@ -123,7 +132,7 @@ const HpcForm: React.FC<{ hpcData: Partial<HPCReportData>; onDataChange: (path: 
                         </div>
                         <TextInput path={`${path}.otherSupport`} label="Any other support needed:" data={hpcData} onChange={onDataChange} />
                     </div>
-                    <TextareaInput path={`${path}.supportAtHome`} label="Based on my discussion with the teacher, I will support my child at home by:" placeholder="..." data={hpcData} onChange={onDataChange} />
+                    <TextareaInput path={`${path}.supportAtHome`} placeholder='...' label="Based on my discussion with the teacher, I will support my child at home by:" data={hpcData} onChange={onDataChange} />
                 </div>
              </CollapsibleSection>
         )
@@ -131,7 +140,7 @@ const HpcForm: React.FC<{ hpcData: Partial<HPCReportData>; onDataChange: (path: 
 
     switch(hpcData.stage) {
         case 'Preparatory':
-            const prepQuestions = [
+            const prepQuestionsA3 = [
                 { key: 'canTalkAboutFeelings', label: '1. I can talk about how I feel, e.g., happy, confident, upset, or angry.' },
                 { key: 'canCalmDown', label: '2. I can calm myself down during difficult situations.' },
                 { key: 'understandsFriends', label: '3. I can understand how my friends feel.' },
@@ -148,7 +157,7 @@ const HpcForm: React.FC<{ hpcData: Partial<HPCReportData>; onDataChange: (path: 
                         <TextareaInput path="preparatoryData.partA2.threeThingsToLearn" label="Three things I want to learn this school year:" placeholder="..." data={hpcData} onChange={onDataChange} />
                     </CollapsibleSection>
                     <CollapsibleSection title="Part A(3): How do I feel at school?">
-                        {prepQuestions.map(q => <SentimentRadioGroup key={q.key} path={`preparatoryData.partA3.${q.key}`} question={q.label} data={hpcData} onChange={onDataChange} />)}
+                        {prepQuestionsA3.map(q => <SentimentRadioGroup key={q.key} path={`preparatoryData.partA3.${q.key}`} question={q.label} data={hpcData} onChange={onDataChange} />)}
                     </CollapsibleSection>
                     {renderParentPartnershipForm('preparatory')}
                 </div>
@@ -160,29 +169,20 @@ const HpcForm: React.FC<{ hpcData: Partial<HPCReportData>; onDataChange: (path: 
                          <div className="space-y-2">
                              <TextInput path="middleData.partA2.iLiveWith" label="I live with my..." data={hpcData} onChange={onDataChange} />
                              <TextInput path="middleData.partA2.weStayAt" label="We stay at..." data={hpcData} onChange={onDataChange} />
-                             {/* FIX: Add missing placeholder prop */}
-<TextareaInput path="middleData.partA2.freeTimeDoing" label="I spend my free time doing..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
-                             {/* FIX: Add missing placeholder prop */}
-<TextareaInput path="middleData.partA2.iAmResponsible" label="I am responsible..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
-                             {/* FIX: Add missing placeholder prop */}
-<TextareaInput path="middleData.partA2.couldDoBetter" label="I could do better specially when it comes to..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
-                             {/* FIX: Add missing placeholder prop */}
-<TextareaInput path="middleData.partA2.iCareAboutOthers" label="I care about others. I show it by..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
-                             {/* FIX: Add missing placeholder prop */}
-<TextareaInput path="middleData.partA2.feelProud" label="I feel proud of myself when..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                             <TextareaInput path="middleData.partA2.freeTimeDoing" label="I spend my free time doing..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                             <TextareaInput path="middleData.partA2.iAmResponsible" label="I am responsible..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                             <TextareaInput path="middleData.partA2.couldDoBetter" label="I could do better specially when it comes to..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                             <TextareaInput path="middleData.partA2.iCareAboutOthers" label="I care about others. I show it by..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
+                             <TextareaInput path="middleData.partA2.feelProud" label="I feel proud of myself when..." placeholder="..." data={hpcData} onChange={onDataChange} rows={2} />
                          </div>
                      </CollapsibleSection>
                       <CollapsibleSection title="Part A(3): My Ambition Card">
                         <div className="space-y-2">
                             <TextInput path="middleData.partA3.myAmbitionIs" label="My ambition is..." data={hpcData} onChange={onDataChange} />
-                            {/* FIX: Add missing placeholder prop */}
-<TextareaInput path="middleData.partA3.fiveSkills" label="5 skills I need to achieve my ambition:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
-                            {/* FIX: Add missing placeholder prop */}
-<TextareaInput path="middleData.partA3.habitsToBe" label="To achieve my ambition, I need my habits to be:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
-                            {/* FIX: Add missing placeholder prop */}
-<TextareaInput path="middleData.partA3.achieveAmbitionBy" label="I will achieve my ambition by:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
-                            {/* FIX: Add missing placeholder prop */}
-<TextareaInput path="middleData.partA3.subjectsToFocusOn" label="Subjects I need to focus on:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
+                            <TextareaInput path="middleData.partA3.fiveSkills" label="5 skills I need to achieve my ambition:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
+                            <TextareaInput path="middleData.partA3.habitsToBe" label="To achieve my ambition, I need my habits to be:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
+                            <TextareaInput path="middleData.partA3.achieveAmbitionBy" label="I will achieve my ambition by:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
+                            <TextareaInput path="middleData.partA3.subjectsToFocusOn" label="Subjects I need to focus on:" placeholder="..." data={hpcData} onChange={onDataChange} rows={3} />
                         </div>
                      </CollapsibleSection>
                      {renderParentPartnershipForm('middle')}

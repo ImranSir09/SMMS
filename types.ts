@@ -76,7 +76,6 @@ export interface DailyLog {
 // ===================================
 
 type HpcPerformanceLevel = 'Beginner' | 'Proficient' | 'Advanced' | 'Stream' | 'Mountain' | 'Sky' | '';
-// FIX: Export HpcSentiment type
 export type HpcSentiment = 'Yes' | 'Sometimes' | 'No' | 'Not sure';
 
 // General
@@ -85,16 +84,16 @@ interface HpcAttendance {
 }
 
 // Universal Parent Feedback
-// FIX: Export ParentFeedback interface
 export interface ParentFeedback {
     resourcesAvailable?: string[];
     otherResource?: string;
     childUnderstanding?: {
+      // Middle Stage Questions
       motivated?: HpcSentiment;
       followsSchedule?: HpcSentiment;
       findsDifficult?: HpcSentiment;
       makingProgress?: HpcSentiment;
-      // Preparatory specific
+      // Preparatory Stage Questions
       findsWelcoming?: HpcSentiment;
       participates?: HpcSentiment;
       gettingSupport?: HpcSentiment;
@@ -110,6 +109,12 @@ export interface ParentFeedback {
     supportAtHome?: string;
 }
 
+interface HpcAssessmentGrid {
+    awarenessStatements?: string[];
+    sensitivityStatements?: string[];
+    creativityStatements?: string[];
+}
+
 // Universal Subject/Domain Assessment
 interface HpcSubjectAssessment {
     // Part B fields for Middle/Preparatory
@@ -120,8 +125,8 @@ interface HpcSubjectAssessment {
     assessmentQuestion?: string;
     
     // Middle stage specific progress wheel data
-    selfAssessment?: { awareness: number; sensitivity: number; creativity: number };
-    peerAssessment?: { awareness: number; sensitivity: number; creativity: number };
+    studentSelfReflection?: HpcAssessmentGrid;
+    peerFeedback?: HpcAssessmentGrid;
     teacherAssessment?: { awareness: HpcPerformanceLevel; sensitivity: HpcPerformanceLevel; creativity: HpcPerformanceLevel };
     
     areasOfStrength?: string[];
@@ -152,7 +157,6 @@ interface PreparatoryPartA2 {
     threeThingsToLearn?: string;
 }
 
-// FIX: Create a specific interface for Preparatory Part A3 to improve type safety
 interface PreparatoryPartA3 {
     canTalkAboutFeelings?: HpcSentiment;
     canCalmDown?: HpcSentiment;
@@ -165,7 +169,6 @@ interface PreparatoryPartA3 {
 
 interface PreparatoryData {
     partA2?: PreparatoryPartA2;
-    // FIX: Use the specific PreparatoryPartA3 interface instead of a generic index signature
     partA3?: PreparatoryPartA3; // How do I feel at school?
     peerFeedback1?: { [key: string]: HpcSentiment };
     peerFeedback2?: { [key: string]: HpcSentiment };
