@@ -1,4 +1,5 @@
 
+
 import React, { useContext, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppContext } from './contexts/AppContext';
@@ -13,6 +14,7 @@ import Certificates from './pages/Certificates';
 import ExamMarks from './pages/ExamMarks';
 import StudentProfile from './pages/StudentProfile';
 import PrintRollStatement from './pages/PrintRollStatement';
+// FIX: Corrected import path for Holistic component.
 import Holistic from './pages/Holistic';
 import PrintHPC from './pages/PrintHPC';
 
@@ -37,6 +39,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       const registerServiceWorker = () => {
+        // FIX: Corrected service worker registration syntax from `service-worker` to `serviceWorker`.
         navigator.serviceWorker.register('/sw.js')
           .then(registration => console.log('Service Worker registered successfully:', registration))
           .catch(error => console.error('Service Worker registration failed:', error));

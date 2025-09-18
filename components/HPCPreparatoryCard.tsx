@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Student, SchoolDetails, HPCReportData, PreparatoryPartA3, ParentFeedback } from '../types';
+import { Student, SchoolDetails, HPCReportData } from '../types';
 
 interface HPCPreparatoryCardProps {
   student: Student;
@@ -8,146 +7,224 @@ interface HPCPreparatoryCardProps {
   hpcData: HPCReportData;
 }
 
-const STAGE_CONFIG = {
-    Preparatory: {
-        domains: ['Cognitive Development', 'Affective Development', 'Psychomotor Development'],
-        aspects: {
-            self: ['My Strengths', 'My Dreams', 'How I Can Improve'],
-            peer: ['What I Like About My Friend', 'What I Want To Tell My Friend']
-        },
-        partA3Questions: {
-            participatesInClass: "Participates in class discussions", asksQuestions: "Asks questions", listensAttentively: "Listens attentively", takesInitiative: "Takes initiative",
-            worksIndependently: "Works independently", worksInGroups: "Works well in groups", isOrganized: "Is neat and organized", isPunctual: "Is punctual",
-            respectsOthers: "Respects others' opinions", isResponsible: "Is responsible and helpful",
-        },
-        parentFeedbackQuestions: {
-            childIsHappy: "Is your child happy at school?", childSharesLearning: "Does your child share about their learning?", childFeelsSafe: "Does your child feel safe at school?",
-            childGetsHelp: "Does your child get help when needed?", parentObservesGrowth: "Have you observed any positive changes?"
-        }
-    },
-};
+const SUBJECTS = ['Language (R1)', 'Language (R2)', 'Mathematics', 'The World Around Us', 'Art Education', 'Physical Education', 'Overall'];
 
-const HPCPreparatoryCard: React.FC<HPCPreparatoryCardProps> = ({ student, schoolDetails, hpcData }) => {
+const DetailItem: React.FC<{ label: string; value: string | undefined | null; className?: string }> = ({ label, value, className }) => (
+    <div className={`flex items-baseline ${className}`}>
+        <span className="font-semibold w-28 flex-shrink-0 text-gray-800">{label}</span>
+        <span className="flex-1 border-b border-dotted border-gray-500 pl-1 font-mono">{value || ''}</span>
+    </div>
+);
 
-    const DetailBox: React.FC<{ label: string; value: string | undefined | null; className?: string }> = ({ label, value, className }) => (
-        <div className={`flex items-baseline ${className}`}>
-            <span className="font-semibold w-28 flex-shrink-0 text-gray-800">{label}:</span>
-            <span className="flex-1 border-b border-dotted border-gray-500 pl-1">{value || ''}</span>
-        </div>
-    );
-    
-    const SummaryRow: React.FC<{ domain: string }> = ({ domain }) => {
-        const summary = hpcData.summaries[domain] || {};
-        return (
-             <tr className="text-center">
-                <td className="border p-1 text-left font-semibold">{domain}</td>
-                <td className="border p-1 h-12 text-left align-top text-[10px] leading-tight">{summary.teacherRemarks}</td>
-                <td className="border p-1 text-left align-top text-[10px] leading-tight">{summary.parentRemarks}</td>
+const AttendanceTable: React.FC<{ attendance: HPCReportData['attendance'] }> = ({ attendance }) => (
+    <table className="w-full border-collapse border border-gray-400 text-center text-[9px]">
+        <thead>
+            <tr className="bg-orange-100 font-semibold">
+                {['MONTHS', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'].map(h => 
+                    <th key={h} className="border border-gray-400 p-0.5">{h}</th>
+                )}
             </tr>
-        );
-    };
+        </thead>
+        <tbody>
+            {['No. of Working Days', 'No. of Days Present', '% of Attendance'].map(rowLabel => {
+                const key = rowLabel.includes('Working') ? 'working' : 'present';
+                return (
+                    <tr key={rowLabel}>
+                        <td className="border border-gray-400 p-0.5 font-semibold text-left">{rowLabel}</td>
+                        {['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'].map(month => {
+                            const data = attendance?.[month];
+                            const value = rowLabel.startsWith('%') 
+                                ? ((data?.working && data?.present) ? Math.round((data.present / data.working) * 100) + '%' : '')
+                                : (data?.[key as 'working' | 'present'] || '');
+                            return <td key={month} className="border border-gray-400 p-0.5 h-4">{value}</td>
+                        })}
+                    </tr>
+                );
+            })}
+        </tbody>
+    </table>
+);
 
-    const AssessmentBox: React.FC<{ title: string; aspects: string[]; data: { [key: string]: string } | undefined }> = ({ title, aspects, data }) => (
-        <div className="border border-gray-400 p-2">
-            <h4 className="font-bold text-center mb-1">{title}</h4>
-            {aspects.map(aspect => (
-                <div key={aspect}>
-                    <p className="font-semibold mt-1">{aspect}:</p>
-                    <p className="border-b border-dotted min-h-[1.5rem]">{data?.[aspect] || ''}</p>
-                </div>
-            ))}
-        </div>
-    );
-    
-    const SentimentTable: React.FC<{title: string, questions: Record<string, string>, data: any}> = ({title, questions, data}) => (
-        <div className="border-2 border-green-600 p-2 rounded-md mt-3">
-            <h2 className="text-center font-bold text-base text-green-700 mb-2">{title}</h2>
-            <table className="w-full text-left">
-                <tbody>
-                    {Object.entries(questions).map(([key, label]) => (
-                        <tr key={key}>
-                            <td className="py-0.5 w-4/5">{label}</td>
-                            <td className="py-0.5 text-center font-semibold">{data?.[key] || '-'}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+const SummaryRow: React.FC<{ subject: string; summary: HPCReportData['summaries'][string] }> = ({ subject, summary }) => {
+    const ProficiencyCheckbox: React.FC<{ level: string, selected: boolean }> = ({ level, selected }) => (
+        <div className="flex flex-col items-center">
+             <div className="w-3 h-3 border border-black flex items-center justify-center text-sm">
+                {selected && <span className="font-bold">✓</span>}
+            </div>
         </div>
     );
 
     return (
+        <tr className="text-center">
+            <td className="border border-black p-1 text-left font-semibold align-top">{subject}</td>
+            <td className="border border-black p-1"><ProficiencyCheckbox level="Beginner" selected={summary?.awareness === 'Beginner'} /></td>
+            <td className="border border-black p-1"><ProficiencyCheckbox level="Proficient" selected={summary?.awareness === 'Proficient'} /></td>
+            <td className="border border-black p-1"><ProficiencyCheckbox level="Advanced" selected={summary?.awareness === 'Advanced'} /></td>
+            <td className="border border-black p-1"><ProficiencyCheckbox level="Beginner" selected={summary?.sensitivity === 'Beginner'} /></td>
+            <td className="border border-black p-1"><ProficiencyCheckbox level="Proficient" selected={summary?.sensitivity === 'Proficient'} /></td>
+            <td className="border border-black p-1"><ProficiencyCheckbox level="Advanced" selected={summary?.sensitivity === 'Advanced'} /></td>
+            <td className="border border-black p-1"><ProficiencyCheckbox level="Beginner" selected={summary?.creativity === 'Beginner'} /></td>
+            <td className="border border-black p-1"><ProficiencyCheckbox level="Proficient" selected={summary?.creativity === 'Proficient'} /></td>
+            <td className="border border-black p-1"><ProficiencyCheckbox level="Advanced" selected={summary?.creativity === 'Advanced'} /></td>
+            <td className="border border-black p-1 text-left align-top min-h-[2rem] text-[9px] leading-tight">{summary?.observationalNotes || ''}</td>
+        </tr>
+    );
+};
+
+const HPCPreparatoryCard: React.FC<HPCPreparatoryCardProps> = ({ student, schoolDetails, hpcData }) => {
+    return (
         <div className="text-black font-sans leading-tight text-[10px]">
             {/* Page 1 */}
             <div className="A4-page bg-white shadow-lg p-6 flex flex-col my-4">
-                 <header className="text-center mb-4">
-                    <h1 className="text-lg font-bold">HOLISTIC PROGRESS CARD (HPC) - PREPARATORY STAGE</h1>
-                    <p className="text-base">Academic Year: {hpcData.academicYear}</p>
-                 </header>
+                <header className="text-center mb-2">
+                    <h1 className="text-lg font-bold">HOLISTIC PROGRESS CARD (HPC)</h1>
+                    <h2 className="text-base font-semibold">PREPARATORY STAGE ({hpcData.academicYear})</h2>
+                </header>
 
-                 <section className="border-2 border-green-600 p-3 rounded-md">
-                    <h2 className="text-center font-bold text-base text-green-700 mb-2">PART-A: GENERAL INFORMATION</h2>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-                        <DetailBox label="School Name" value={schoolDetails.name} className="col-span-2" />
-                        <DetailBox label="Student's Name" value={student.name} />
-                        <DetailBox label="Admission No." value={student.admissionNo} />
+                 <section className="border-2 border-orange-500 p-2 rounded-md">
+                    <h3 className="text-center font-bold text-base text-orange-700 mb-1">PART-A (1): GENERAL INFORMATION</h3>
+                    <div className="space-y-0.5">
+                        <DetailItem label="School Name & Address" value={`${schoolDetails.name}, ${schoolDetails.address}`} />
+                        <div className="grid grid-cols-2 gap-x-4">
+                            <DetailItem label="UDISE Code" value={schoolDetails.udiseCode} />
+                            <DetailItem label="Teacher Code" value={hpcData.preparatoryData?.partA1?.teacherCode} />
+                        </div>
                     </div>
-                 </section>
-
-                <section className="border-2 border-green-600 p-3 rounded-md mt-3">
-                    <h2 className="text-center font-bold text-base text-green-700 mb-2">PART-A2: ALL ABOUT ME</h2>
-                     <DetailBox label="My Family" value={hpcData.preparatoryData?.partA2?.myFamily} className="col-span-2" />
-                     <div className="grid grid-cols-3 gap-x-2 mt-1">
-                        <DetailBox label="Favorite Food" value={hpcData.preparatoryData?.partA2?.myFavoriteThings?.food} />
-                        <DetailBox label="Favorite Games" value={hpcData.preparatoryData?.partA2?.myFavoriteThings?.games} />
-                        <DetailBox label="Favorite Festivals" value={hpcData.preparatoryData?.partA2?.myFavoriteThings?.festivals} />
-                     </div>
-                     <DetailBox label="When I grow up, I want to be" value={hpcData.preparatoryData?.partA2?.whenIGrowUp} className="col-span-2 mt-1" />
+                    
+                    <hr className="my-1 border-gray-400" />
+                    
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        <DetailItem label="Student's Name" value={student.name} />
+                        <DetailItem label="Grade / Class" value={student.className} />
+                        <DetailItem label="Roll No." value={student.rollNo} />
+                        <DetailItem label="Section" value={student.section} />
+                        <DetailItem label="Registration No." value={hpcData.preparatoryData?.partA1?.registrationNo} />
+                        <DetailItem label="Date of Birth" value={student.dob} />
+                        <DetailItem label="Mother's Name" value={student.mothersName} />
+                        <DetailItem label="Mother's Occupation" value={hpcData.preparatoryData?.partA1?.motherOccupation} />
+                        <DetailItem label="Father's Name" value={student.fathersName} />
+                        <DetailItem label="Father's Occupation" value={hpcData.preparatoryData?.partA1?.fatherOccupation} />
+                        <DetailItem label="Address" value={student.address} className="col-span-2" />
+                    </div>
                 </section>
 
-                 <section className="border-2 border-green-600 p-2 rounded-md mt-3">
-                    <h2 className="text-center font-bold text-base text-green-700 mb-2">PART-B: ALL-ROUND DEVELOPMENT</h2>
-                     <table className="w-full border-collapse border border-gray-400">
-                         <thead className="bg-green-100 text-sm">
-                            <tr>
-                                <th className="border p-1 w-1/4">Domains of Development</th>
-                                <th className="border p-1 w-1/3">Teacher's Remarks</th>
-                                <th className="border p-1 w-1/3">Parent's Remarks</th>
-                            </tr>
-                        </thead>
-                         <tbody>{STAGE_CONFIG.Preparatory.domains.map(domain => (<SummaryRow key={domain} domain={domain} />))}</tbody>
-                     </table>
-                 </section>
-
-                  <section className="border-2 border-green-600 p-3 rounded-md mt-3 flex-grow">
-                    <h2 className="text-center font-bold text-base text-green-700 mb-2">PART-C: STUDENT'S SELF & PEER ASSESSMENT</h2>
-                    <div className="grid grid-cols-2 gap-2 h-full">
-                        <AssessmentBox title="Self Assessment" aspects={STAGE_CONFIG.Preparatory.aspects.self} data={hpcData.preparatoryData?.selfAssessment} />
-                        <AssessmentBox title="Peer Assessment" aspects={STAGE_CONFIG.Preparatory.aspects.peer} data={hpcData.preparatoryData?.peerAssessment} />
-                    </div>
-                  </section>
-                 
-                 <footer className="mt-auto pt-8 flex justify-between items-end">
-                    <div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Parent's Signature</p></div>
-                    <div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Teacher's Signature</p></div>
-                    <div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Principal's Signature</p></div>
-                </footer>
+                <section className="border-2 border-orange-500 p-1.5 rounded-md mt-2 flex-grow">
+                    <h3 className="text-center font-bold text-orange-700 mb-1">ATTENDANCE</h3>
+                    <AttendanceTable attendance={hpcData.attendance} />
+                </section>
+                <div className="mt-auto pt-4 text-center text-gray-500 text-[9px]">Page 1 of 4</div>
             </div>
 
             {/* Page 2 */}
             <div className="A4-page bg-white shadow-lg p-6 flex flex-col my-4">
-                 <header className="text-center mb-4">
-                    <h1 className="text-lg font-bold">HOLISTIC PROGRESS CARD - PREPARATORY STAGE (Contd.)</h1>
-                 </header>
+                 <header className="text-center mb-2">
+                    <h1 className="text-base font-bold">PART A (2): ALL ABOUT ME</h1>
+                </header>
+                <div className="border-2 border-orange-500 p-2 rounded-md flex-grow space-y-2">
+                    <DetailItem label="My name is" value={student.name} />
+                    <DetailItem label="I am" value={`${hpcData.preparatoryData?.partA2?.iAmYearsOld || ''} years old.`} />
+                    <DetailItem label="My Family" value={hpcData.preparatoryData?.partA2?.myFamily} />
+                    
+                    <div className="border border-gray-400 p-2 rounded">
+                        <h4 className="font-bold text-center">Things about me...</h4>
+                        <DetailItem label="I am good at" value={hpcData.preparatoryData?.partA2?.handDiagram?.goodAt} />
+                        <DetailItem label="I am not so good at" value={hpcData.preparatoryData?.partA2?.handDiagram?.notSoGoodAt} />
+                        <DetailItem label="I would like to improve" value={hpcData.preparatoryData?.partA2?.handDiagram?.improveSkill} />
+                        <DetailItem label="I like to" value={hpcData.preparatoryData?.partA2?.handDiagram?.likeToDo} />
+                        <DetailItem label="I don't like to" value={hpcData.preparatoryData?.partA2?.handDiagram?.dontLikeToDo} />
+                    </div>
 
-                 <SentimentTable title="PART-A3: MY HABITS & DISPOSITIONS" questions={STAGE_CONFIG.Preparatory.partA3Questions} data={hpcData.preparatoryData?.partA3} />
-                 
-                 <SentimentTable title="PARENT FEEDBACK" questions={STAGE_CONFIG.Preparatory.parentFeedbackQuestions} data={hpcData.preparatoryData?.parentFeedback} />
-                
-                 <div className="border-2 border-green-600 p-2 rounded-md mt-3 flex-grow">
-                     <h2 className="text-center font-bold text-base text-green-700 mb-2">Suggestions for Improvement</h2>
-                     <p>{hpcData.preparatoryData?.parentFeedback?.parentSuggestions}</p>
-                 </div>
+                     <div className="border border-gray-400 p-2 rounded">
+                        <h4 className="font-bold text-center">Some of my favorite things...</h4>
+                        <DetailItem label="Food" value={hpcData.preparatoryData?.partA2?.myFavoriteThings?.food} />
+                        <DetailItem label="Games" value={hpcData.preparatoryData?.partA2?.myFavoriteThings?.games} />
+                        <DetailItem label="Festivals" value={hpcData.preparatoryData?.partA2?.myFavoriteThings?.festivals} />
+                    </div>
+
+                    <DetailItem label="When I grow up I want to be" value={hpcData.preparatoryData?.partA2?.whenIGrowUp} />
+                    <DetailItem label="One person who inspires me is" value={hpcData.preparatoryData?.partA2?.myIdol} />
+                    <DetailItem label="Things I want to learn this year" value={hpcData.preparatoryData?.partA2?.thingsToLearn?.join(', ')} />
+                </div>
+                <div className="mt-auto pt-4 text-center text-gray-500 text-[9px]">Page 2 of 4</div>
             </div>
+
+             {/* Page 3 */}
+            <div className="A4-page bg-white shadow-lg p-6 flex flex-col my-4">
+                <header className="text-center mb-2">
+                    <h1 className="text-lg font-bold">PART-C: SUMMARY FOR THE ACADEMIC YEAR</h1>
+                </header>
+                <table className="w-full border-collapse border border-black">
+                    <thead className="bg-orange-100 text-sm">
+                        <tr>
+                            <th rowSpan={2} className="border border-black p-1 w-[15%]">ABILITIES</th>
+                            <th colSpan={3} className="border border-black p-1">Awareness</th>
+                            <th colSpan={3} className="border border-black p-1">Sensitivity</th>
+                            <th colSpan={3} className="border border-black p-1">Creativity</th>
+                            <th rowSpan={2} className="border border-black p-1 w-[30%]">Observational Note</th>
+                        </tr>
+                        <tr className="text-[9px]">
+                           {['B', 'P', 'A', 'B', 'P', 'A', 'B', 'P', 'A'].map((l, i) => <th key={i} className="border border-black p-0.5">{l}</th>)}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {SUBJECTS.map(subject => (
+                            <SummaryRow key={subject} subject={subject} summary={hpcData.summaries[subject]} />
+                        ))}
+                    </tbody>
+                </table>
+                <div className="mt-2 text-[9px]">
+                    <p className="font-bold">Key:</p>
+                    <p><strong>B</strong> - Beginner, <strong>P</strong> - Proficient, <strong>A</strong> - Advanced.</p>
+                </div>
+                 <footer className="mt-auto pt-16 flex justify-between items-end">
+                    <div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Parent's Signature</p></div>
+                    <div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Teacher's Signature</p></div>
+                    <div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Principal's Signature</p></div>
+                </footer>
+                <div className="mt-auto pt-4 text-center text-gray-500 text-[9px]">Page 3 of 4</div>
+            </div>
+            
+            {/* Page 4 */}
+            <div className="A4-page bg-white shadow-lg p-6 flex flex-col my-4">
+                 <header className="text-center mb-2">
+                    <h1 className="text-lg font-bold">CREDITS EARNED THROUGH HPC</h1>
+                </header>
+                <table className="w-full border-collapse border border-black text-center">
+                    <thead className="bg-orange-100">
+                        <tr>
+                            <th className="border border-black p-1">Learning Standard</th>
+                            <th className="border border-black p-1">Credits Earned by Completing the HPC (70%)</th>
+                            <th className="border border-black p-1">National Credit Framework Levels</th>
+                            <th className="border border-black p-1">Credit Points</th>
+                            <th className="border border-black p-1">Credit Points Earned by the Learner</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {[
+                            { name: 'Language Education (R1)', credits: 3.8 },
+                            { name: 'Language Education (R2)', credits: 3.8 },
+                            { name: 'Mathematics', credits: 3.8 },
+                            { name: 'The World Around Us', credits: 3.8 },
+                            { name: 'Art Education', credits: 3.8 },
+                            { name: 'Physical Education', credits: 3.8 },
+                        ].map(item => {
+                            const level = student.className === '3rd' ? 0.6 : student.className === '4th' ? 0.8 : 1.0;
+                            const points = student.className === '3rd' ? 2.3 : student.className === '4th' ? 3.0 : 3.8;
+                            return (
+                                <tr key={item.name}>
+                                    <td className="border border-black p-1 text-left">{item.name}</td>
+                                    <td className="border border-black p-1">{item.credits}</td>
+                                    <td className="border border-black p-1">{level.toFixed(1)}</td>
+                                    <td className="border border-black p-1">{points.toFixed(1)}</td>
+                                    <td className="border border-black p-1"></td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+                 <div className="mt-auto pt-4 text-center text-gray-500 text-[9px]">Page 4 of 4</div>
+            </div>
+
         </div>
     );
 };

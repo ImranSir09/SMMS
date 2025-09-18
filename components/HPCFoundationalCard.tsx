@@ -9,97 +9,178 @@ interface HPCFoundationalCardProps {
   hpcData: HPCReportData;
 }
 
-const STAGE_CONFIG = {
-    Foundational: {
-        domains: ['Physical Development', 'Socio-emotional Development', 'Cognitive Development', 'Language and Literacy', 'Aesthetic & Cultural', 'Positive Learning Habits'],
-    },
+const DOMAINS = ['Physical Development', 'Socio-emotional Development', 'Cognitive Development', 'Language and Literacy', 'Aesthetic & Cultural', 'Positive Learning Habits'];
+const INTERESTS = ['Reading', 'Dancing/Singing', 'Sport/Games', 'Creative writing', 'Gardening', 'Yoga', 'Art', 'Craft', 'Cooking', 'Chores'];
+
+const DetailItem: React.FC<{ label: string; value: string | undefined | null; className?: string }> = ({ label, value, className }) => (
+    <div className={`flex items-baseline ${className}`}>
+        <span className="font-semibold w-32 flex-shrink-0 text-gray-800">{label}</span>
+        <span className="flex-1 border-b border-dotted border-gray-500 pl-1 font-mono">{value || ''}</span>
+    </div>
+);
+
+const AttendanceTable: React.FC<{ attendance: HPCReportData['attendance'] }> = ({ attendance }) => (
+    <table className="w-full border-collapse border border-gray-400 text-center">
+        <thead>
+            <tr className="bg-orange-100 font-semibold">
+                {['Month', 'Working Days', 'Days Present', '%'].map(h => 
+                    <th key={h} className="border border-gray-400 p-0.5">{h}</th>
+                )}
+            </tr>
+        </thead>
+        <tbody>
+            {['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'].map(month => {
+                const monthKey = month.toLowerCase();
+                const data = attendance?.[monthKey];
+                const percentage = (data?.working && data?.present) ? Math.round((data.present / data.working) * 100) : '';
+                return (
+                    <tr key={month}>
+                        <td className="border border-gray-400 p-0.5 font-semibold">{month}</td>
+                        <td className="border border-gray-400 p-0.5 h-5">{data?.working || ''}</td>
+                        <td className="border border-gray-400 p-0.5">{data?.present || ''}</td>
+                        <td className="border border-gray-400 p-0.5">{percentage}%</td>
+                    </tr>
+                );
+            })}
+        </tbody>
+    </table>
+);
+
+const InterestChecklist: React.FC<{ interests: string[] | undefined }> = ({ interests }) => (
+    <div className="grid grid-cols-5 gap-x-2 gap-y-1">
+        {INTERESTS.map(item => (
+            <div key={item} className="flex items-center gap-1">
+                <div className="w-3 h-3 border border-black flex items-center justify-center">
+                    {interests?.includes(item) && <span className="font-bold">✓</span>}
+                </div>
+                <span>{item}</span>
+            </div>
+        ))}
+    </div>
+);
+
+const SummaryRow: React.FC<{ domain: string; summary: HPCReportData['summaries'][string] }> = ({ domain, summary }) => {
+    const ProficiencyDots: React.FC<{ level: string | undefined }> = ({ level }) => (
+        <div className="flex justify-around items-center h-full">
+            <div className={`w-3 h-3 rounded-full border border-black ${level === 'Stream' ? 'bg-black' : ''}`}></div>
+            <div className={`w-3 h-3 rounded-full border border-black ${level === 'Mountain' ? 'bg-black' : ''}`}></div>
+            <div className={`w-3 h-3 rounded-full border border-black ${level === 'Sky' ? 'bg-black' : ''}`}></div>
+        </div>
+    );
+
+    return (
+        <tr className="text-center">
+            <td className="border border-black p-1 text-left font-semibold align-top">{domain}</td>
+            <td className="border border-black p-1"><ProficiencyDots level={summary?.awareness} /></td>
+            <td className="border border-black p-1"><ProficiencyDots level={summary?.sensitivity} /></td>
+            <td className="border border-black p-1"><ProficiencyDots level={summary?.creativity} /></td>
+            <td className="border border-black p-1 text-left align-top min-h-[3rem]">{summary?.observationalNotes || ''}</td>
+        </tr>
+    );
 };
 
 const HPCFoundationalCard: React.FC<HPCFoundationalCardProps> = ({ student, schoolDetails, hpcData }) => {
-
-    const DetailBox: React.FC<{ label: string; value: string | undefined; className?: string }> = ({ label, value, className }) => (
-        <div className={`flex items-baseline ${className}`}>
-            <span className="font-semibold w-28 flex-shrink-0 text-gray-800">{label}:</span>
-            <span className="flex-1 border-b border-dotted border-gray-500 pl-1">{value || ''}</span>
-        </div>
-    );
-    
-    const SummaryRow: React.FC<{ domain: string }> = ({ domain }) => {
-        const summary = hpcData.summaries[domain] || {};
-        
-        const renderCircles = (levelValue?: string) => (
-             <div className="flex justify-center items-center gap-1">
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center font-bold text-xs ${levelValue === 'Stream' ? 'bg-orange-400 border-orange-600' : 'border-gray-400'}`}></div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center font-bold text-xs ${levelValue === 'Mountain' ? 'bg-orange-400 border-orange-600' : 'border-gray-400'}`}></div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center font-bold text-xs ${levelValue === 'Sky' ? 'bg-orange-400 border-orange-600' : 'border-gray-400'}`}></div>
-            </div>
-        );
-
-        return (
-             <tr className="text-center">
-                <td className="border p-1 text-left font-semibold">{domain}</td>
-                <td className="border p-1">{renderCircles(summary?.awareness)}</td>
-                <td className="border p-1">{renderCircles(summary?.sensitivity)}</td>
-                <td className="border p-1">{renderCircles(summary?.creativity)}</td>
-                {/* FIX: Correctly access observationalNotes from the 'summary' object, as 'domainAssessments' does not exist on 'foundationalData'. */}
-                <td className="border p-1 text-left text-[10px] leading-tight min-h-[3rem] align-top">{summary.observationalNotes || ''}</td>
-            </tr>
-        );
-    };
-
     return (
         <div className="text-black font-sans leading-tight text-[10px]">
+            {/* Page 1 */}
             <div className="A4-page bg-white shadow-lg p-6 flex flex-col my-4">
-                 <header className="text-center mb-4">
-                    <h1 className="text-lg font-bold">HOLISTIC PROGRESS CARD (HPC) - FOUNDATIONAL STAGE</h1>
-                    <p className="text-base">Academic Year: {hpcData.academicYear}</p>
-                 </header>
+                <header className="text-center mb-2">
+                    <h1 className="text-lg font-bold">HOLISTIC PROGRESS CARD (HPC)</h1>
+                    <h2 className="text-base font-semibold">FOUNDATIONAL STAGE ({hpcData.academicYear})</h2>
+                </header>
 
-                 <section className="border-2 border-orange-500 p-3 rounded-md">
-                    <h2 className="text-center font-bold text-base text-orange-700 mb-2">PART-A: GENERAL INFORMATION</h2>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-1">
-                        <DetailBox label="School Name" value={schoolDetails.name} className="col-span-2" />
-                        <DetailBox label="Student's Name" value={student.name} />
-                        <DetailBox label="Admission No." value={student.admissionNo} />
-                        <DetailBox label="Date of Birth" value={student.dob} />
-                        <DetailBox label="Class" value={student.className} />
-                        <DetailBox label="Father's Name" value={student.fathersName} />
-                        <DetailBox label="Mother's Name" value={student.mothersName} />
-                        <DetailBox label="Address" value={student.address} className="col-span-2" />
-                        <DetailBox label="Contact No." value={student.contact} />
-                        <DetailBox label="UDISE Code" value={schoolDetails.udiseCode} />
+                <section className="border-2 border-orange-500 p-2 rounded-md">
+                    <h3 className="text-center font-bold text-base text-orange-700 mb-1">PART-A (1): GENERAL INFORMATION</h3>
+                    <div className="space-y-0.5">
+                        <DetailItem label="School Name & Address" value={`${schoolDetails.name}, ${schoolDetails.address}`} />
+                        <div className="flex justify-between gap-4">
+                            <DetailItem label="UDISE Code" value={schoolDetails.udiseCode} />
+                            <DetailItem label="Teacher Code" value={hpcData.foundationalData?.partA1?.teacherCode} />
+                        </div>
+                        <div className="flex justify-between gap-4">
+                            <DetailItem label="APAAR ID" value={hpcData.foundationalData?.partA1?.apaarId} />
+                        </div>
                     </div>
-                 </section>
-                 
-                 <section className="border-2 border-orange-500 p-2 rounded-md mt-3">
-                    <h2 className="text-center font-bold text-base text-orange-700 mb-2">ATTENDANCE</h2>
-                     <table className="w-full border-collapse border border-gray-400">
-                        <thead><tr className="bg-orange-100">{['Month', 'Working Days', 'Days Present'].map(h => <th key={h} className="border border-gray-400 p-1 font-semibold">{h}</th>)}</tr></thead>
+                    
+                    <hr className="my-1 border-gray-400" />
+                    
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        <DetailItem label="Student's Name" value={student.name} />
+                        <DetailItem label="Grade / Class" value={student.className} />
+                        <DetailItem label="Roll No." value={student.rollNo} />
+                        <DetailItem label="Section" value={student.section} />
+                        <DetailItem label="Registration No." value={hpcData.foundationalData?.partA1?.registrationNo} />
+                        <DetailItem label="Date of Birth" value={student.dob} />
+                        <DetailItem label="Mother's Name" value={student.mothersName} />
+                        <DetailItem label="Mother's Education" value={hpcData.foundationalData?.partA1?.motherEducation} />
+                        <DetailItem label="Father's Name" value={student.fathersName} />
+                        <DetailItem label="Father's Education" value={hpcData.foundationalData?.partA1?.fatherEducation} />
+                        <DetailItem label="Address" value={student.address} className="col-span-2" />
+                    </div>
+                </section>
+                
+                <section className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="border-2 border-orange-500 p-1.5 rounded-md">
+                        <h3 className="text-center font-bold text-orange-700 mb-1">ATTENDANCE</h3>
+                        <AttendanceTable attendance={hpcData.attendance} />
+                    </div>
+                    <div className="border-2 border-orange-500 p-1.5 rounded-md flex flex-col">
+                        <h3 className="text-center font-bold text-orange-700 mb-1">INTERESTS</h3>
+                        <div className="flex-grow">
+                             <InterestChecklist interests={hpcData.foundationalData?.interests} />
+                        </div>
+                         <p className="text-[9px] border-t border-gray-400 pt-1 mt-1">
+                            <strong>Other:</strong> 
+                            <span className="font-mono border-b border-dotted border-black">{hpcData.foundationalData?.interests?.find(i => !INTERESTS.includes(i)) || ''}</span>
+                        </p>
+                    </div>
+                </section>
+                <div className="mt-auto pt-4 text-center text-gray-500 text-[9px]">Page 1 of 2</div>
+            </div>
+
+            {/* Page 2 */}
+            <div className="A4-page bg-white shadow-lg p-6 flex flex-col my-4">
+                <section className="flex-grow">
+                    <header className="text-center mb-2">
+                        <h1 className="text-lg font-bold">PART-C: SUMMARY FOR THE ACADEMIC YEAR</h1>
+                    </header>
+                    <table className="w-full border-collapse border border-black">
+                        <thead className="bg-orange-100 text-sm">
+                            <tr>
+                                <th className="border border-black p-1 w-[25%]">Domains of Development</th>
+                                <th className="border border-black p-1 w-[10%]">Awareness</th>
+                                <th className="border border-black p-1 w-[10%]">Sensitivity</th>
+                                <th className="border border-black p-1 w-[10%]">Creativity</th>
+                                <th className="border border-black p-1 w-[45%]">Key Performance Descriptors (Teacher's Notes)</th>
+                            </tr>
+                        </thead>
                         <tbody>
-                            {['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'].map(month => {
-                                const data = hpcData.attendance?.[month.toLowerCase()];
-                                return (<tr key={month} className="text-center"><td className="border border-gray-400 p-0.5 font-semibold">{month}</td><td className="border border-gray-400 p-0.5 h-6">{data?.working || ''}</td><td className="border border-gray-400 p-0.5">{data?.present || ''}</td></tr>);
-                            })}
+                            {DOMAINS.map(domain => (
+                                <SummaryRow key={domain} domain={domain} summary={hpcData.summaries[domain]} />
+                            ))}
                         </tbody>
-                     </table>
-                 </section>
+                    </table>
+                    <div className="mt-2 text-[9px]">
+                        <p className="font-bold">Key:</p>
+                        <p>The 3 dots under each ability represent proficiency levels. From left to right: <strong>Stream</strong> (Beginning), <strong>Mountain</strong> (Developing), <strong>Sky</strong> (Achieved).</p>
+                    </div>
+                </section>
 
-                  <section className="border-2 border-orange-500 p-3 rounded-md mt-3">
-                    <h2 className="text-center font-bold text-base text-orange-700 mb-2">HEALTH STATUS / INTERESTS</h2>
-                    <DetailBox label="Health Notes" value={hpcData.healthNotes} />
-                    <div className="mt-2"><span className="font-semibold text-gray-800">Student's Interests:</span><p className="p-2 border border-dotted border-gray-500 min-h-[2rem] mt-1">{hpcData.foundationalData?.interests?.join(', ')}</p></div>
-                  </section>
-                 
-                 <section className="mt-4 flex-grow flex flex-col">
-                    <header className="text-center mb-2"><h1 className="text-lg font-bold">PART-C: SUMMARY FOR THE ACADEMIC YEAR</h1></header>
-                     <table className="w-full border-collapse border border-gray-400">
-                         <thead className="bg-orange-100 text-sm"><tr><th className="border p-1 w-1/4">Domains of Development</th><th className="border p-1">Awareness</th><th className="border p-1">Sensitivity</th><th className="border p-1">Creativity</th><th className="border p-1 w-1/3">Key Performance Descriptors (Teacher's Notes)</th></tr></thead>
-                         <tbody>{STAGE_CONFIG.Foundational.domains.map(domain => (<SummaryRow key={domain} domain={domain} />))}</tbody>
-                     </table>
-                     <div className="mt-4"><p className="font-bold">Key:</p><p><span className="font-bold inline-block w-5 text-center">Circles represent proficiency:</span> 1st for Stream, 2nd for Mountain, 3rd for Sky.</p></div>
-                 </section>
-
-                 <footer className="mt-auto pt-8 flex justify-between items-end"><div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Parent's Signature</p></div><div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Teacher's Signature</p></div><div className="text-center w-1/3"><div className="border-t-2 border-gray-500 mb-1"></div><p className="font-semibold">Principal's Signature</p></div></footer>
+                <footer className="mt-auto pt-16 flex justify-between items-end">
+                    <div className="text-center w-1/3">
+                        <div className="border-t-2 border-gray-500 mb-1"></div>
+                        <p className="font-semibold">Parent's Signature</p>
+                    </div>
+                    <div className="text-center w-1/3">
+                        <div className="border-t-2 border-gray-500 mb-1"></div>
+                        <p className="font-semibold">Teacher's Signature</p>
+                    </div>
+                    <div className="text-center w-1/3">
+                        <div className="border-t-2 border-gray-500 mb-1"></div>
+                        <p className="font-semibold">Principal's Signature</p>
+                    </div>
+                </footer>
+                <div className="mt-auto pt-4 text-center text-gray-500 text-[9px]">Page 2 of 2</div>
             </div>
         </div>
     );
