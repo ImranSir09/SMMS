@@ -1,8 +1,7 @@
 
-
-
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+// FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import { Exam } from '../types';
@@ -29,6 +28,7 @@ const Exams: React.FC = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newExamData, setNewExamData] = useState({ name: '', className: '' });
     const exams = useLiveQuery(() => db.exams.toArray(), []);
+    // FIX: Replaced v5 useHistory with v6 useNavigate.
     const navigate = useNavigate();
     const { addToast } = useToast();
     
@@ -48,6 +48,7 @@ const Exams: React.FC = () => {
             const newId = await db.exams.add({ name: examNameToSave, className: newExamData.className });
             setIsCreateModalOpen(false);
             addToast('Exam created successfully!', 'success');
+            // FIX: Updated navigation call to use navigate() for v6.
             navigate(`/exams/${newId}`);
         } catch (error) {
             console.error("Failed to save exam:", error);
@@ -86,6 +87,7 @@ const Exams: React.FC = () => {
                          <p className="text-foreground/80 text-xs">Class: {exam.className}</p>
                        </div>
                        <div className="mt-3 flex justify-between items-center">
+                            {/* FIX: Updated navigation call to use navigate() for v6. */}
                             <button onClick={() => navigate(`/exams/${exam.id}`)} className="flex items-center gap-1 py-2 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors">
                                 <ClipboardListIcon className="w-3.5 h-3.5" />
                                 Marks

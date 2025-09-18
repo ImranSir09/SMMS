@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+// FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import { db } from '../services/db';
@@ -15,6 +16,7 @@ const inputStyle = "p-3 w-full bg-background border border-input rounded-md focu
 
 const Reports: React.FC = () => {
     const { schoolDetails } = useAppData();
+    // FIX: Replaced v5 useHistory with v6 useNavigate.
     const navigate = useNavigate();
 
     const exams = useLiveQuery(() => db.exams.toArray(), []);
@@ -89,6 +91,7 @@ const Reports: React.FC = () => {
 
     const handleGenerateRollStatement = () => {
         if (selectedClass) {
+            // FIX: Updated navigation call to use navigate() for v6.
             navigate(`/print/roll-statement/${selectedClass}`);
         }
     };

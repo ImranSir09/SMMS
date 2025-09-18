@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'sms-mobile-v1';
+const CACHE_NAME = 'sms-mobile-v2';
 // These are the core files that make up the "app shell".
 const APP_SHELL_URLS = [
   '/',

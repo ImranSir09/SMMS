@@ -1,4 +1,6 @@
+
 import React from 'react';
+// FIX: Updated NavLink usage to react-router-dom v6 syntax.
 import { NavLink } from 'react-router-dom';
 import { DashboardIcon, StudentsIcon, SettingsIcon, HolisticIcon, ReportsIcon } from './icons';
 
@@ -18,6 +20,7 @@ const BottomNav: React.FC = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t border-border flex md:hidden z-30">
       {navItems.map(item => (
+        // FIX: Updated NavLink from v5 to v6 syntax. Replaced className/activeClassName props with a className function.
         <NavLink
           key={item.to}
           to={item.to}

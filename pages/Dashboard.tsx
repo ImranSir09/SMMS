@@ -1,7 +1,7 @@
 
-
 import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+// FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import Card from '../components/Card';
@@ -30,6 +30,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, onClick }) => (
 );
 
 const Dashboard: React.FC = () => {
+    // FIX: Replaced v5 useHistory with v6 useNavigate.
     const navigate = useNavigate();
     const { schoolDetails } = useAppData();
 
@@ -133,8 +134,10 @@ const Dashboard: React.FC = () => {
                                     </div>
                                 ) : '...'
                             }
+                            // FIX: Updated navigation call to use navigate() for v6.
                             onClick={() => navigate('/students')}
                         />
+                        {/* FIX: Updated navigation call to use navigate() for v6. */}
                         <StatCard icon={<ExamsIcon />} label="Exams" value={dashboardData?.examCount} onClick={() => navigate('/exams')} />
                     </div>
                 </Card>
@@ -150,10 +153,12 @@ const Dashboard: React.FC = () => {
                       <SectionHeader 
                         icon={<UsersIcon className="w-4 h-4 text-foreground/60" />} 
                         title="Recent Students" 
+                        // FIX: Updated navigation call to use navigate() for v6.
                         action={<span onClick={() => navigate('/students')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>}
                     />
                     {dashboardData && dashboardData.recentStudents.length > 0 ? (
                         <ul className="space-y-1 overflow-y-auto">
+                            {/* FIX: Updated navigation call to use navigate() for v6. */}
                             {dashboardData.recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} onClick={() => navigate(`/student/${s.id}`)} />)}
                         </ul>
                     ) : (

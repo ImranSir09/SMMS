@@ -1,6 +1,6 @@
 
-
 import React, { useContext, useEffect } from 'react';
+// FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors.
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppContext } from './contexts/AppContext';
 import Header from './components/Header';
@@ -69,9 +69,9 @@ const App: React.FC = () => {
       )}
       <div className={`relative z-10 h-screen flex flex-col ${backgroundStyle}`}>
         <Header />
-        <main className="flex-1 p-3 pb-24 overflow-y-auto">
+        <main className="flex-1 p-3 pb-28 overflow-y-auto">
+            {/* FIX: Replaced v5 <Switch> and <Route component={...}> with v6 <Routes> and <Route element={...}> */}
             <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/students" element={<Students />} />
                 <Route path="/student/:id" element={<StudentProfile />} />
@@ -83,6 +83,7 @@ const App: React.FC = () => {
                 <Route path="/holistic" element={<Holistic />} />
                 <Route path="/print/roll-statement/:className" element={<PrintRollStatement />} />
                 <Route path="/print/hpc/:studentId" element={<PrintHPC />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
         </main>
