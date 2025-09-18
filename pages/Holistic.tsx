@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback, FC } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Student, HPCReportData, Stage, FoundationalData, PreparatoryData, MiddleData, HpcMiddleSubjectAssessment } from '../types';
+import { HPCReportData, Stage } from '../types';
 import Card from '../components/Card';
 import { useToast } from '../contexts/ToastContext';
 import { SaveIcon } from '../components/icons';
+import { HPCFoundationalForm } from '../components/HPCFoundationalForm';
+import { HPCPreparatoryForm } from '../components/HPCPreparatoryForm';
+import { HPCMiddleForm } from '../components/HPCMiddleForm';
 
 const ACADEMIC_YEAR = '2024-25';
 
@@ -44,81 +48,6 @@ const defaultHpcData = (studentId: number, stage: Stage): Partial<HPCReportData>
     }
     return baseData;
 };
-
-const MIDDLE_STAGE_SUBJECTS = ['Language 1 (R1)', 'Language 2 (R2)', 'Language 3 (R3)', 'Mathematics', 'Science', 'Social Science', 'Art Education', 'Physical Education', 'Skill Education'];
-
-
-const MiddleForm: FC<{ data: MiddleData, setData: (data: MiddleData) => void }> = ({ data, setData }) => {
-
-    // FIX: Corrected handleDataChange to not use a functional update, which was causing a type error.
-    const handleDataChange = (path: string, value: any) => {
-        const keys = path.split('.');
-        let temp = { ...data };
-        let current = temp as any;
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (!current[keys[i]]) {
-                current[keys[i]] = {};
-            }
-            current = current[keys[i]];
-        }
-        current[keys[keys.length - 1]] = value;
-        setData(temp);
-    };
-    
-     const handleCheckboxChange = (path: string, value: string, checked: boolean) => {
-        const keys = path.split('.');
-        let temp = { ...data };
-        let current = temp as any;
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (!current[keys[i]]) current[keys[i]] = {};
-            current = current[keys[i]];
-        }
-        
-        const currentArray = current[keys[keys.length - 1]] || [];
-        const newArray = checked ? [...currentArray, value] : currentArray.filter((item: string) => item !== value);
-        current[keys[keys.length - 1]] = newArray;
-
-        setData(temp);
-    };
-
-    return (
-        <div className="p-4 space-y-4">
-            <details className="bg-background/50 rounded-lg">
-                <summary className="p-2 font-semibold cursor-pointer">Part A: Student Profile</summary>
-                <div className="p-2 border-t border-border space-y-2">
-                    <h4 className="font-semibold text-sm">All About Me & Goal Setting</h4>
-                    <input className="w-full p-2 border rounded" placeholder="I live with my..." value={data.partA2?.liveWith || ''} onChange={e => handleDataChange('partA2.liveWith', e.target.value)} />
-                    <textarea className="w-full p-2 border rounded" placeholder="My Academic Goal description..." value={data.partA2?.academicGoal?.description || ''} onChange={e => handleDataChange('partA2.academicGoal.description', e.target.value)} />
-                    
-                    <h4 className="font-semibold text-sm mt-2">My Ambition Card</h4>
-                    <input className="w-full p-2 border rounded" placeholder="My ambition is..." value={data.partA3?.ambition || ''} onChange={e => handleDataChange('partA3.ambition', e.target.value)} />
-                    <textarea className="w-full p-2 border rounded" placeholder="5 skills I need to achieve my ambition..." value={data.partA3?.skillsNeeded || ''} onChange={e => handleDataChange('partA3.skillsNeeded', e.target.value)} />
-
-                    <h4 className="font-semibold text-sm mt-2">Parent-Teacher Partnership</h4>
-                    <textarea className="w-full p-2 border rounded" placeholder="Based on my discussion with the teacher, I will support my child at home by..." value={data.partA4?.supportAtHome || ''} onChange={e => handleDataChange('partA4.supportAtHome', e.target.value)} />
-                </div>
-            </details>
-
-            <details className="bg-background/50 rounded-lg">
-                <summary className="p-2 font-semibold cursor-pointer">Part B: Subject Assessments</summary>
-                <div className="p-2 border-t border-border space-y-4">
-                    {MIDDLE_STAGE_SUBJECTS.map(subject => (
-                        <details key={subject} className="bg-background/70 rounded">
-                            <summary className="p-2 font-semibold text-sm cursor-pointer">{subject}</summary>
-                            <div className="p-2 border-t border-border space-y-2">
-                                <h5 className="font-bold">Activity</h5>
-                                <textarea className="w-full p-2 border rounded" placeholder="Activity Description..." value={data.subjectAssessments?.[subject]?.activity || ''} onChange={e => handleDataChange(`subjectAssessments.${subject}.activity`, e.target.value)} />
-                                <h5 className="font-bold mt-2">Teacher's Feedback</h5>
-                                 <textarea className="w-full p-2 border rounded" placeholder="Teacher's Observations and Recommendations..." value={data.subjectAssessments?.[subject]?.teacherFeedback?.observations || ''} onChange={e => handleDataChange(`subjectAssessments.${subject}.teacherFeedback.observations`, e.target.value)} />
-                            </div>
-                        </details>
-                    ))}
-                </div>
-            </details>
-        </div>
-    );
-};
-
 
 const Holistic: React.FC = () => {
     const [selectedClass, setSelectedClass] = useState('');
@@ -176,30 +105,28 @@ const Holistic: React.FC = () => {
         if (!stage || !hpcData) return <p className="text-center text-sm text-foreground/60 p-4">Select a student to begin.</p>;
         
         switch (stage) {
+            case 'Foundational':
+                return <HPCFoundationalForm 
+                            data={hpcData.foundationalData!}
+                            summaries={hpcData.summaries!}
+                            attendance={hpcData.attendance!}
+                            setData={(key, value) => setHpcData(prev => ({ ...prev!, [key]: value }))}
+                        />;
+            case 'Preparatory':
+                 return <HPCPreparatoryForm 
+                            data={hpcData.preparatoryData!} 
+                            setData={(newData) => setHpcData(prev => ({ ...prev!, preparatoryData: newData }))} 
+                        />;
             case 'Middle':
-                return <MiddleForm 
+                return <HPCMiddleForm 
                             data={hpcData.middleData!} 
                             setData={(newData) => setHpcData(prev => ({ ...prev!, middleData: newData }))} 
                         />;
-            // Other stages would be here
             default:
                  return (
                     <div className="p-4 space-y-4">
                         <h3 className="text-lg font-semibold">{stage} Stage Entry</h3>
-                        <textarea
-                            className="w-full p-2 border border-input rounded-md bg-background min-h-[10rem]"
-                            placeholder={`Enter notes for ${stage} stage...`}
-                            value={hpcData.summaries?.['Overall']?.observationalNotes || ''}
-                            onChange={(e) => {
-                                setHpcData(prev => ({
-                                    ...prev!,
-                                    summaries: {
-                                        ...prev!.summaries,
-                                        'Overall': { ...prev!.summaries?.['Overall'], observationalNotes: e.target.value }
-                                    }
-                                }));
-                            }}
-                        />
+                        <p className="text-sm text-center text-foreground/70">Data entry for this stage is not yet implemented.</p>
                     </div>
                 );
         }
