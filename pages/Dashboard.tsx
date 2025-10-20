@@ -1,171 +1,161 @@
 
 import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-// FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
-import Card from '../components/Card';
-import { StudentsIcon, ExamsIcon, SchoolIcon, BarChart3Icon, PieChartIcon, UsersIcon } from '../components/icons';
-import HorizontalBarChart from '../components/HorizontalBarChart';
-import { Student } from '../types';
 import { useAppData } from '../hooks/useAppData';
+import { useToast } from '../contexts/ToastContext';
+import {
+    SchoolIcon,
+    HashIcon,
+    UsersIcon,
+    UserIcon,
+    StudentsIcon,
+    UserListIcon,
+    EditIcon,
+    PrintIcon,
+    BarChart3Icon,
+    BookIcon,
+    CalendarIcon,
+    ClipboardListIcon,
+    InfoIcon,
+    DashboardIcon,
+    BriefcaseIcon,
+} from '../components/icons';
 
-type StatCardProps = {
-    icon: React.ReactElement<{ className?: string }>;
-    label: string;
-    value: React.ReactNode;
-    onClick?: () => void;
-};
-
-const StatCard: React.FC<StatCardProps> = ({ icon, label, value, onClick }) => (
-    <div onClick={onClick} className={`bg-card text-card-foreground p-2 rounded-lg flex items-center gap-2 ${onClick ? 'cursor-pointer hover-lift' : ''}`}>
-        <div className="w-8 h-8 rounded-md flex items-center justify-center bg-primary/20 text-primary">
-            {React.cloneElement(icon, { className: 'w-5 h-5' })}
-        </div>
+// Reusable components for the new dashboard
+const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: React.ReactNode; color: string; }> = ({ icon, label, value, color }) => (
+    <div className={`p-3 rounded-xl flex items-center gap-3 ${color}`}>
+        <div className="text-white/80">{icon}</div>
         <div>
-            <p className="text-xs text-foreground/70">{label}</p>
-            <div className="text-md font-bold">{value ?? '...'}</div>
+            <p className="text-xs text-white/90 font-semibold">{label}</p>
+            <p className="text-xl font-bold text-white">{value ?? '...'}</p>
         </div>
     </div>
 );
 
+const FeatureTile: React.FC<{ icon: React.ReactNode; label: string; color: string; onClick: () => void; }> = ({ icon, label, color, onClick }) => (
+    <div
+        onClick={onClick}
+        className={`p-4 rounded-2xl flex flex-col justify-between h-28 cursor-pointer hover-lift ${color}`}
+    >
+        <div className="text-white">{icon}</div>
+        <p className="font-bold text-white">{label}</p>
+    </div>
+);
+
+const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; }> = ({ icon, title }) => (
+    <div className="flex items-center gap-2">
+        {icon}
+        <h2 className="text-lg font-bold text-foreground">{title}</h2>
+    </div>
+);
+
 const Dashboard: React.FC = () => {
-    // FIX: Replaced v5 useHistory with v6 useNavigate.
     const navigate = useNavigate();
     const { schoolDetails } = useAppData();
+    const { addToast } = useToast();
 
     const dashboardData = useLiveQuery(async () => {
         const [
             studentCount,
             maleCount,
             femaleCount,
-            otherCount,
-            examCount,
-            recentStudents,
             classNames,
         ] = await Promise.all([
             db.students.count(),
             db.students.where({ gender: 'Male' }).count(),
             db.students.where({ gender: 'Female' }).count(),
-            db.students.where({ gender: 'Other' }).count(),
-            db.exams.count(),
-            db.students.orderBy('id').reverse().limit(4).toArray(),
             db.students.orderBy('className').uniqueKeys(),
         ]);
         
-        const classCounts = await Promise.all(
-            (classNames as string[]).map(async (name) => ({
-                label: name,
-                value: await db.students.where({ className: name }).count(),
-            }))
-        );
+        const sortedClassNames = (classNames as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
         return {
             studentCount,
-            genderCounts: { male: maleCount, female: femaleCount, other: otherCount },
-            examCount,
-            recentStudents,
-            chartData: classCounts.sort((a,b) => b.value - a.value),
+            maleCount,
+            femaleCount,
+            classNames: sortedClassNames,
         };
     }, []);
 
-    const QuickListItem: React.FC<{ photo: string | null; name: string; detail: string; onClick: () => void; }> = ({ photo, name, detail, onClick }) => (
-        <li onClick={onClick} className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-            {photo ? (
-                <img src={photo} alt={name} className="w-10 h-10 rounded-full object-cover"/>
-            ) : (
-                 <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
-            )}
-            <div className="truncate">
-                <p className="font-semibold text-sm truncate">{name}</p>
-                <p className="text-xs text-foreground/60 truncate">{detail}</p>
-            </div>
-        </li>
-    );
+    const features = [
+        { label: 'Add Student', icon: <StudentsIcon className="w-6 h-6"/>, color: 'bg-green-500', path: '/students' },
+        { label: 'View Admissions', icon: <UserListIcon className="w-6 h-6"/>, color: 'bg-red-500', path: '/students' },
+        { label: 'Marks Entry', icon: <EditIcon className="w-6 h-6"/>, color: 'bg-blue-500', path: '/exams' },
+        { label: 'Print Results', icon: <PrintIcon className="w-6 h-6"/>, color: 'bg-cyan-500', path: '/certificates' },
+        { label: 'Roll Statement', icon: <BarChart3Icon className="w-6 h-6"/>, color: 'bg-yellow-500', path: '/reports' },
+        { label: 'Subjects', icon: <BookIcon className="w-6 h-6"/>, color: 'bg-gray-800', path: '/exams' },
+        { label: 'Time Table', icon: <CalendarIcon className="w-6 h-6"/>, color: 'bg-purple-500', action: () => addToast('Time Table feature is coming soon.', 'info') },
+        { label: 'Necessary Formats', icon: <ClipboardListIcon className="w-6 h-6"/>, color: 'bg-gray-500', path: '/reports' },
+    ];
     
-    const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; action?: React.ReactNode; }> = ({ icon, title, action }) => (
-        <div className="flex justify-between items-center px-1 mb-1">
-            <div className="flex items-center gap-1.5">
-                {icon}
-                <h3 className="text-sm font-bold">{title}</h3>
-            </div>
-            {action}
-        </div>
-    );
-
     return (
-        <div className="flex flex-col gap-3 animate-fade-in">
-             {/* School Header */}
-            <div className="flex-shrink-0 flex items-center gap-4 p-3 bg-card rounded-lg shadow-sm">
-                {schoolDetails?.logo ? (
-                    <img src={schoolDetails.logo} alt="School Logo" className="w-16 h-16 object-contain rounded-md" />
-                ) : (
-                    <div className="w-16 h-16 flex items-center justify-center bg-primary/10 rounded-full">
-                        <SchoolIcon className="w-8 h-8 text-primary" />
-                    </div>
-                )}
-                <div>
-                    <h2 className="text-xl font-gothic font-bold text-foreground">
-                        {schoolDetails?.name || 'School Name'}
-                    </h2>
-                    <p className="text-xs text-foreground/70">
-                        {schoolDetails?.phone && <span>Ph: {schoolDetails.phone}</span>}
-                        {schoolDetails?.udiseCode && <span className="ml-2">| UDISE: {schoolDetails.udiseCode}</span>}
-                    </p>
+        <div className="flex flex-col gap-6 animate-fade-in pb-8">
+            {/* School Header */}
+            <header className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl shadow-sm border border-primary/20">
+                 <div className="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full flex-shrink-0">
+                    <SchoolIcon className="w-7 h-7 text-primary" />
                 </div>
+                <div>
+                    <h1 className="text-xl font-gothic font-bold text-primary">
+                        {schoolDetails?.name || 'School Name'}
+                    </h1>
+                </div>
+            </header>
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3">
+                <StatCard icon={<HashIcon className="w-5 h-5"/>} label="UDISE" value={schoolDetails?.udiseCode || 'N/A'} color="bg-gray-400"/>
+                <StatCard icon={<UsersIcon className="w-5 h-5"/>} label="Students" value={dashboardData?.studentCount ?? 0} color="bg-blue-400"/>
+                <StatCard icon={<UserIcon className="w-5 h-5"/>} label="Boys" value={dashboardData?.maleCount ?? 0} color="bg-sky-400"/>
+                <StatCard icon={<UserIcon className="w-5 h-5"/>} label="Girls" value={dashboardData?.femaleCount ?? 0} color="bg-pink-400"/>
             </div>
             
-            {/* Main content grid */}
-            <div className="flex-1 grid grid-cols-2 gap-3">
-                {/* At a Glance */}
-                <Card className="col-span-2 p-2 space-y-2">
-                    <SectionHeader icon={<BarChart3Icon className="w-4 h-4 text-foreground/60" />} title="At a Glance" />
-                    <div className="grid grid-cols-2 gap-2">
-                        <StatCard
-                            icon={<StudentsIcon />}
-                            label="Students"
-                            value={
-                                dashboardData ? (
-                                    <div className="flex flex-col items-start">
-                                        <span>{dashboardData.studentCount}</span>
-                                        <span className="text-xs font-normal text-foreground/70">
-                                            ({dashboardData.genderCounts.male}M / {dashboardData.genderCounts.female}F)
-                                        </span>
-                                    </div>
-                                ) : '...'
-                            }
-                            // FIX: Updated navigation call to use navigate() for v6.
-                            onClick={() => navigate('/students')}
-                        />
-                        {/* FIX: Updated navigation call to use navigate() for v6. */}
-                        <StatCard icon={<ExamsIcon />} label="Exams" value={dashboardData?.examCount} onClick={() => navigate('/exams')} />
-                    </div>
-                </Card>
-                
-                {/* Class Distribution */}
-                <Card className="col-span-2 p-2 flex flex-col">
-                    <SectionHeader icon={<PieChartIcon className="w-4 h-4 text-foreground/60" />} title="Class Distribution" />
-                    <HorizontalBarChart data={dashboardData?.chartData || []} />
-                </Card>
-
-                {/* Recently Added Students */}
-                <Card className="col-span-2 p-2 flex flex-col">
-                      <SectionHeader 
-                        icon={<UsersIcon className="w-4 h-4 text-foreground/60" />} 
-                        title="Recent Students" 
-                        // FIX: Updated navigation call to use navigate() for v6.
-                        action={<span onClick={() => navigate('/students')} className="text-xs text-primary hover:underline cursor-pointer">View all</span>}
-                    />
-                    {dashboardData && dashboardData.recentStudents.length > 0 ? (
-                        <ul className="space-y-1 overflow-y-auto">
-                            {/* FIX: Updated navigation call to use navigate() for v6. */}
-                            {dashboardData.recentStudents.map(s => <QuickListItem key={s.id} photo={s.photo} name={s.name} detail={`Class ${s.className}`} onClick={() => navigate(`/student/${s.id}`)} />)}
-                        </ul>
-                    ) : (
-                        <p className="text-center text-xs text-foreground/60 py-2">No students added yet.</p>
-                    )}
-                </Card>
+            {/* Session Card */}
+            <div className="p-4 bg-card rounded-xl text-center shadow-sm">
+                <p className="text-sm font-semibold text-foreground/70">Session</p>
+                <p className="text-lg font-bold">Nov-Dec 2025</p>
             </div>
+            
+            {/* Quick Access Features */}
+            <section className="flex flex-col gap-3">
+                <SectionHeader icon={<DashboardIcon className="w-5 h-5 text-foreground/70"/>} title="Quick Access Features" />
+                <div className="grid grid-cols-2 gap-3">
+                    {features.map(feature => (
+                        <FeatureTile 
+                            key={feature.label}
+                            icon={feature.icon}
+                            label={feature.label}
+                            color={feature.color}
+                            onClick={() => feature.path ? navigate(feature.path) : feature.action?.()}
+                        />
+                    ))}
+                </div>
+            </section>
+            
+            {/* Navigate Classes */}
+            <section className="flex flex-col gap-3">
+                 <SectionHeader icon={<BriefcaseIcon className="w-5 h-5 text-foreground/70"/>} title="Navigate Classes" />
+                 <div className="flex flex-wrap gap-2">
+                    {dashboardData?.classNames.map(className => (
+                        <button 
+                            key={className} 
+                            onClick={() => navigate('/students')}
+                            className="py-2 px-4 bg-card border border-border rounded-lg text-sm font-semibold hover-lift"
+                        >
+                            {className}
+                        </button>
+                    ))}
+                    {(!dashboardData || dashboardData.classNames.length === 0) && (
+                        <p className="text-xs text-foreground/60 w-full text-center p-4">No classes found. Add students to see classes here.</p>
+                    )}
+                 </div>
+                 <div className="flex items-center gap-2 text-xs text-foreground/60 p-2 bg-blue-500/10 rounded-lg">
+                    <InfoIcon className="w-4 h-4 text-blue-500"/>
+                    <span>Click a class button to view active students.</span>
+                 </div>
+            </section>
         </div>
     );
 };
