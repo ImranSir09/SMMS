@@ -1,12 +1,14 @@
+
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 
 interface DobCertificateProps {
   student: Student;
   schoolDetails: SchoolDetails | null;
+  photo?: string | null;
 }
 
-const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails }) => {
+const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails, photo }) => {
     
     // Helper function to convert a date string into a formatted word string
     const dateToWords = (dateString: string): string => {
@@ -82,6 +84,17 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails 
         <div className="A4-page-container">
             <div id="dob-certificate" className="w-[210mm] h-[297mm] bg-white p-8 flex flex-col font-serif text-black relative">
                 
+                 {/* Photo */}
+                <div className="absolute top-36 right-8 z-20">
+                    {photo ? (
+                        <img src={photo} alt="Student" className="w-28 h-36 object-cover border-2 border-gray-700" />
+                    ) : (
+                        <div className="w-28 h-36 border-2 border-dashed border-gray-500 flex items-center justify-center text-center text-gray-500 text-sm p-2">
+                            <span>Affix Recent Passport Size Photograph</span>
+                        </div>
+                    )}
+                </div>
+
                 {/* Watermark */}
                 {schoolDetails?.logo && (
                     <div className="absolute inset-0 flex items-center justify-center z-0">

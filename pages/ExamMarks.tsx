@@ -114,7 +114,8 @@ const ExamMarks: React.FC = () => {
 
         setMarksData(prev => {
             const newMap = new Map(prev);
-            const currentMark = newMap.get(key) || { studentId, examId: numericExamId, subject };
+            // FIX: Explicitly type currentMark to resolve spread operator error.
+            const currentMark: Partial<Mark> = newMap.get(key) || { studentId, examId: numericExamId, subject };
             const updatedMark = { ...currentMark, [field]: numericValue };
             newMap.set(key, updatedMark);
             return newMap;
@@ -129,7 +130,8 @@ const ExamMarks: React.FC = () => {
         const key = `${studentId}-extra`;
         setStudentExtraData(prev => {
             const newMap = new Map(prev);
-            const currentData = newMap.get(studentId) || { studentId, examId: numericExamId };
+            // FIX: Explicitly type currentData to resolve spread operator error.
+            const currentData: Partial<StudentExamData> = newMap.get(studentId) || { studentId, examId: numericExamId };
             const updatedData = { ...currentData, [field]: value } as Partial<StudentExamData>;
             newMap.set(studentId, updatedData);
             return newMap;
@@ -153,7 +155,8 @@ const ExamMarks: React.FC = () => {
         setDirtyKeys(new Set());
 
         // FIX: Replaced for...of loop with forEach to avoid TypeScript type inference issues where 'key' was 'unknown'.
-        currentDirtyKeys.forEach(key => {
+        // FIX: Explicitly type 'key' as string to resolve method errors.
+        currentDirtyKeys.forEach((key: string) => {
             if (key.endsWith('-extra')) {
                 const studentId = Number(key.split('-')[0]);
                 const data = studentExtraData.get(studentId);

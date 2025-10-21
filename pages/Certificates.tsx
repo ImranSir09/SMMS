@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student, Exam } from '../types';
 import Card from '../components/Card';
-import { ExamsIcon, CalendarIcon, CertificateIcon, BonafideIcon, SearchIcon, ClipboardListIcon } from '../components/icons';
+import { ExamsIcon, CalendarIcon, CertificateIcon, BonafideIcon, SearchIcon, UploadIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
@@ -27,6 +27,11 @@ const Certificates: React.FC = () => {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const { schoolDetails } = useAppData();
   
+  // Certificate Generation Modal States
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const [certType, setCertType] = useState<'dob' | 'bonafide' | null>(null);
+  const [certPhoto, setCertPhoto] = useState<string | null>(null);
+
   // NEP Modal States
   const [isNepCardModalOpen, setIsNepCardModalOpen] = useState(false);
   const [classExams, setClassExams] = useState<Exam[]>([]);
@@ -74,12 +79,51 @@ const Certificates: React.FC = () => {
       setIsGeneratingPdf(false);
   };
   
-  const handleGenerateDobCert = () => {
-      if (foundStudent) generateDoc(<DobCertificate student={foundStudent} schoolDetails={schoolDetails} />, `DOB-Cert-${foundStudent.admissionNo}`);
+  const handleOpenCertModal = (type: 'dob' | 'bonafide') => {
+    setCertType(type);
+    setCertPhoto(null);
+    setError('');
+    setIsCertModalOpen(true);
   };
-  
-  const handleGenerateBonafideCert = () => {
-      if (foundStudent) generateDoc(<BonafideCertificate student={foundStudent} schoolDetails={schoolDetails} />, `Bonafide-Cert-${foundStudent.admissionNo}`);
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        if (file.size > 2 * 1024 * 1024) { // 2MB limit
+            setError('File is too large. Please select an image under 2MB.');
+            return;
+        }
+        setError('');
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setCertPhoto(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        setCertPhoto(null);
+    }
+  };
+
+  const handleFinalGenerate = async () => {
+    if (!foundStudent || !certType || !schoolDetails) {
+        alert("Required data is missing to generate the certificate.");
+        return;
+    }
+
+    let componentToRender;
+    const fileName = `${certType === 'dob' ? 'DOB' : 'Bonafide'}-Cert-${foundStudent.admissionNo}`;
+
+    if (certType === 'dob') {
+        componentToRender = <DobCertificate student={foundStudent} schoolDetails={schoolDetails} photo={certPhoto} />;
+    } else if (certType === 'bonafide') {
+        componentToRender = <BonafideCertificate student={foundStudent} schoolDetails={schoolDetails} photo={certPhoto} />;
+    }
+    
+    if (componentToRender) {
+        await generateDoc(componentToRender, fileName);
+    }
+    
+    setIsCertModalOpen(false);
   };
 
   const handleGenerateNepCard = async () => {
@@ -133,7 +177,7 @@ const Certificates: React.FC = () => {
             <SearchIcon className="w-4 h-4" />
             Search Student
         </button>
-        {error && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
+        {error && !isCertModalOpen && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
       </Card>
 
       {foundStudent && (
@@ -146,10 +190,10 @@ const Certificates: React.FC = () => {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
-               <button onClick={handleGenerateDobCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-purple-600`}>
+               <button onClick={() => handleOpenCertModal('dob')} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-purple-600`}>
                     <CalendarIcon className="w-3.5 h-3.5" /> DOB Cert
                </button>
-               <button onClick={handleGenerateBonafideCert} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-pink-600`}>
+               <button onClick={() => handleOpenCertModal('bonafide')} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-pink-600`}>
                     <BonafideIcon className="w-3.5 h-3.5" /> Bonafide
                </button>
                <button onClick={() => setIsNepCardModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-green-600`}>
@@ -190,6 +234,40 @@ const Certificates: React.FC = () => {
                         className="py-3 px-5 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-semibold disabled:opacity-60"
                     >
                         {isGeneratingPdf ? 'Generating...' : 'Generate'}
+                    </button>
+                </div>
+            </div>
+        </Modal>
+        
+        <Modal
+            isOpen={isCertModalOpen}
+            onClose={() => setIsCertModalOpen(false)}
+            title={`Generate ${certType === 'dob' ? 'DOB Certificate' : 'Bonafide Certificate'}`}
+        >
+            <div className="p-4 space-y-4">
+                <div>
+                    <label className={labelStyle}>Student Photo (Optional)</label>
+                    <div className="mt-1 flex items-center gap-4">
+                        {certPhoto ? (
+                            <img src={certPhoto} alt="Preview" className="w-24 h-32 object-cover rounded-md border border-border" />
+                        ) : (
+                            <div className="w-24 h-32 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Photo</div>
+                        )}
+                        <label className="flex-1 flex flex-col items-center justify-center gap-2 cursor-pointer p-3 rounded-md bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5 h-32">
+                            <UploadIcon className="w-6 h-6 text-foreground/60" />
+                            <span className="text-xs text-foreground/80 text-center">Upload Photo<br/>(Max 2MB)</span>
+                            <input type="file" accept="image/png, image/jpeg" onChange={handlePhotoChange} className="hidden" />
+                        </label>
+                    </div>
+                    {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
+                </div>
+                <div className="flex justify-end pt-2">
+                    <button 
+                        onClick={handleFinalGenerate}
+                        disabled={isGeneratingPdf}
+                        className="py-3 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors disabled:opacity-60"
+                    >
+                        {isGeneratingPdf ? 'Generating...' : `Generate PDF ${certPhoto ? 'with' : 'without'} Photo`}
                     </button>
                 </div>
             </div>

@@ -7,9 +7,10 @@ import { formatDateLong } from '../utils/formatters';
 interface BonafideCertificateProps {
   student: Student;
   schoolDetails: SchoolDetails | null;
+  photo?: string | null;
 }
 
-const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, schoolDetails }) => {
+const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, schoolDetails, photo }) => {
     const genderPronoun = student.gender === 'Female' ? 'she' : 'he';
     const relationPronoun = student.gender === 'Female' ? 'Daughter' : 'Son';
 
@@ -22,7 +23,18 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
                         <img src={schoolDetails.logo} alt="Logo" className="w-2/3 max-h-2/3 object-contain opacity-10" />
                     </div>
                 )}
-                <div className="w-full h-full border-4 border-double border-gray-800 p-6 flex flex-col z-10">
+                <div className="w-full h-full border-4 border-double border-gray-800 p-6 flex flex-col z-10 relative">
+                    {/* Photo */}
+                    <div className="absolute top-32 right-12 z-20">
+                        {photo ? (
+                            <img src={photo} alt="Student" className="w-28 h-36 object-cover border-2 border-gray-700" />
+                        ) : (
+                            <div className="w-28 h-36 border-2 border-dashed border-gray-500 flex items-center justify-center text-center text-gray-500 text-sm p-2">
+                                <span>Affix Recent Passport Size Photograph</span>
+                            </div>
+                        )}
+                    </div>
+
                     <header className="text-center mb-8">
                         {schoolDetails?.logo && (
                             <img src={schoolDetails.logo} alt="School Logo" className="w-28 h-28 mx-auto mb-2 object-contain" />
@@ -47,7 +59,7 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
                         BONAFIDE CERTIFICATE
                     </h2>
 
-                    <main className="flex-1 text-xl leading-loose">
+                    <main className="flex-1 text-xl leading-loose pr-40"> {/* Add padding to avoid text overlap with photo */}
                         <p className="indent-12">
                             This is to certify that <strong className="font-bold">{student.name}</strong>, 
                             {relationPronoun} of <strong className="font-bold">{student.fathersName}</strong>, is a bonafide student
