@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../services/db';
@@ -11,12 +12,11 @@ import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import DobCertificate from '../components/DobCertificate';
 import BonafideCertificate from '../components/BonafideCertificate';
 import NepProgressCard from '../components/NepProgressCard';
+import { ACADEMIC_YEAR } from '../constants';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
 const docButtonStyle = "flex items-center justify-center gap-1 py-3 px-2 rounded-lg text-white text-xs font-semibold transition-colors disabled:opacity-60 text-center";
-
-const ACADEMIC_YEAR = '2024-25';
 
 const Certificates: React.FC = () => {
   const location = useLocation();

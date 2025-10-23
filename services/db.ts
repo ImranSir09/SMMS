@@ -1,8 +1,8 @@
 import Dexie, { Table } from 'dexie';
-// FIX: Import the new StudentExamData type.
-import { SchoolDetails, Student, Exam, Mark, DailyLog, HPCReportData, StudentExamData } from '../types';
+// FIX: Import the new StudentExamData and SbaReportData types.
+import { SchoolDetails, Student, Exam, Mark, DailyLog, HPCReportData, StudentExamData, SbaReportData, FormativeAssessmentMark, DetailedFormativeAssessment } from '../types';
 
-// FIX: Add studentExamData to the Dexie type definition.
+// FIX: Add studentExamData and sbaReports to the Dexie type definition.
 export const db = new Dexie('AegisSchoolDB') as Dexie & {
   schoolDetails: Table<SchoolDetails, number>;
   students: Table<Student, number>;
@@ -11,6 +11,9 @@ export const db = new Dexie('AegisSchoolDB') as Dexie & {
   dailyLogs: Table<DailyLog, number>;
   hpcReports: Table<HPCReportData, number>;
   studentExamData: Table<StudentExamData, number>;
+  sbaReports: Table<SbaReportData, number>;
+  formativeMarks: Table<FormativeAssessmentMark, number>;
+  detailedFormativeAssessments: Table<DetailedFormativeAssessment, number>;
 };
 
 // Dexie versions must be in ascending order.
@@ -218,4 +221,43 @@ db.version(16).stores({
   dailyLogs: '++id, &date',
   studentExamData: '++id, &[examId+studentId], studentId',
   hpcReports: '++id, &[studentId+academicYear], studentId',
+});
+
+// v17: Add sbaReports table
+db.version(17).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className, gender',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  hpcReports: '++id, &[studentId+academicYear], studentId',
+  sbaReports: '++id, &[studentId+academicYear], studentId',
+});
+
+// v18: Add formativeMarks table for detailed formative assessment entry
+db.version(18).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className, gender',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  hpcReports: '++id, &[studentId+academicYear], studentId',
+  sbaReports: '++id, &[studentId+academicYear], studentId',
+  formativeMarks: '++id, &[studentId+subject+assessmentName], studentId, className',
+});
+
+// v19: Add detailedFormativeAssessments table for the new student-centric form
+db.version(19).stores({
+  schoolDetails: '++id, name',
+  students: '++id, name, rollNo, admissionNo, className, gender',
+  exams: '++id, name, className',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  hpcReports: '++id, &[studentId+academicYear], studentId',
+  sbaReports: '++id, &[studentId+academicYear], studentId',
+  formativeMarks: '++id, &[studentId+subject+assessmentName], studentId, className',
+  detailedFormativeAssessments: '++id, &[studentId+assessmentName+subject], studentId',
 });

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 // FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
@@ -10,8 +11,8 @@ import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { BookmarkIcon, ClipboardListIcon } from '../components/icons';
 import SubjectTopperList from '../components/SubjectTopperList';
 import { Student } from '../types';
+import { SUBJECTS } from '../constants';
 
-const SUBJECTS = ['English', 'Math', 'Science', 'Social Science', 'Urdu', 'Kashmiri'];
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
 const Reports: React.FC = () => {

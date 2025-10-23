@@ -1,11 +1,9 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Student } from '../types';
 import PhotoUploadModal from './PhotoUploadModal';
-
-const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
-const CATEGORY_OPTIONS = ['General', 'SC', 'ST', 'OBC', 'Other'];
-const BLOOD_GROUP_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+import { CLASS_OPTIONS, CATEGORY_OPTIONS, BLOOD_GROUP_OPTIONS } from '../constants';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-sm font-medium text-foreground/80 mb-1";

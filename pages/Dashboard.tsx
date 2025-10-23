@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +17,7 @@ import {
     PrintIcon,
     BarChart3Icon,
     BookIcon,
-    CalendarIcon,
+    ExamsIcon,
     ClipboardListIcon,
     InfoIcon,
     DashboardIcon,
@@ -79,14 +80,23 @@ const Dashboard: React.FC = () => {
         };
     }, []);
 
-    const features = [
+    // FIX: Define a type for feature items to include the optional 'action' property, resolving the TypeScript error.
+    type FeatureItem = {
+        label: string;
+        icon: React.ReactNode;
+        color: string;
+        path?: string;
+        action?: () => void;
+    };
+
+    const features: FeatureItem[] = [
         { label: 'Add Student', icon: <StudentsIcon className="w-6 h-6"/>, color: 'bg-green-500', path: '/students' },
         { label: 'View Admissions', icon: <UserListIcon className="w-6 h-6"/>, color: 'bg-red-500', path: '/students' },
         { label: 'Marks Entry', icon: <EditIcon className="w-6 h-6"/>, color: 'bg-blue-500', path: '/exams' },
         { label: 'Print Results', icon: <PrintIcon className="w-6 h-6"/>, color: 'bg-cyan-500', path: '/certificates' },
         { label: 'Roll Statement', icon: <BarChart3Icon className="w-6 h-6"/>, color: 'bg-yellow-500', path: '/reports' },
         { label: 'Subjects', icon: <BookIcon className="w-6 h-6"/>, color: 'bg-gray-800', path: '/exams' },
-        { label: 'Time Table', icon: <CalendarIcon className="w-6 h-6"/>, color: 'bg-purple-500', action: () => addToast('Time Table feature is coming soon.', 'info') },
+        { label: 'School Based Assessment', icon: <ExamsIcon className="w-6 h-6"/>, color: 'bg-purple-500', path: '/sba' },
         { label: 'Necessary Formats', icon: <ClipboardListIcon className="w-6 h-6"/>, color: 'bg-gray-500', path: '/reports' },
     ];
     

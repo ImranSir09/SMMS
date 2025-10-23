@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 // FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
@@ -9,18 +10,7 @@ import Card from '../components/Card';
 import { ClipboardListIcon, ExamsIcon, PlusIcon, TrashIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useToast } from '../contexts/ToastContext';
-
-const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
-const EXAM_OPTIONS = [
-    'FA1',
-    'FA2',
-    'FA3',
-    'FA4',
-    'FA5',
-    'FA6',
-    'Co-Curricular',
-    'Summative Assessment',
-];
+import { CLASS_OPTIONS, EXAM_OPTIONS } from '../constants';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 

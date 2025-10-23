@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../services/db';
@@ -8,9 +10,8 @@ import { DownloadIcon, PrintIcon } from '../components/icons';
 import HPCFoundationalCard from '../components/HPCFoundationalCard';
 import HPCPreparatoryCard from '../components/HPCPreparatoryCard';
 import HPCMiddleCard from '../components/HPCMiddleCard';
+import { ACADEMIC_YEAR } from '../constants';
 
-
-const ACADEMIC_YEAR = '2024-25';
 
 const getStageForClass = (className: string): 'Foundational' | 'Preparatory' | 'Middle' | null => {
     const foundational = ['PP1', 'PP2', 'Balvatika', '1st', '2nd'];

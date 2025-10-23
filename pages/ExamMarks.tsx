@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -8,8 +9,7 @@ import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import ProgressCard from '../components/ProgressCard';
 import { PrintIcon } from '../components/icons';
-
-const SUBJECTS = ['English', 'Math', 'Science', 'Social Science', 'Urdu', 'Kashmiri'];
+import { SUBJECTS } from '../constants';
 
 // FIX: Create a specific type for mark fields to ensure type safety.
 type NumericMarkField = Exclude<keyof Mark, 'id' | 'examId' | 'studentId' | 'subject'>;

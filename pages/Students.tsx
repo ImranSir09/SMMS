@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -11,8 +12,7 @@ import StudentForm from '../components/StudentForm';
 import { useNavigate } from 'react-router-dom';
 import StudentCard from '../components/StudentCard';
 import { useToast } from '../contexts/ToastContext';
-
-const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
+import { CLASS_OPTIONS } from '../constants';
 
 const buttonStyle = "py-3 px-4 rounded-md text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-1";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;

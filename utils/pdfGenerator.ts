@@ -5,7 +5,8 @@ import jsPDF from 'jspdf';
 
 export const generatePdfFromComponent = async (
   ComponentToRender: React.ReactElement,
-  fileName: string
+  fileName: string,
+  pdfOptions: any = {}
 ): Promise<void> => {
   const container = document.createElement('div');
   // Styling to ensure the container doesn't affect the layout but its content is measurable
@@ -19,14 +20,12 @@ export const generatePdfFromComponent = async (
 
   try {
     // Render the component into the off-screen container
-    // FIX: Replaced JSX with React.createElement to resolve TypeScript errors in a .ts file.
     root.render(
       React.createElement('div', { id: 'pdf-render-target' }, ComponentToRender)
     );
     
     // Wait for rendering and resource loading (e.g., images).
-    // A timeout is a pragmatic approach for this environment.
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     const elementToCapture = container.querySelector('#pdf-render-target');
     if (!elementToCapture) {
@@ -34,22 +33,43 @@ export const generatePdfFromComponent = async (
     }
     
     const canvas = await html2canvas(elementToCapture as HTMLElement, {
-      scale: 2, // Higher scale for better quality
+      scale: 2,
       useCORS: true,
-      backgroundColor: null, // Use component's own background
+      backgroundColor: '#ffffff', // Ensure solid background for multi-page splitting
+      windowWidth: elementToCapture.scrollWidth,
+      windowHeight: elementToCapture.scrollHeight,
     });
 
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+
+    const finalPdfOptions = {
+        orientation: 'p',
+        unit: 'px',
+        format: 'a4',
+        ...pdfOptions,
+    };
+    const pdf = new jsPDF(finalPdfOptions);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    // Determine PDF dimensions and orientation from the canvas itself
-    const pdf = new jsPDF({
-      orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-      unit: 'px',
-      format: [canvas.width, canvas.height],
-      hotfixes: ["px_scaling"], // Important for accurate pixel scaling
-    });
+    const ratio = imgWidth / pdfWidth;
+    const scaledImgHeight = imgHeight / ratio;
+    
+    let heightLeft = scaledImgHeight;
+    let position = 0;
 
-    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledImgHeight);
+    heightLeft -= pdfHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - scaledImgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledImgHeight);
+      heightLeft -= pdfHeight;
+    }
+
     pdf.save(`${fileName}.pdf`);
 
   } catch (error) {

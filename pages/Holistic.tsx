@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -9,8 +10,7 @@ import { SaveIcon } from '../components/icons';
 import { HPCFoundationalForm } from '../components/HPCFoundationalForm';
 import { HPCPreparatoryForm } from '../components/HPCPreparatoryForm';
 import { HPCMiddleForm } from '../components/HPCMiddleForm';
-
-const ACADEMIC_YEAR = '2024-25';
+import { ACADEMIC_YEAR } from '../constants';
 
 const getStageForClass = (className: string): Stage | null => {
     const foundational = ['PP1', 'PP2', 'Balvatika', '1st', '2nd'];

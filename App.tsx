@@ -1,4 +1,3 @@
-
 import React, { useContext, useEffect } from 'react';
 // FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors.
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -17,6 +16,13 @@ import PrintRollStatement from './pages/PrintRollStatement';
 // FIX: Corrected import path for Holistic component.
 import Holistic from './pages/Holistic';
 import PrintHPC from './pages/PrintHPC';
+import SBA from './pages/SBA';
+import HolisticAssessment from './pages/HolisticAssessment';
+import FormativeAssessment from './pages/FormativeAssessment';
+import StudentReport from './pages/StudentReport';
+import FormativeAssessmentRecord from './pages/FormativeAssessmentRecord';
+import CoCurricularReport from './pages/CoCurricularReport';
+import SbaResultSheet from './pages/SbaResultSheet';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -78,9 +84,16 @@ const App: React.FC = () => {
                 <Route path="/exams" element={<Exams />} />
                 <Route path="/exams/:examId" element={<ExamMarks />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/reports/student-report" element={<StudentReport />} />
+                <Route path="/reports/formative-assessment-record" element={<FormativeAssessmentRecord />} />
+                <Route path="/reports/co-curricular-record" element={<CoCurricularReport />} />
+                <Route path="/reports/sba-result-sheet" element={<SbaResultSheet />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/certificates" element={<Certificates />} />
                 <Route path="/holistic" element={<Holistic />} />
+                <Route path="/sba" element={<SBA />} />
+                <Route path="/holistic-assessment" element={<HolisticAssessment />} />
+                <Route path="/formative-assessment" element={<FormativeAssessment />} />
                 <Route path="/print/roll-statement/:className" element={<PrintRollStatement />} />
                 <Route path="/print/hpc/:studentId" element={<PrintHPC />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />

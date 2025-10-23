@@ -272,3 +272,97 @@ export interface MiddleData {
     [subject: string]: HpcMiddleSubjectAssessment;
   };
 }
+
+
+// For School Based Assessment (SBA)
+export type SbaWellbeingStatus = 'Normal and Healthy' | 'Needs Attention';
+export type SbaProficiencyLevel = 'High' | 'Medium' | 'Low';
+export type SbaTalentLevel = 'No talent' | 'Talented' | 'Highly Talented';
+
+export interface SbaReportData {
+  id?: number;
+  studentId: number;
+  academicYear: string;
+
+  // Section 2
+  physicalWellbeing?: SbaWellbeingStatus;
+  mentalWellbeing?: SbaWellbeingStatus;
+  diseaseFound?: SbaWellbeingStatus;
+
+  // Section 3
+  creativity?: SbaProficiencyLevel;
+  criticalThinking?: SbaProficiencyLevel;
+  communicationSkill?: SbaProficiencyLevel;
+  problemSolvingAbility?: SbaProficiencyLevel;
+  collaboration?: SbaProficiencyLevel;
+
+  // Section 4
+  studentsTalent?: SbaTalentLevel;
+  participationInActivities?: SbaProficiencyLevel;
+  attitudeAndValues?: SbaProficiencyLevel;
+  presentationSkill?: SbaProficiencyLevel;
+  writingSkill?: SbaProficiencyLevel;
+  comprehensionSkill?: SbaProficiencyLevel;
+}
+
+// For detailed grid-based Formative Assessment
+export type AssessmentComponent = {
+  name: string;
+  maxMarks: number;
+};
+
+export interface FormativeAssessment {
+  name: string; // e.g., FA1, FA2
+  components: AssessmentComponent[];
+}
+
+export interface FormativeAssessmentMark {
+  id?: number;
+  studentId: number;
+  className: string;
+  subject: string;
+  assessmentName: string; // "FA1", "FA2", etc.
+  componentMarks: {
+    [componentName: string]: number | undefined;
+  };
+}
+
+// For detailed student-centric Formative Assessment Form
+export type FormativeProficiencyLevel = 'Sky' | 'Mountain' | 'Stream' | 'Not-Satisfied';
+
+export interface CocurricularRatings {
+    physicalActivity?: FormativeProficiencyLevel;
+    participationInSchoolActivities?: FormativeProficiencyLevel;
+    culturalAndCreativeActivities?: FormativeProficiencyLevel;
+    healthAndHygiene?: FormativeProficiencyLevel;
+    environmentAndITAwareness?: FormativeProficiencyLevel;
+    discipline?: FormativeProficiencyLevel;
+    attendance?: FormativeProficiencyLevel;
+}
+
+export interface AnecdotalRecord {
+    date?: string;
+    observation?: string;
+}
+
+export interface DetailedFormativeAssessment {
+    id?: number;
+    studentId: number;
+    academicYear: string;
+
+    // Academic Performance
+    examRollNo?: string;
+    registrationNo?: string;
+    date?: string;
+    assessmentName?: string; // F1 - F6
+    subject?: string;
+    teacherName?: string;
+    learningOutcomeCode?: string;
+    academicProficiency?: FormativeProficiencyLevel;
+
+    // Cocurricular Activities
+    cocurricularRatings?: CocurricularRatings;
+
+    // Anecdotal Record
+    anecdotalRecord?: AnecdotalRecord;
+}
