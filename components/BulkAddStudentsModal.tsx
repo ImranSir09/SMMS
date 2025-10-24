@@ -174,12 +174,12 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                             Ensure the first row matches the template.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                             <label className="cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">
+                             <label className="cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">
                                 <UploadIcon className="w-5 h-5"/>
                                 <span>Choose File</span>
                                 <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
                             </label>
-                             <button onClick={handleDownloadTemplate} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-md bg-gray-600 hover:bg-gray-700 text-white transition-colors text-sm font-semibold">
+                             <button onClick={handleDownloadTemplate} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition-colors text-sm font-semibold">
                                 <DownloadIcon className="w-5 h-5"/>
                                 <span>Download Template</span>
                             </button>
@@ -213,8 +213,8 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                         </div>
                         {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
                         <div className="flex justify-end gap-2 mt-6">
-                            <button onClick={resetState} className="py-3 px-5 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white transition-colors text-sm font-semibold">Start Over</button>
-                            <button onClick={() => { if(validateMapping()) setStep('preview'); }} className="py-3 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">Next: Preview</button>
+                            <button onClick={resetState} className="py-3 px-5 rounded-lg bg-gray-500/80 hover:bg-gray-500 text-white transition-colors text-sm font-semibold">Start Over</button>
+                            <button onClick={() => { if(validateMapping()) setStep('preview'); }} className="py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">Next: Preview</button>
                         </div>
                     </div>
                 );
@@ -243,8 +243,8 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                            </table>
                         </div>
                         <div className="flex justify-end gap-2 mt-6">
-                            <button onClick={() => setStep('map')} className="py-3 px-5 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white transition-colors text-sm font-semibold">Back to Mapping</button>
-                            <button onClick={handleImport} disabled={isLoading} className="py-3 px-5 rounded-md bg-green-600 hover:bg-green-700 text-white disabled:bg-green-800 transition-colors text-sm font-semibold">
+                            <button onClick={() => setStep('map')} className="py-3 px-5 rounded-lg bg-gray-500/80 hover:bg-gray-500 text-white transition-colors text-sm font-semibold">Back to Mapping</button>
+                            <button onClick={handleImport} disabled={isLoading} className="py-3 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white disabled:bg-green-800 transition-colors text-sm font-semibold">
                                 {isLoading ? 'Importing...' : `Import ${csvData.length} Students`}
                             </button>
                         </div>
@@ -262,7 +262,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                         )}
                         {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
                         <div className="flex justify-center mt-6">
-                            <button onClick={handleClose} className="py-3 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">Close</button>
+                            <button onClick={handleClose} className="py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">Close</button>
                         </div>
                     </div>
                 )

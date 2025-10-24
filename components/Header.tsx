@@ -43,7 +43,7 @@ const Header: React.FC = () => {
       </div>
       
       <div className="flex items-center justify-center">
-        <h1 className="text-lg font-bold font-gothic bg-clip-text text-transparent bg-gradient-to-br from-foreground from-50% to-foreground/60">
+        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground from-50% to-foreground/60">
             {getPageTitle()}
         </h1>
       </div>

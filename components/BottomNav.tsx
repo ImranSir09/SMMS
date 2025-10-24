@@ -2,14 +2,14 @@
 import React from 'react';
 // FIX: Updated NavLink usage to react-router-dom v6 syntax.
 import { NavLink } from 'react-router-dom';
-import { DashboardIcon, StudentsIcon, SettingsIcon, HolisticIcon, ReportsIcon } from './icons';
+import { DashboardIcon, StudentsIcon, SettingsIcon, ReportsIcon, ClipboardListIcon } from './icons';
 
 const BottomNav: React.FC = () => {
   const navItems = [
     { to: "/dashboard", icon: <DashboardIcon className="w-5 h-5" />, label: "Dashboard" },
     { to: "/students", icon: <StudentsIcon className="w-5 h-5" />, label: "Students" },
     { to: "/reports", icon: <ReportsIcon className="w-5 h-5" />, label: "Reports" },
-    { to: "/holistic", icon: <HolisticIcon className="w-5 h-5" />, label: "Holistic" },
+    { to: "/sba", icon: <ClipboardListIcon className="w-5 h-5" />, label: "SBA" },
     { to: "/settings", icon: <SettingsIcon className="w-5 h-5" />, label: "Settings" },
   ];
 

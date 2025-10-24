@@ -7,7 +7,7 @@ import { CLASS_OPTIONS, CATEGORY_OPTIONS, BLOOD_GROUP_OPTIONS } from '../constan
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-sm font-medium text-foreground/80 mb-1";
-const buttonStyle = "py-3 px-5 rounded-md text-sm font-semibold transition-colors";
+const buttonStyle = "py-3 px-5 rounded-lg text-sm font-semibold transition-colors";
 const successButtonStyle = `${buttonStyle} bg-success text-success-foreground hover:bg-success-hover`;
 const secondaryButtonStyle = `${buttonStyle} bg-gray-500/80 hover:bg-gray-500 text-white`;
 
@@ -52,7 +52,7 @@ const validateStudent = (student: Partial<Student>): { [key: string]: string } =
     return errors;
 };
 
-const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClose }) => {
+export const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClose }) => {
     const [formData, setFormData] = useState<Partial<Student>>({});
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
@@ -217,5 +217,3 @@ const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClos
         </div>
     );
 };
-
-export default StudentForm;

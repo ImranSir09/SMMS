@@ -289,7 +289,7 @@ const ExamMarks: React.FC = () => {
                                         <button 
                                             onClick={() => handleGeneratePdf(student)}
                                             disabled={isGeneratingPdf === student.id}
-                                            className="p-2 rounded-md bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                            className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
                                         >
                                             {isGeneratingPdf === student.id ? '...' : <PrintIcon className="w-3 h-3" />}
                                         </button>

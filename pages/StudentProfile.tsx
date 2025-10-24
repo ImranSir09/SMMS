@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 // FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
 import { useParams, useNavigate } from 'react-router-dom';
@@ -9,10 +10,10 @@ import Card from '../components/Card';
 import { EditIcon, TrashIcon, CertificateIcon, UserIcon, HeartHandIcon, CreditCardIcon, BarChart3Icon, HolisticIcon } from '../components/icons';
 import LineChart from '../components/LineChart';
 import Modal from '../components/Modal';
-import StudentForm from '../components/StudentForm';
+import { StudentForm } from '../components/StudentForm';
 import { useToast } from '../contexts/ToastContext';
 
-const buttonStyle = "py-2 px-3 text-xs font-semibold rounded-md flex items-center justify-center gap-1.5 transition-colors";
+const buttonStyle = "py-2 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors";
 
 const StudentProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();

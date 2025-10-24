@@ -28,7 +28,7 @@ const SBA: React.FC = () => {
     return (
         <div className="animate-fade-in-up p-2 space-y-4">
             <header className="text-center p-4 rounded-lg bg-card border border-border">
-                <h1 className="text-2xl font-bold font-gothic text-red-700 dark:text-red-500">School Based Assessment</h1>
+                <h1 className="text-2xl font-bold text-primary">School Based Assessment</h1>
             </header>
             <div className="space-y-3">
                 {menuItems.map(item => (

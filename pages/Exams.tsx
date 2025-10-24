@@ -78,7 +78,7 @@ const Exams: React.FC = () => {
                        </div>
                        <div className="mt-3 flex justify-between items-center">
                             {/* FIX: Updated navigation call to use navigate() for v6. */}
-                            <button onClick={() => navigate(`/exams/${exam.id}`)} className="flex items-center gap-1 py-2 px-3 rounded-md bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors">
+                            <button onClick={() => navigate(`/exams/${exam.id}`)} className="flex items-center gap-1 py-2 px-3 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-semibold transition-colors">
                                 <ClipboardListIcon className="w-3.5 h-3.5" />
                                 Marks
                             </button>
@@ -128,7 +128,7 @@ const Exams: React.FC = () => {
                     <div className="flex justify-end pt-2">
                         <button 
                             onClick={handleSaveExam}
-                            className="py-3 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors"
+                            className="py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors"
                         >
                             Create & Go to Marks
                         </button>

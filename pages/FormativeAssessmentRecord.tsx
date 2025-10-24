@@ -96,7 +96,7 @@ const FormativeAssessmentRecord: React.FC = () => {
             <button 
                 onClick={handleGenerateReport}
                 disabled={isGenerating || !selectedStudentId || !selectedSubject}
-                className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full py-3 px-5 rounded-lg bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
             >
                 <DownloadIcon className="w-5 h-5" />
                 {isGenerating ? 'Generating...' : 'Generate Report'}

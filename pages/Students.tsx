@@ -7,16 +7,16 @@ import { Student } from '../types';
 import { StudentsIcon, UploadIcon, PlusIcon, SearchIcon, ArrowLeftIcon, ArrowRightIcon } from '../components/icons';
 import BulkAddStudentsModal from '../components/BulkAddStudentsModal';
 import Modal from '../components/Modal';
-import StudentForm from '../components/StudentForm';
+import { StudentForm } from '../components/StudentForm';
 // FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
 import { useNavigate } from 'react-router-dom';
 import StudentCard from '../components/StudentCard';
 import { useToast } from '../contexts/ToastContext';
 import { CLASS_OPTIONS } from '../constants';
 
-const buttonStyle = "py-3 px-4 rounded-md text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-1";
+const buttonStyle = "py-3 px-4 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
-const secondaryButtonStyle = `${buttonStyle} bg-gray-600 hover:bg-gray-700 text-white`;
+const secondaryButtonStyle = `${buttonStyle} bg-slate-200 text-slate-800 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600`;
 
 const STUDENTS_PER_PAGE = 8;
 

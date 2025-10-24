@@ -1,47 +1,26 @@
 
-
 import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
-import { useToast } from '../contexts/ToastContext';
 import {
     SchoolIcon,
     HashIcon,
     UsersIcon,
     UserIcon,
-    StudentsIcon,
-    UserListIcon,
-    EditIcon,
-    PrintIcon,
-    BarChart3Icon,
-    BookIcon,
-    ExamsIcon,
-    ClipboardListIcon,
     InfoIcon,
-    DashboardIcon,
     BriefcaseIcon,
 } from '../components/icons';
 
 // Reusable components for the new dashboard
-const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: React.ReactNode; color: string; }> = ({ icon, label, value, color }) => (
-    <div className={`p-3 rounded-xl flex items-center gap-3 ${color}`}>
-        <div className="text-white/80">{icon}</div>
+const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: React.ReactNode; className: string; }> = ({ icon, label, value, className }) => (
+    <div className={`p-3 rounded-xl flex items-center gap-3 ${className}`}>
+        <div className="opacity-80">{icon}</div>
         <div>
-            <p className="text-xs text-white/90 font-semibold">{label}</p>
-            <p className="text-xl font-bold text-white">{value ?? '...'}</p>
+            <p className="text-xs opacity-90 font-semibold">{label}</p>
+            <p className="text-xl font-bold">{value ?? '...'}</p>
         </div>
-    </div>
-);
-
-const FeatureTile: React.FC<{ icon: React.ReactNode; label: string; color: string; onClick: () => void; }> = ({ icon, label, color, onClick }) => (
-    <div
-        onClick={onClick}
-        className={`p-4 rounded-2xl flex flex-col justify-between h-28 cursor-pointer hover-lift ${color}`}
-    >
-        <div className="text-white">{icon}</div>
-        <p className="font-bold text-white">{label}</p>
     </div>
 );
 
@@ -55,7 +34,6 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; }> = ({ ic
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const { schoolDetails } = useAppData();
-    const { addToast } = useToast();
 
     const dashboardData = useLiveQuery(async () => {
         const [
@@ -79,26 +57,6 @@ const Dashboard: React.FC = () => {
             classNames: sortedClassNames,
         };
     }, []);
-
-    // FIX: Define a type for feature items to include the optional 'action' property, resolving the TypeScript error.
-    type FeatureItem = {
-        label: string;
-        icon: React.ReactNode;
-        color: string;
-        path?: string;
-        action?: () => void;
-    };
-
-    const features: FeatureItem[] = [
-        { label: 'Add Student', icon: <StudentsIcon className="w-6 h-6"/>, color: 'bg-green-500', path: '/students' },
-        { label: 'View Admissions', icon: <UserListIcon className="w-6 h-6"/>, color: 'bg-red-500', path: '/students' },
-        { label: 'Marks Entry', icon: <EditIcon className="w-6 h-6"/>, color: 'bg-blue-500', path: '/exams' },
-        { label: 'Print Results', icon: <PrintIcon className="w-6 h-6"/>, color: 'bg-cyan-500', path: '/certificates' },
-        { label: 'Roll Statement', icon: <BarChart3Icon className="w-6 h-6"/>, color: 'bg-yellow-500', path: '/reports' },
-        { label: 'Subjects', icon: <BookIcon className="w-6 h-6"/>, color: 'bg-gray-800', path: '/exams' },
-        { label: 'School Based Assessment', icon: <ExamsIcon className="w-6 h-6"/>, color: 'bg-purple-500', path: '/sba' },
-        { label: 'Necessary Formats', icon: <ClipboardListIcon className="w-6 h-6"/>, color: 'bg-gray-500', path: '/reports' },
-    ];
     
     return (
         <div className="flex flex-col gap-6 animate-fade-in pb-8">
@@ -108,7 +66,7 @@ const Dashboard: React.FC = () => {
                     <SchoolIcon className="w-7 h-7 text-primary" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-gothic font-bold text-primary">
+                    <h1 className="text-2xl font-bold text-primary">
                         {schoolDetails?.name || 'School Name'}
                     </h1>
                 </div>
@@ -116,10 +74,10 @@ const Dashboard: React.FC = () => {
             
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
-                <StatCard icon={<HashIcon className="w-5 h-5"/>} label="UDISE" value={schoolDetails?.udiseCode || 'N/A'} color="bg-gray-400"/>
-                <StatCard icon={<UsersIcon className="w-5 h-5"/>} label="Students" value={dashboardData?.studentCount ?? 0} color="bg-blue-400"/>
-                <StatCard icon={<UserIcon className="w-5 h-5"/>} label="Boys" value={dashboardData?.maleCount ?? 0} color="bg-sky-400"/>
-                <StatCard icon={<UserIcon className="w-5 h-5"/>} label="Girls" value={dashboardData?.femaleCount ?? 0} color="bg-pink-400"/>
+                <StatCard icon={<HashIcon className="w-5 h-5"/>} label="UDISE" value={schoolDetails?.udiseCode || 'N/A'} className="bg-slate-500 text-white"/>
+                <StatCard icon={<UsersIcon className="w-5 h-5"/>} label="Students" value={dashboardData?.studentCount ?? 0} className="bg-primary text-primary-foreground"/>
+                <StatCard icon={<UserIcon className="w-5 h-5"/>} label="Boys" value={dashboardData?.maleCount ?? 0} className="bg-sky-500 text-white"/>
+                <StatCard icon={<UserIcon className="w-5 h-5"/>} label="Girls" value={dashboardData?.femaleCount ?? 0} className="bg-pink-500 text-white"/>
             </div>
             
             {/* Session Card */}
@@ -127,22 +85,6 @@ const Dashboard: React.FC = () => {
                 <p className="text-sm font-semibold text-foreground/70">Session</p>
                 <p className="text-lg font-bold">Nov-Dec 2025</p>
             </div>
-            
-            {/* Quick Access Features */}
-            <section className="flex flex-col gap-3">
-                <SectionHeader icon={<DashboardIcon className="w-5 h-5 text-foreground/70"/>} title="Quick Access Features" />
-                <div className="grid grid-cols-2 gap-3">
-                    {features.map(feature => (
-                        <FeatureTile 
-                            key={feature.label}
-                            icon={feature.icon}
-                            label={feature.label}
-                            color={feature.color}
-                            onClick={() => feature.path ? navigate(feature.path) : feature.action?.()}
-                        />
-                    ))}
-                </div>
-            </section>
             
             {/* Navigate Classes */}
             <section className="flex flex-col gap-3">

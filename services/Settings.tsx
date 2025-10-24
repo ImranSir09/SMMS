@@ -7,8 +7,8 @@ import Card from '../components/Card';
 import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon } from '../components/icons';
 import { useToast } from '../contexts/ToastContext';
 
-const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
-const buttonStyle = "py-3 px-5 rounded-md text-sm font-semibold transition-colors";
+const inputStyle = "p-3 w-full bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
+const buttonStyle = "py-3 px-5 rounded-lg text-sm font-semibold transition-colors";
 const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground hover:bg-primary-hover`;
 
 
@@ -253,7 +253,7 @@ const Settings: React.FC = () => {
                             ) : (
                                 <div className="w-16 h-16 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Logo</div>
                             )}
-                            <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-3 rounded-md bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5">
+                            <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-3 rounded-lg bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5">
                                 <UploadIcon className="w-4 h-4 text-foreground/60" />
                                 <span className="text-xs text-foreground/80">Upload Logo</span>
                                 <input type="file" accept="image/png, image/jpeg" onChange={handleLogoChange} className="hidden" />
@@ -291,7 +291,7 @@ const Settings: React.FC = () => {
                     </p>
                     <button
                         onClick={handleResetData}
-                        className="w-full py-2 px-4 rounded-md text-sm font-semibold transition-colors bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        className="w-full py-2 px-4 rounded-lg text-sm font-semibold transition-colors bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
                         Reset All Data
                     </button>

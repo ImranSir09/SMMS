@@ -115,7 +115,7 @@ const StudentReport: React.FC = () => {
                 </select>
                 {studentsInClass && studentsInClass.length > 0 && (
                     <div className="mb-2">
-                        <label className="flex items-center gap-2 text-sm p-2 bg-background/50 rounded-md">
+                        <label className="flex items-center gap-2 text-sm p-2 bg-background/50 rounded-lg">
                             <input
                                 type="checkbox"
                                 checked={selectedStudentIds.size === studentsInClass.length}
@@ -142,7 +142,7 @@ const StudentReport: React.FC = () => {
             <button 
                 onClick={handleGenerateReports}
                 disabled={isGenerating || selectedStudentIds.size === 0}
-                className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+                className="w-full py-3 px-5 rounded-lg bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
             >
                 <DownloadIcon className="w-5 h-5" />
                 {isGenerating ? 'Generating...' : `Generate HPC for ${selectedStudentIds.size} Student(s)`}
