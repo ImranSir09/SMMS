@@ -27,16 +27,16 @@ const SbaResultSheetComponent: React.FC<ReportProps> = ({ students, schoolDetail
                 <thead>
                     <tr>
                         {['Roll No', 'Reg No', 'Adm No', 'Aadhar No', 'Name', 'Father\'s Name', 'Mother\'s Name', 'Address', 'Category', 'D.O.B', 'Contact No'].map(h => 
-                            <th key={h} className={thStyle} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{h}</th>
+                            <th key={h} className={thStyle} style={{ writingMode: 'vertical-rl' }}>{h}</th>
                         )}
                         {SUBJECTS.map(subject => (
                             <React.Fragment key={subject}>
                                 <th colSpan={9} className={`${thStyle} bg-gray-200`}>{subject}</th>
                             </React.Fragment>
                         ))}
-                        <th className={thStyle} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Grand Total</th>
-                        <th className={thStyle} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Grade</th>
-                        <th className={thStyle} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Remarks</th>
+                        <th className={thStyle} style={{ writingMode: 'vertical-rl' }}>Grand Total</th>
+                        <th className={thStyle} style={{ writingMode: 'vertical-rl' }}>Grade</th>
+                        <th className={thStyle} style={{ writingMode: 'vertical-rl' }}>Remarks</th>
                     </tr>
                     <tr>
                          {Array(11).fill(null).map((_, i) => <th key={i} className={thStyle}></th>)}

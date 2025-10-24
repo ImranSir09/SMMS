@@ -7,6 +7,7 @@ interface HPCFoundationalCardProps {
   student: Student;
   schoolDetails: SchoolDetails;
   hpcData: HPCReportData;
+  photo?: string | null;
 }
 
 const DOMAINS = ['Physical Development', 'Socio-emotional Development', 'Cognitive Development', 'Language and Literacy', 'Aesthetic & Cultural', 'Positive Learning Habits'];
@@ -79,7 +80,7 @@ const SummaryRow: React.FC<{ domain: string; summary: HPCReportData['summaries']
     );
 };
 
-const HPCFoundationalCard: React.FC<HPCFoundationalCardProps> = ({ student, schoolDetails, hpcData }) => {
+const HPCFoundationalCard: React.FC<HPCFoundationalCardProps> = ({ student, schoolDetails, hpcData, photo }) => {
     return (
         <div className="text-black font-sans leading-tight text-[10px]">
             {/* Page 1 */}
@@ -91,31 +92,44 @@ const HPCFoundationalCard: React.FC<HPCFoundationalCardProps> = ({ student, scho
 
                 <section className="border-2 border-orange-500 p-2 rounded-md">
                     <h3 className="text-center font-bold text-base text-orange-700 mb-1">PART-A (1): GENERAL INFORMATION</h3>
-                    <div className="space-y-0.5">
-                        <DetailItem label="School Name & Address" value={`${schoolDetails.name}, ${schoolDetails.address}`} />
-                        <div className="flex justify-between gap-4">
-                            <DetailItem label="UDISE Code" value={schoolDetails.udiseCode} />
-                            <DetailItem label="Teacher Code" value={hpcData.foundationalData?.partA1?.teacherCode} />
+                     <div className="flex gap-2">
+                        <div className="flex-grow">
+                             <div className="space-y-0.5">
+                                <DetailItem label="School Name & Address" value={`${schoolDetails.name}, ${schoolDetails.address}`} />
+                                <div className="flex justify-between gap-4">
+                                    <DetailItem label="UDISE Code" value={schoolDetails.udiseCode} />
+                                    <DetailItem label="Teacher Code" value={hpcData.foundationalData?.partA1?.teacherCode} />
+                                </div>
+                                <div className="flex justify-between gap-4">
+                                    <DetailItem label="APAAR ID" value={hpcData.foundationalData?.partA1?.apaarId} />
+                                </div>
+                            </div>
+                            
+                            <hr className="my-1 border-gray-400" />
+                            
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                                <DetailItem label="Student's Name" value={student.name} />
+                                <DetailItem label="Grade / Class" value={student.className} />
+                                <DetailItem label="Roll No." value={student.rollNo} />
+                                <DetailItem label="Section" value={student.section} />
+                                <DetailItem label="Registration No." value={hpcData.foundationalData?.partA1?.registrationNo} />
+                                <DetailItem label="Date of Birth" value={student.dob} />
+                                <DetailItem label="Mother's Name" value={student.mothersName} />
+                                <DetailItem label="Mother's Education" value={hpcData.foundationalData?.partA1?.motherEducation} />
+                                <DetailItem label="Father's Name" value={student.fathersName} />
+                                <DetailItem label="Father's Education" value={hpcData.foundationalData?.partA1?.fatherEducation} />
+                                <DetailItem label="Address" value={student.address} className="col-span-2" />
+                            </div>
                         </div>
-                        <div className="flex justify-between gap-4">
-                            <DetailItem label="APAAR ID" value={hpcData.foundationalData?.partA1?.apaarId} />
+                        <div className="flex-shrink-0 w-24">
+                             {photo ? (
+                                <img src={photo} alt="Student" className="w-full h-32 object-cover border-2 border-gray-400" />
+                            ) : (
+                                <div className="w-full h-32 border-2 border-dashed border-gray-400 flex items-center justify-center text-center text-[9px] p-1">
+                                    Affix Passport Size Photograph
+                                </div>
+                            )}
                         </div>
-                    </div>
-                    
-                    <hr className="my-1 border-gray-400" />
-                    
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <DetailItem label="Student's Name" value={student.name} />
-                        <DetailItem label="Grade / Class" value={student.className} />
-                        <DetailItem label="Roll No." value={student.rollNo} />
-                        <DetailItem label="Section" value={student.section} />
-                        <DetailItem label="Registration No." value={hpcData.foundationalData?.partA1?.registrationNo} />
-                        <DetailItem label="Date of Birth" value={student.dob} />
-                        <DetailItem label="Mother's Name" value={student.mothersName} />
-                        <DetailItem label="Mother's Education" value={hpcData.foundationalData?.partA1?.motherEducation} />
-                        <DetailItem label="Father's Name" value={student.fathersName} />
-                        <DetailItem label="Father's Education" value={hpcData.foundationalData?.partA1?.fatherEducation} />
-                        <DetailItem label="Address" value={student.address} className="col-span-2" />
                     </div>
                 </section>
                 

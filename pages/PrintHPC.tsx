@@ -11,6 +11,7 @@ import HPCFoundationalCard from '../components/HPCFoundationalCard';
 import HPCPreparatoryCard from '../components/HPCPreparatoryCard';
 import HPCMiddleCard from '../components/HPCMiddleCard';
 import { ACADEMIC_YEAR } from '../constants';
+import PhotoUploadModal from '../components/PhotoUploadModal';
 
 
 const getStageForClass = (className: string): 'Foundational' | 'Preparatory' | 'Middle' | null => {
@@ -30,12 +31,19 @@ const PrintHPC: React.FC = () => {
   
   const [student, setStudent] = useState<Student | null>(null);
   const [hpcData, setHpcData] = useState<HPCReportData | null>(null);
+  const [tempPhoto, setTempPhoto] = useState<string | null>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   
   const { schoolDetails } = useAppData();
 
   useEffect(() => {
     if (numericStudentId) {
-      db.students.get(numericStudentId).then(setStudent);
+      db.students.get(numericStudentId).then(studentData => {
+          setStudent(studentData || null);
+          if (studentData) {
+              setTempPhoto(studentData.photo);
+          }
+      });
       db.hpcReports.where({ studentId: numericStudentId, academicYear: ACADEMIC_YEAR }).first().then(data => setHpcData(data || null));
     }
   }, [numericStudentId]);
@@ -49,13 +57,13 @@ const PrintHPC: React.FC = () => {
         let cardComponent;
         switch(hpcData.stage) {
             case 'Foundational':
-                cardComponent = <HPCFoundationalCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} />;
+                cardComponent = <HPCFoundationalCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
                 break;
             case 'Preparatory':
-                cardComponent = <HPCPreparatoryCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} />;
+                cardComponent = <HPCPreparatoryCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
                 break;
             case 'Middle':
-                cardComponent = <HPCMiddleCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} />;
+                cardComponent = <HPCMiddleCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
                 break;
             default:
                 alert(`HPC Card for ${hpcData.stage} stage is not yet implemented.`);
@@ -73,11 +81,11 @@ const PrintHPC: React.FC = () => {
   let cardToRender = null;
   if (student && hpcData && schoolDetails && stage) {
       if (stage === 'Foundational') {
-          cardToRender = <HPCFoundationalCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} />;
+          cardToRender = <HPCFoundationalCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
       } else if (stage === 'Preparatory') {
-          cardToRender = <HPCPreparatoryCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} />;
+          cardToRender = <HPCPreparatoryCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
       } else if (stage === 'Middle') {
-          cardToRender = <HPCMiddleCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} />;
+          cardToRender = <HPCMiddleCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
       }
   }
 
@@ -101,19 +109,37 @@ const PrintHPC: React.FC = () => {
       <div className="w-full mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
         <h1 className="text-2xl font-bold text-gray-800">HPC Preview</h1>
         <p className="text-gray-600 mb-4">Preview for {student.name}'s {stage} Stage HPC.</p>
-        <div className="flex flex-wrap gap-4">
-             <button
-                onClick={handleDownloadPdf}
-                className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none"
-             >
-                <DownloadIcon className="w-5 h-5"/> Download PDF
-            </button>
-            <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none"
-            >
-                <PrintIcon className="w-5 h-5"/> Print
-            </button>
+        <div className="flex items-start gap-4">
+             <div className="flex-shrink-0">
+                <p className="text-sm font-semibold mb-1 text-gray-700">Student Photo:</p>
+                {tempPhoto ? (
+                    <img src={tempPhoto} alt="Student" className="w-24 h-32 object-cover rounded border border-gray-300" />
+                ) : (
+                    <div className="w-24 h-32 bg-gray-200 rounded flex items-center justify-center text-center text-xs text-gray-500 p-2">No Photo Provided</div>
+                )}
+                <button 
+                    onClick={() => setIsPhotoModalOpen(true)} 
+                    className="w-full mt-2 py-1 px-2 bg-gray-200 text-gray-800 text-xs rounded hover:bg-gray-300 transition-colors">
+                    Change Photo
+                </button>
+            </div>
+            <div className="flex-grow">
+                <p className="text-sm font-semibold mb-1 text-gray-700">Actions:</p>
+                <div className="flex flex-col gap-2">
+                    <button
+                        onClick={handleDownloadPdf}
+                        className="flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none"
+                    >
+                        <DownloadIcon className="w-5 h-5"/> Download PDF
+                    </button>
+                    <button
+                        onClick={handlePrint}
+                        className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none"
+                    >
+                        <PrintIcon className="w-5 h-5"/> Print
+                    </button>
+                </div>
+            </div>
         </div>
       </div>
   );
@@ -125,6 +151,14 @@ const PrintHPC: React.FC = () => {
       <div id="hpc-printable-area">
          {cardToRender}
       </div>
+
+        <PhotoUploadModal
+            isOpen={isPhotoModalOpen}
+            onClose={() => setIsPhotoModalOpen(false)}
+            onSave={(photo) => { setTempPhoto(photo); setIsPhotoModalOpen(false); }}
+            title="Upload & Crop Student Photo"
+            aspectRatio={4 / 5}
+        />
 
       <style>{`
         body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails, HPCReportData } from '../types';
 
@@ -5,6 +6,7 @@ interface HPCMiddleCardProps {
   student: Student;
   schoolDetails: SchoolDetails;
   hpcData: HPCReportData;
+  photo?: string | null;
 }
 
 const SUBJECTS = ['Language (R1)', 'Language (R2)', 'Language (R3)', 'Mathematics', 'Science', 'Social Science', 'Art Education', 'Physical Education', 'Skill Education', 'Overall'];
@@ -42,7 +44,7 @@ const SummaryRow: React.FC<{ subject: string; summary: HPCReportData['summaries'
     );
 };
 
-const HPCMiddleCard: React.FC<HPCMiddleCardProps> = ({ student, schoolDetails, hpcData }) => {
+const HPCMiddleCard: React.FC<HPCMiddleCardProps> = ({ student, schoolDetails, hpcData, photo }) => {
     const grade = student.className.replace(/[^0-9]/g, '');
 
     const getCreditData = (grade: string) => {
@@ -65,11 +67,22 @@ const HPCMiddleCard: React.FC<HPCMiddleCardProps> = ({ student, schoolDetails, h
                 </header>
                  <section className="border-2 border-orange-500 p-2 rounded-md">
                     <h3 className="text-center font-bold text-base text-orange-700 mb-1">PART-A (1): GENERAL INFORMATION</h3>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <DetailItem label="School Name" value={schoolDetails.name} />
-                        <DetailItem label="Address" value={schoolDetails.address} />
-                        <DetailItem label="Student's Name" value={student.name} />
-                        <DetailItem label="Class" value={student.className} />
+                    <div className="flex gap-2">
+                        <div className="flex-grow grid grid-cols-2 gap-x-4 gap-y-0.5">
+                            <DetailItem label="School Name" value={schoolDetails.name} />
+                            <DetailItem label="Address" value={schoolDetails.address} />
+                            <DetailItem label="Student's Name" value={student.name} />
+                            <DetailItem label="Class" value={student.className} />
+                        </div>
+                        <div className="flex-shrink-0 w-24">
+                            {photo ? (
+                                <img src={photo} alt="Student" className="w-full h-32 object-cover border-2 border-gray-400" />
+                            ) : (
+                                <div className="w-full h-32 border-2 border-dashed border-gray-400 flex items-center justify-center text-center text-[9px] p-1">
+                                    Affix Passport Size Photograph
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </section>
                 <section className="border-2 border-orange-500 p-2 rounded-md mt-2 flex-grow">
