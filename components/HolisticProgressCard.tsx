@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails, SbaReportData, Mark, DetailedFormativeAssessment, StudentExamData, Exam, HPCReportData, FormativeProficiencyLevel } from '../types';
 import ThermometerGauge from './ThermometerGauge';
@@ -11,6 +12,7 @@ interface ReportProps {
     allDetailedFA: DetailedFormativeAssessment[];
     allStudentExamData: StudentExamData[];
     allExams: Exam[];
+    photoOverride?: string | null;
 }
 
 const SUBJECT_ORDER = ['English', 'Math', 'Science', 'Social Science', 'Urdu', 'Kashmiri'];
@@ -63,7 +65,7 @@ const mapSbaToPercent = (level: any): number => {
 }
 
 
-const HolisticProgressCard: React.FC<ReportProps> = ({ student, schoolDetails, sbaData, hpcData, allMarks, allDetailedFA, allExams }) => {
+const HolisticProgressCard: React.FC<ReportProps> = ({ student, schoolDetails, sbaData, hpcData, allMarks, allDetailedFA, allExams, photoOverride }) => {
     const academicData = processAcademicData(allMarks, allExams);
     const latestDetailedFA = getLatestDetailedFA(allDetailedFA);
 
@@ -131,6 +133,8 @@ const HolisticProgressCard: React.FC<ReportProps> = ({ student, schoolDetails, s
     if (sbaData?.studentsTalent === 'Highly Talented' || sbaData?.studentsTalent === 'Talented') {
         impressions.push("Your child has remarkable talent like...");
     }
+    
+    const photoToDisplay = photoOverride !== undefined ? photoOverride : student.photo;
 
     return (
         <div className="text-black font-sans leading-tight text-[10px] bg-yellow-50">
@@ -150,7 +154,7 @@ const HolisticProgressCard: React.FC<ReportProps> = ({ student, schoolDetails, s
                     <h2 className="text-2xl font-semibold mt-8 underline">Student Profile</h2>
                 </header>
                 <main className="flex-grow flex flex-col items-center z-10">
-                    {student.photo && <img src={student.photo} alt="student" className="w-32 h-40 object-cover border-4 border-gray-400 p-1 mb-4" />}
+                    {photoToDisplay && <img src={photoToDisplay} alt="student" className="w-32 h-40 object-cover border-4 border-gray-400 p-1 mb-4" />}
                     <div className="border-4 border-dashed border-gray-500 p-4 w-full max-w-lg text-base space-y-2">
                         {[
                             { label: "Admission No", value: student.admissionNo },

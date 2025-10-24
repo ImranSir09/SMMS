@@ -58,6 +58,9 @@ const FormativeAssessment: React.FC = () => {
     const [saveStatus, setSaveStatus] = useState<'synced' | 'pending' | 'saving' | 'error'>('synced');
     const [searchTerm, setSearchTerm] = useState('');
 
+    const [selectedSubject, setSelectedSubject] = useState(SUBJECTS[0]);
+    const [selectedAssessmentName, setSelectedAssessmentName] = useState(FA_OPTIONS[0]);
+
     const { addToast } = useToast();
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -93,6 +96,8 @@ const FormativeAssessment: React.FC = () => {
         setStudentProfile(null);
         setFormData(null);
         setSearchTerm('');
+        setSelectedSubject(SUBJECTS[0]);
+        setSelectedAssessmentName(FA_OPTIONS[0]);
     }, [selectedClass]);
 
     useEffect(() => {
@@ -106,18 +111,15 @@ const FormativeAssessment: React.FC = () => {
             const student = await db.students.get(selectedStudentId);
             setStudentProfile(student || null);
 
-            const subject = formData?.subject || SUBJECTS[0];
-            const assessmentName = formData?.assessmentName || FA_OPTIONS[0];
-
             const existingData = await db.detailedFormativeAssessments
-                .where({ studentId: selectedStudentId, subject, assessmentName })
+                .where({ studentId: selectedStudentId, subject: selectedSubject, assessmentName: selectedAssessmentName })
                 .first();
 
-            setFormData(existingData || defaultFormData(selectedStudentId, subject, assessmentName));
+            setFormData(existingData || defaultFormData(selectedStudentId, selectedSubject, selectedAssessmentName));
             setSaveStatus('synced');
         };
         loadData();
-    }, [selectedStudentId, formData?.subject, formData?.assessmentName]);
+    }, [selectedStudentId, selectedSubject, selectedAssessmentName]);
 
     const saveData = useCallback(async (dataToSave: Partial<DetailedFormativeAssessment>) => {
         if (!dataToSave || !dataToSave.studentId) return;
@@ -232,10 +234,10 @@ const FormativeAssessment: React.FC = () => {
                             <input type="text" placeholder="Exam Roll No" value={formData.examRollNo || ''} onChange={e => handleDataChange('examRollNo', e.target.value)} className="p-2 bg-background border border-input rounded-md"/>
                             <input type="text" placeholder="Registration No" value={formData.registrationNo || ''} onChange={e => handleDataChange('registrationNo', e.target.value)} className="p-2 bg-background border border-input rounded-md"/>
                             <input type="date" value={formData.date || ''} onChange={e => handleDataChange('date', e.target.value)} className="p-2 bg-background border border-input rounded-md"/>
-                            <select value={formData.assessmentName} onChange={e => handleDataChange('assessmentName', e.target.value)} className="p-2 bg-background border border-input rounded-md">
+                            <select value={selectedAssessmentName} onChange={e => setSelectedAssessmentName(e.target.value)} className="p-2 bg-background border border-input rounded-md">
                                 {FA_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
-                            <select value={formData.subject} onChange={e => handleDataChange('subject', e.target.value)} className="p-2 bg-background border border-input rounded-md">
+                            <select value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} className="p-2 bg-background border border-input rounded-md">
                                 {SUBJECTS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
                             <input type="text" placeholder="Name of Teacher" value={formData.teacherName || ''} onChange={e => handleDataChange('teacherName', e.target.value)} className="p-2 bg-background border border-input rounded-md"/>

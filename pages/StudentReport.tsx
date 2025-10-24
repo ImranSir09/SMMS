@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -7,10 +6,11 @@ import { Student } from '../types';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import HolisticProgressCard from '../components/HolisticProgressCard';
-import { DownloadIcon } from '../components/icons';
+import { DownloadIcon, UploadIcon } from '../components/icons';
 import Card from '../components/Card';
 import { useToast } from '../contexts/ToastContext';
 import { ACADEMIC_YEAR } from '../constants';
+import PhotoUploadModal from '../components/PhotoUploadModal';
 
 const StudentReport: React.FC = () => {
     const [selectedClass, setSelectedClass] = useState('');
@@ -18,6 +18,9 @@ const StudentReport: React.FC = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const { schoolDetails } = useAppData();
     const { addToast } = useToast();
+    
+    const [tempPhotos, setTempPhotos] = useState<Map<number, string | null>>(new Map());
+    const [photoModalStudentId, setPhotoModalStudentId] = useState<number | null>(null);
 
     const classOptions = useLiveQuery(
         () => db.students.orderBy('className').uniqueKeys()
@@ -82,6 +85,8 @@ const StudentReport: React.FC = () => {
                     db.studentExamData.where({ studentId }).toArray()
                 ]);
 
+                const photoOverride = tempPhotos.has(studentId) ? tempPhotos.get(studentId) : undefined;
+
                 await generatePdfFromComponent(
                     <HolisticProgressCard
                         student={student}
@@ -92,6 +97,7 @@ const StudentReport: React.FC = () => {
                         allDetailedFA={allDetailedFA}
                         allStudentExamData={allStudentExamData}
                         allExams={allExams}
+                        photoOverride={photoOverride}
                     />,
                     `Holistic-Progress-Card-${student.name}-${student.admissionNo}`
                 );
@@ -127,14 +133,23 @@ const StudentReport: React.FC = () => {
                 )}
                 <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
                     {studentsInClass?.map(student => (
-                        <label key={student.id} className="flex items-center gap-3 p-2 bg-background rounded-lg cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={selectedStudentIds.has(student.id!)}
-                                onChange={() => handleStudentSelect(student.id!)}
-                            />
-                            <p className="font-semibold text-sm">{student.name} <span className="font-normal text-xs text-foreground/70">(Roll: {student.rollNo})</span></p>
-                        </label>
+                         <div key={student.id} className="flex items-center justify-between p-2 bg-background rounded-lg">
+                            <label className="flex items-center gap-3 cursor-pointer flex-grow">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedStudentIds.has(student.id!)}
+                                    onChange={() => handleStudentSelect(student.id!)}
+                                />
+                                <p className="font-semibold text-sm">{student.name} <span className="font-normal text-xs text-foreground/70">(Roll: {student.rollNo})</span></p>
+                            </label>
+                            <button
+                                onClick={() => setPhotoModalStudentId(student.id!)}
+                                className="p-2 rounded-md hover:bg-black/10 dark:hover:bg-white/10 flex-shrink-0"
+                                aria-label="Change photo for this report"
+                            >
+                                <UploadIcon className="w-4 h-4 text-foreground/70" />
+                            </button>
+                        </div>
                     ))}
                 </div>
             </Card>
@@ -147,6 +162,19 @@ const StudentReport: React.FC = () => {
                 <DownloadIcon className="w-5 h-5" />
                 {isGenerating ? 'Generating...' : `Generate HPC for ${selectedStudentIds.size} Student(s)`}
             </button>
+            
+            <PhotoUploadModal
+                isOpen={photoModalStudentId !== null}
+                onClose={() => setPhotoModalStudentId(null)}
+                onSave={(photo) => {
+                    if (photoModalStudentId !== null) {
+                        setTempPhotos(prev => new Map(prev).set(photoModalStudentId, photo));
+                    }
+                    setPhotoModalStudentId(null);
+                }}
+                title="Set Temporary Photo for Report"
+                aspectRatio={4 / 5}
+            />
         </div>
     );
 };
