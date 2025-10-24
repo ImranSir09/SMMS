@@ -8,7 +8,7 @@ import Card from '../components/Card';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
-import { BookmarkIcon, ClipboardListIcon } from '../components/icons';
+import { BookmarkIcon, ClipboardListIcon, UserListIcon } from '../components/icons';
 import SubjectTopperList from '../components/SubjectTopperList';
 import { Student } from '../types';
 import { SUBJECTS } from '../constants';
@@ -28,6 +28,7 @@ const Reports: React.FC = () => {
     const [topperListError, setTopperListError] = useState('');
 
     const [selectedClass, setSelectedClass] = useState('');
+    const [selectedClassForCategoryReport, setSelectedClassForCategoryReport] = useState('');
 
     const classOptions = useLiveQuery(
         () => db.students.orderBy('className').uniqueKeys()
@@ -97,6 +98,12 @@ const Reports: React.FC = () => {
         }
     };
 
+    const handleGenerateCategoryRollStatement = () => {
+        if (selectedClassForCategoryReport) {
+            navigate(`/print/category-roll-statement/${selectedClassForCategoryReport}`);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-4 animate-fade-in">
             <Card className="p-3">
@@ -133,7 +140,7 @@ const Reports: React.FC = () => {
             
             <Card className="p-3">
                 <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Class Reports</h2>
-                <div className="space-y-3">
+                <div className="space-y-3 border-b border-border pb-4 mb-4">
                     <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
                         <ClipboardListIcon className="w-4 h-4" />
                         <h3>Class Roll Statement</h3>
@@ -151,6 +158,27 @@ const Reports: React.FC = () => {
                         className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
                     >
                         Generate Roll Statement PDF
+                    </button>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                        <UserListIcon className="w-4 h-4" />
+                        <h3>Gender & Category Wise Roll Statement</h3>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">Select Class</label>
+                        <select value={selectedClassForCategoryReport} onChange={e => setSelectedClassForCategoryReport(e.target.value)} className={inputStyle}>
+                            <option value="">-- Choose Class --</option>
+                            {classOptions?.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </div>
+                    <button 
+                        onClick={handleGenerateCategoryRollStatement} 
+                        disabled={!selectedClassForCategoryReport}
+                        className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
+                    >
+                        Generate Category Wise PDF
                     </button>
                 </div>
             </Card>
