@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student } from '../types';
 import CategoryWiseRollStatement from '../components/CategoryWiseRollStatement';
@@ -8,41 +7,59 @@ import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 
 const PrintCategoryRollStatement: React.FC = () => {
-  const { className } = useParams<{ className: string }>();
-  const [students, setStudents] = useState<Student[]>([]);
+  const [studentsByClass, setStudentsByClass] = useState<Map<string, Student[]>>(new Map());
   const { schoolDetails } = useAppData();
 
   useEffect(() => {
-    if (className) {
-      db.students
-        .where('className')
-        .equals(className)
-        .sortBy('rollNo')
-        .then(setStudents);
-    }
-  }, [className]);
+    const fetchData = async () => {
+        const allStudents = await db.students.toArray();
+        
+        // FIX: Cast the array of unique class names to string[] to resolve type inference issues.
+        const classNames = ([...new Set(allStudents.map(s => s.className))] as string[])
+            .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+        const grouped = new Map<string, Student[]>();
+        classNames.forEach(className => {
+            const classStudents = allStudents
+                .filter(s => s.className === className)
+                .sort((a, b) => a.rollNo.localeCompare(b.rollNo, undefined, { numeric: true, sensitivity: 'base' }));
+            grouped.set(className, classStudents);
+        });
+        setStudentsByClass(grouped);
+    };
+    fetchData();
+  }, []);
 
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownloadPdf = async () => {
-    if (className) {
+    if (studentsByClass.size > 0 && schoolDetails) {
         await generatePdfFromComponent(
-            <CategoryWiseRollStatement students={students} className={className} schoolDetails={schoolDetails} />,
-            `Category-Roll-Statement-Class-${className}`
+            <div id="pdf-content">
+                {Array.from(studentsByClass.entries()).map(([className, classStudents]) => (
+                    <CategoryWiseRollStatement
+                        key={className}
+                        students={classStudents}
+                        className={className}
+                        schoolDetails={schoolDetails}
+                    />
+                ))}
+            </div>,
+            `Category-Roll-Statement-All-Classes`
         );
     }
   };
 
-  if (!students.length || !schoolDetails) {
-    return <div className="p-4 text-center">Loading student data or no students found for this class...</div>;
+  if (studentsByClass.size === 0 || !schoolDetails) {
+    return <div className="p-4 text-center">Loading student data...</div>;
   }
   
   const ControlPanel = () => (
       <div className="max-w-4xl mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
         <h1 className="text-2xl font-bold text-gray-800">Document Preview</h1>
-        <p className="text-gray-600 mb-4">Preview for Class {className} Category Wise Roll Statement.</p>
+        <p className="text-gray-600 mb-4">Preview for All Classes: Gender & Category Wise Roll Statement.</p>
         <div className="flex flex-wrap gap-4">
              <button
                 onClick={handleDownloadPdf}
@@ -65,8 +82,15 @@ const PrintCategoryRollStatement: React.FC = () => {
     <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
         <ControlPanel />
       
-        <div className="flex justify-center items-start">
-             <CategoryWiseRollStatement students={students} className={className!} schoolDetails={schoolDetails} />
+        <div id="printable-area" className="flex flex-col items-center justify-start gap-4 print:gap-0">
+             {Array.from(studentsByClass.entries()).map(([className, classStudents]) => (
+                <CategoryWiseRollStatement
+                    key={className}
+                    students={classStudents}
+                    className={className}
+                    schoolDetails={schoolDetails}
+                />
+            ))}
         </div>
 
         <style>{`
@@ -74,16 +98,14 @@ const PrintCategoryRollStatement: React.FC = () => {
             @page { size: A4; margin: 0; }
             @media print {
                 body * { visibility: hidden; }
-                #category-roll-statement, #category-roll-statement * { visibility: visible; }
-                #category-roll-statement { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
-            }
-            .A4-page-container {
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                transform: scale(0.75);
-                transform-origin: top center;
-                print:transform: scale(1);
+                #printable-area, #printable-area * { visibility: visible; }
+                #printable-area { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
+                .A4-page-container {
+                    transform: scale(1.0);
+                    box-shadow: none;
+                    margin: 0;
+                    page-break-after: always;
+                }
             }
         `}</style>
     </div>

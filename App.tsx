@@ -96,7 +96,7 @@ const App: React.FC = () => {
                 <Route path="/holistic-assessment" element={<HolisticAssessment />} />
                 <Route path="/formative-assessment" element={<FormativeAssessment />} />
                 <Route path="/print/roll-statement/:className" element={<PrintRollStatement />} />
-                <Route path="/print/category-roll-statement/:className" element={<PrintCategoryRollStatement />} />
+                <Route path="/print/category-roll-statement" element={<PrintCategoryRollStatement />} />
                 <Route path="/print/hpc/:studentId" element={<PrintHPC />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

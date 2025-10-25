@@ -28,7 +28,6 @@ const Reports: React.FC = () => {
     const [topperListError, setTopperListError] = useState('');
 
     const [selectedClass, setSelectedClass] = useState('');
-    const [selectedClassForCategoryReport, setSelectedClassForCategoryReport] = useState('');
 
     const classOptions = useLiveQuery(
         () => db.students.orderBy('className').uniqueKeys()
@@ -99,9 +98,7 @@ const Reports: React.FC = () => {
     };
 
     const handleGenerateCategoryRollStatement = () => {
-        if (selectedClassForCategoryReport) {
-            navigate(`/print/category-roll-statement/${selectedClassForCategoryReport}`);
-        }
+        navigate(`/print/category-roll-statement`);
     };
 
     return (
@@ -164,19 +161,11 @@ const Reports: React.FC = () => {
                 <div className="space-y-3">
                     <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
                         <UserListIcon className="w-4 h-4" />
-                        <h3>Gender & Category Wise Roll Statement</h3>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">Select Class</label>
-                        <select value={selectedClassForCategoryReport} onChange={e => setSelectedClassForCategoryReport(e.target.value)} className={inputStyle}>
-                            <option value="">-- Choose Class --</option>
-                            {classOptions?.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
+                        <h3>Gender & Category Wise Roll Statement (All Classes)</h3>
                     </div>
                     <button 
                         onClick={handleGenerateCategoryRollStatement} 
-                        disabled={!selectedClassForCategoryReport}
-                        className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
+                        className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold"
                     >
                         Generate Category Wise PDF
                     </button>
