@@ -43,12 +43,34 @@ const SbaResultSheet: React.FC = () => {
             const allMarks = await db.marks.where('studentId').anyOf(studentIds).toArray();
             
             const marksMap = new Map<number, Map<string, Mark>>();
-            allMarks.forEach(mark => {
-                if (!marksMap.has(mark.studentId)) {
-                    marksMap.set(mark.studentId, new Map());
-                }
-                marksMap.get(mark.studentId)!.set(mark.subject, mark);
+            students.forEach(student => {
+                marksMap.set(student.id!, new Map<string, Mark>());
             });
+
+            allMarks.forEach(mark => {
+                const studentMarksMap = marksMap.get(mark.studentId);
+                if (!studentMarksMap) return;
+
+                const existingMark = studentMarksMap.get(mark.subject);
+                const consolidatedMark: Mark = existingMark || {
+                    studentId: mark.studentId,
+                    examId: 0, // Not relevant for consolidated view
+                    subject: mark.subject,
+                };
+
+                // Aggregate fields: add new values to existing ones.
+                if (mark.fa1 !== undefined) consolidatedMark.fa1 = (consolidatedMark.fa1 || 0) + mark.fa1;
+                if (mark.fa2 !== undefined) consolidatedMark.fa2 = (consolidatedMark.fa2 || 0) + mark.fa2;
+                if (mark.fa3 !== undefined) consolidatedMark.fa3 = (consolidatedMark.fa3 || 0) + mark.fa3;
+                if (mark.fa4 !== undefined) consolidatedMark.fa4 = (consolidatedMark.fa4 || 0) + mark.fa4;
+                if (mark.fa5 !== undefined) consolidatedMark.fa5 = (consolidatedMark.fa5 || 0) + mark.fa5;
+                if (mark.fa6 !== undefined) consolidatedMark.fa6 = (consolidatedMark.fa6 || 0) + mark.fa6;
+                if (mark.coCurricular !== undefined) consolidatedMark.coCurricular = (consolidatedMark.coCurricular || 0) + mark.coCurricular;
+                if (mark.summative !== undefined) consolidatedMark.summative = (consolidatedMark.summative || 0) + mark.summative;
+                
+                studentMarksMap.set(mark.subject, consolidatedMark);
+            });
+
 
             await generatePdfFromComponent(
                 <SbaResultSheetComponent
