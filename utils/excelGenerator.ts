@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import { utils, writeFile } from 'xlsx';
 
 /**
  * Exports an array of objects to an Excel file.
@@ -7,10 +7,10 @@ import * as XLSX from 'xlsx';
  */
 export const exportToExcel = (data: any[], fileName: string): void => {
     // 1. Create a new workbook
-    const wb = XLSX.utils.book_new();
+    const wb = utils.book_new();
 
     // 2. Convert the JSON data to a worksheet
-    const ws = XLSX.utils.json_to_sheet(data);
+    const ws = utils.json_to_sheet(data);
 
     // 3. Optional: Auto-fit columns for better readability
     if (data.length > 0) {
@@ -24,8 +24,8 @@ export const exportToExcel = (data: any[], fileName: string): void => {
     }
 
     // 4. Append the worksheet to the workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Results');
+    utils.book_append_sheet(wb, ws, 'Results');
 
     // 5. Write the workbook and trigger a download
-    XLSX.writeFile(wb, `${fileName}.xlsx`);
+    writeFile(wb, `${fileName}.xlsx`);
 };
