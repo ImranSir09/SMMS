@@ -2,7 +2,7 @@ export const ACADEMIC_YEAR = '2024-25';
 
 export const CLASS_OPTIONS = ['PP1', 'PP2', 'Balvatika', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th'];
 
-export const SUBJECTS = ['English', 'Mathematics', 'Science', 'Social Science/EVS', 'Urdu/Hindi', 'Kashmiri/Dogri/Punjabi'];
+export const SUBJECTS = ['English', 'Mathematics', 'Science', 'Social Science/EVS', 'Urdu/Hindi', 'Kashmiri'];
 
 export const CATEGORY_OPTIONS = ['General', 'SC', 'ST', 'OBC', 'Other'];
 

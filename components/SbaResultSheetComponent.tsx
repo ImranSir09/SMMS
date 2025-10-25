@@ -26,7 +26,7 @@ const SbaResultSheetComponent: React.FC<ReportProps> = ({ students, schoolDetail
         fontSize: '8px',
         verticalAlign: 'middle',
     };
-    const verticalThStyle: React.CSSProperties = { ...thStyle, writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' };
+    const verticalThStyle: React.CSSProperties = { ...thStyle, writingMode: 'vertical-rl', textOrientation: 'mixed' };
 
     const getGrade = (percentage: number): string => {
         if (percentage > 85) return 'A+';
@@ -51,9 +51,7 @@ const SbaResultSheetComponent: React.FC<ReportProps> = ({ students, schoolDetail
                             <th key={h} style={verticalThStyle}>{h}</th>
                         )}
                         {SUBJECTS.map(subject => (
-                            <React.Fragment key={subject}>
-                                <th colSpan={10} style={{...thStyle, backgroundColor: '#e5e7eb'}}>{subject}</th>
-                            </React.Fragment>
+                            <th colSpan={10} key={subject} style={{...thStyle, backgroundColor: '#e5e7eb'}}>{subject}</th>
                         ))}
                         <th style={verticalThStyle}>Grand Total</th>
                         <th style={verticalThStyle}>Grade</th>
