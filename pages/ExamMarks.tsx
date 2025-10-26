@@ -48,22 +48,9 @@ const ExamMarks: React.FC = () => {
     [exam]);
 
     const displayedMarkFields = useMemo(() => {
-        if (!exam) return [];
-
-        const examName = exam.name.toLowerCase();
-
-        if (examName.startsWith('fa1')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa1');
-        if (examName.startsWith('fa2')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa2');
-        if (examName.startsWith('fa3')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa3');
-        if (examName.startsWith('fa4')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa4');
-        if (examName.startsWith('fa5')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa5');
-        if (examName.startsWith('fa6')) return ALL_MARK_FIELDS.filter(f => f.key === 'fa6');
-        if (examName.includes('co-curricular')) return ALL_MARK_FIELDS.filter(f => f.key === 'coCurricular');
-        if (examName.includes('summative')) return ALL_MARK_FIELDS.filter(f => f.key === 'summative');
-        
-        // Default case for 'Term 1', 'Final Exam', 'Other', etc.
-        return ALL_MARK_FIELDS;
-    }, [exam]);
+        // Only show the summative assessment field
+        return ALL_MARK_FIELDS.filter(f => f.key === 'summative');
+    }, []);
 
     useEffect(() => {
         if (SUBJECTS.length > 0 && !activeSubject) {
@@ -221,7 +208,7 @@ const ExamMarks: React.FC = () => {
     };
 
     if (!exam || !students) {
-        return <div className="p-4 text-center">Loading exam data...</div>;
+        return <div className="p-4 text-center">Loading assessment data...</div>;
     }
 
     return (

@@ -7,14 +7,3 @@ export const SUBJECTS = ['English', 'Mathematics', 'Science', 'Social Science/EV
 export const CATEGORY_OPTIONS = ['General', 'SC', 'ST', 'OBC', 'Other'];
 
 export const BLOOD_GROUP_OPTIONS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-
-export const EXAM_OPTIONS = [
-    'FA1',
-    'FA2',
-    'FA3',
-    'FA4',
-    'FA5',
-    'FA6',
-    'Co-Curricular',
-    'Summative Assessment',
-];

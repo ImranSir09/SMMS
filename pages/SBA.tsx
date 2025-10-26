@@ -83,7 +83,7 @@ const SBA: React.FC = () => {
             action: () => navigate("/formative-entry")
         },
         {
-            title: "Exams & Marks Entry",
+            title: "Summative Assessment",
             icon: <ExamsIcon className="w-6 h-6" />,
             action: () => navigate("/exams")
         },

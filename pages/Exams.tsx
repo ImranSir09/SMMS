@@ -8,7 +8,7 @@ import Card from '../components/Card';
 import { ClipboardListIcon, ExamsIcon, PlusIcon, TrashIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useToast } from '../contexts/ToastContext';
-import { CLASS_OPTIONS, EXAM_OPTIONS } from '../constants';
+import { CLASS_OPTIONS } from '../constants';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
@@ -21,41 +21,39 @@ const Exams: React.FC = () => {
     const { addToast } = useToast();
     
     const handleOpenCreateModal = () => {
-        setNewExamData({ name: EXAM_OPTIONS[0], className: '' });
+        setNewExamData({ name: '', className: '' });
         setIsCreateModalOpen(true);
     };
 
     const handleSaveExam = async () => {
         try {
-            const examNameToSave = newExamData.name;
-    
-            if (!examNameToSave || !newExamData.className) {
-                addToast("Please provide an exam name and select a class.", 'error');
+            if (!newExamData.name || !newExamData.className) {
+                addToast("Please provide an assessment name and select a class.", 'error');
                 return;
             }
-            const newId = await db.exams.add({ name: examNameToSave, className: newExamData.className });
+            const newId = await db.exams.add({ name: newExamData.name, className: newExamData.className });
             setIsCreateModalOpen(false);
-            addToast('Exam created successfully!', 'success');
+            addToast('Assessment created successfully!', 'success');
             // FIX: Replace history.push with navigate for react-router-dom v6.
             navigate(`/exams/${newId}`);
         } catch (error) {
             console.error("Failed to save exam:", error);
-            addToast("An error occurred while creating the exam.", 'error');
+            addToast("An error occurred while creating the assessment.", 'error');
         }
     };
 
     const handleDeleteExam = async (id: number) => {
-        if(window.confirm('Are you sure you want to delete this exam? This will also delete all associated marks.')) {
+        if(window.confirm('Are you sure you want to delete this assessment? This will also delete all associated marks.')) {
             try {
                 await db.transaction('rw', db.exams, db.marks, db.studentExamData, async () => {
                     await db.exams.delete(id);
                     await db.marks.where('examId').equals(id).delete();
                     await db.studentExamData.where('examId').equals(id).delete();
                 });
-                addToast('Exam and all associated marks deleted.', 'success');
+                addToast('Assessment and all associated marks deleted.', 'success');
             } catch (error) {
                 console.error("Failed to delete exam:", error);
-                addToast("An error occurred while deleting the exam.", 'error');
+                addToast("An error occurred while deleting the assessment.", 'error');
             }
         }
     }
@@ -64,7 +62,7 @@ const Exams: React.FC = () => {
         <div className="flex flex-col">
             <button onClick={handleOpenCreateModal} className="w-full mb-3 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors flex items-center justify-center gap-2">
                 <PlusIcon className="w-5 h-5"/>
-                Create New Exam
+                Create Summative Assessment
             </button>
             
             <div className="flex-1 grid grid-cols-2 gap-3 overflow-y-auto">
@@ -90,7 +88,7 @@ const Exams: React.FC = () => {
              {(!exams || exams.length === 0) && (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-border rounded-lg">
                     <ExamsIcon className="w-10 h-10 text-foreground/20" />
-                    <h3 className="text-md font-semibold mt-2">No Exams Found</h3>
+                    <h3 className="text-md font-semibold mt-2">No Summative Assessments Found</h3>
                     <p className="mt-1 text-xs text-foreground/60">
                         Tap the button above to create one.
                     </p>
@@ -100,18 +98,18 @@ const Exams: React.FC = () => {
             <Modal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
-                title="Create New Exam"
+                title="Create Summative Assessment"
             >
                 <div className="p-4 space-y-4">
-                    <select
+                    <input
+                        type="text"
                         name="name"
                         value={newExamData.name}
                         onChange={(e) => setNewExamData({...newExamData, name: e.target.value})}
                         required
                         className={inputStyle}
-                    >
-                        {EXAM_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
+                        placeholder="e.g., Term 1 Assessment"
+                    />
                     <select
                         name="className"
                         value={newExamData.className}
