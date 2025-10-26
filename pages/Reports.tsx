@@ -26,12 +26,20 @@ const Reports: React.FC = () => {
     const [topperListError, setTopperListError] = useState('');
 
     const [selectedClass, setSelectedClass] = useState('');
+    
+    const [selectedStudentForFaReport, setSelectedStudentForFaReport] = useState<string>('');
+    const [selectedSubjectForFaReport, setSelectedSubjectForFaReport] = useState<string>('');
 
     const classOptions = useLiveQuery(
         () => db.students.orderBy('className').uniqueKeys()
             .then(keys => (keys as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))),
         []
     );
+    
+    const studentsInClass = useLiveQuery(() => 
+        selectedClass ? db.students.where({ className: selectedClass }).sortBy('rollNo') : Promise.resolve([]),
+    [selectedClass]);
+
 
     const handleGenerateTopperList = async () => {
         if (!selectedExamId || !selectedSubject) {
@@ -100,6 +108,12 @@ const Reports: React.FC = () => {
         navigate(`/print/category-roll-statement`);
     };
 
+    const handleGenerateFaReport = () => {
+        if (selectedStudentForFaReport && selectedSubjectForFaReport) {
+            navigate(`/print/co-curricular-report/${selectedStudentForFaReport}/${selectedSubjectForFaReport}`);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-4 animate-fade-in">
             <Card className="p-3">
@@ -135,14 +149,14 @@ const Reports: React.FC = () => {
             </Card>
             
             <Card className="p-3">
-                <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Class Reports</h2>
-                <div className="space-y-3 border-b border-border pb-4 mb-4">
+                <h2 className="text-md font-semibold mb-2 border-b border-border pb-1">Class & Student Reports</h2>
+                <div className="space-y-3 pb-4 mb-4">
                     <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
-                        <ClipboardListIcon className="w-4 h-4" />
-                        <h3>Class Roll Statement</h3>
+                        <UserListIcon className="w-4 h-4" />
+                        <h3>Roll Statements</h3>
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">Select Class</label>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">Select Class (for statements)</label>
                         <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className={inputStyle}>
                             <option value="">-- Choose Class --</option>
                             {classOptions?.map(c => <option key={c} value={c}>{c}</option>)}
@@ -153,20 +167,41 @@ const Reports: React.FC = () => {
                         disabled={!selectedClass}
                         className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
                     >
-                        Generate Roll Statement PDF
+                        Generate Class Roll Statement PDF
                     </button>
-                </div>
-
-                <div className="space-y-3">
-                    <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
-                        <UserListIcon className="w-4 h-4" />
-                        <h3>Gender & Category Wise Roll Statement (All Classes)</h3>
-                    </div>
                     <button 
                         onClick={handleGenerateCategoryRollStatement} 
                         className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold"
                     >
-                        Generate Category Wise PDF
+                        Generate Category Wise PDF (All Classes)
+                    </button>
+                </div>
+
+                <div className="space-y-3 border-t border-border pt-4">
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                        <ClipboardListIcon className="w-4 h-4" />
+                        <h3>Formative / Co-Curricular Report Sheet</h3>
+                    </div>
+                     <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">Select Student</label>
+                        <select value={selectedStudentForFaReport} onChange={e => setSelectedStudentForFaReport(e.target.value)} disabled={!selectedClass} className={inputStyle}>
+                            <option value="">-- Choose Student --</option>
+                            {studentsInClass?.map(s => <option key={s.id} value={s.id}>{s.name} (Roll: {s.rollNo})</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-foreground/80 mb-1">Select Subject</label>
+                        <select value={selectedSubjectForFaReport} onChange={e => setSelectedSubjectForFaReport(e.target.value)} className={inputStyle}>
+                            <option value="">-- Choose Subject --</option>
+                            {SUBJECTS.map(subject => <option key={subject} value={subject}>{subject}</option>)}
+                        </select>
+                    </div>
+                    <button 
+                        onClick={handleGenerateFaReport} 
+                        disabled={!selectedStudentForFaReport || !selectedSubjectForFaReport}
+                        className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
+                    >
+                        Generate Report Sheet
                     </button>
                 </div>
             </Card>

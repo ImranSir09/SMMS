@@ -19,6 +19,7 @@ import SBA from './pages/SBA';
 import SbaDataEntry from './pages/SbaDataEntry';
 import FormativeAssessment from './pages/FormativeAssessment';
 import StudentReport from './pages/StudentReport';
+import PrintCoCurricularReport from './pages/PrintCoCurricularReport';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -87,6 +88,7 @@ const App: React.FC = () => {
                 <Route path="/print/roll-statement/:className" element={<PrintRollStatement />} />
                 <Route path="/print/category-roll-statement" element={<PrintCategoryRollStatement />} />
                 <Route path="/print/hpc/:studentId" element={<PrintHPC />} />
+                <Route path="/print/co-curricular-report/:studentId/:subject" element={<PrintCoCurricularReport />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
