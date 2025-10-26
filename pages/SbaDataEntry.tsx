@@ -1,14 +1,61 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Student, SbaReportData, SbaWellbeingStatus, SbaProficiencyLevel, SbaTalentLevel } from '../types';
+import { Student, SbaReportData, SbaProficiencyLevel, SbaTalentLevel } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import { ACADEMIC_YEAR } from '../constants';
 import SectionCard from '../components/SectionCard';
 
 const DEBOUNCE_DELAY = 1500;
 
-const WELLBEING_OPTIONS: SbaWellbeingStatus[] = ['Normal and Healthy', 'Needs Attention'];
+const PHYSICAL_WELLBEING_OPTIONS = [
+  'Normal and Healthy',
+  'Not Well groomed',
+  'Lethargic or Lazy',
+  'Consuming unhealthy food',
+  'Listening or Speaking Problem',
+  'Heart related issue',
+  'Kidney related issue',
+  'Persistent Cough',
+  'Dry skin, lips and infrequent urination',
+  'Excessive Sleep',
+  'Observed musculoskeletal issue',
+  'Allergic to food or Medicines',
+  'Chronic Condition (Asthma, Diabetes, Thyroid)',
+  'Slow recovery from injuries or illness',
+  'Under weight or Under growth',
+  'Dental issue',
+  'Vision Problem',
+  'Headaches, Stomachaches or other discomforts',
+  'Multiple physical disorder',
+];
+
+const MENTAL_WELLBEING_OPTIONS = [
+  'Normal and Healthy',
+  'Irritative or Aggressive',
+  'Consistently Sad, Anxious or excessively moody',
+  'Remain isolated and avoiding Social relations',
+  'Showing lack of interest in school work',
+  'Changes in sleep patterns and appetite',
+  'Neglecting personal hygiene or self-care routines',
+  'Loss of interest in activities',
+  'Unable to communicate their thoughts and feelings',
+  'Stressed (Nail-biting, Hair-pulling or other nervous habits)',
+  'Observed suicidal thoughts or self harming behaviour',
+  'Stressful in exams, conflicts or changes in their life',
+  'Frequent absence from school',
+  'Smoker or Drug abuser',
+  'Multiple Mental disorders',
+];
+
+const DISEASE_FOUND_OPTIONS = [
+  'Normal and Healthy',
+  'Infectious disease',
+  'Deficiency disease',
+  'Genetic disease',
+  'Other Fatal disease',
+];
+
 const PROFICIENCY_OPTIONS: SbaProficiencyLevel[] = ['High', 'Medium', 'Low'];
 const TALENT_OPTIONS: SbaTalentLevel[] = ['Highly Talented', 'Talented', 'No talent'];
 
@@ -156,10 +203,10 @@ const SbaDataEntry: React.FC = () => {
             ) : (
                 <div>
                     <SectionCard title="Health & Wellbeing" colorClasses="bg-green-700 border-green-500 text-white">
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {renderSelect('Physical Wellbeing', 'physicalWellbeing', WELLBEING_OPTIONS)}
-                            {renderSelect('Mental Wellbeing', 'mentalWellbeing', WELLBEING_OPTIONS)}
-                            {renderSelect('Disease Found', 'diseaseFound', WELLBEING_OPTIONS)}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            {renderSelect('Physical Wellbeing', 'physicalWellbeing', PHYSICAL_WELLBEING_OPTIONS)}
+                            {renderSelect('Mental Wellbeing', 'mentalWellbeing', MENTAL_WELLBEING_OPTIONS)}
+                            {renderSelect('Disease Found', 'diseaseFound', DISEASE_FOUND_OPTIONS)}
                         </div>
                     </SectionCard>
                     <SectionCard title="Life Skills" colorClasses="bg-blue-700 border-blue-500 text-white">

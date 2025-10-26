@@ -271,7 +271,6 @@ export interface MiddleData {
   };
 }
 // FIX: Added new types for School Based Assessment (SBA)
-export type SbaWellbeingStatus = 'Normal and Healthy' | 'Needs Attention';
 export type SbaProficiencyLevel = 'High' | 'Medium' | 'Low';
 export type SbaTalentLevel = 'No talent' | 'Talented' | 'Highly Talented';
 
@@ -279,9 +278,9 @@ export interface SbaReportData {
   id?: number;
   studentId: number;
   academicYear: string;
-  physicalWellbeing: SbaWellbeingStatus;
-  mentalWellbeing: SbaWellbeingStatus;
-  diseaseFound: SbaWellbeingStatus;
+  physicalWellbeing: string;
+  mentalWellbeing: string;
+  diseaseFound: string;
   creativity: SbaProficiencyLevel;
   criticalThinking: SbaProficiencyLevel;
   communicationSkill: SbaProficiencyLevel;
