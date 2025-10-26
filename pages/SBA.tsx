@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { BarChart3Icon, ClipboardListIcon, EditIcon, HolisticIcon } from '../components/icons';
+import { BarChart3Icon, ClipboardListIcon, EditIcon, ExamsIcon, HolisticIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { db } from '../services/db';
 import { SUBJECTS } from '../constants';
@@ -81,6 +81,11 @@ const SBA: React.FC = () => {
             title: "Formative Assessment Entry",
             icon: <EditIcon className="w-6 h-6" />,
             action: () => navigate("/formative-entry")
+        },
+        {
+            title: "Exams & Marks Entry",
+            icon: <ExamsIcon className="w-6 h-6" />,
+            action: () => navigate("/exams")
         },
         {
             title: "Holistic Progress Card",
