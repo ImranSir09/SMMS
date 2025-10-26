@@ -62,7 +62,10 @@ const SBA: React.FC = () => {
     };
 
     const handleGenerateReport = () => {
-        if (selectedStudentId && selectedSubject) {
+        if (reportType === 'Formative' && selectedStudentId) {
+            navigate(`/print/formative-assessment-report/${selectedStudentId}`);
+            setIsReportModalOpen(false);
+        } else if (reportType === 'Co-Curricular' && selectedStudentId && selectedSubject) {
             navigate(`/print/co-curricular-report/${selectedStudentId}/${selectedSubject}`);
             setIsReportModalOpen(false);
         }
@@ -139,17 +142,22 @@ const SBA: React.FC = () => {
                             {studentsInClass?.map(s => <option key={s.id} value={s.id}>{s.name} (Roll: {s.rollNo})</option>)}
                         </select>
                     </div>
-                    <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">Select Subject</label>
-                        <select value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} className={inputStyle}>
-                            <option value="">-- Choose Subject --</option>
-                            {SUBJECTS.map(subject => <option key={subject} value={subject}>{subject}</option>)}
-                        </select>
-                    </div>
+                    {reportType === 'Co-Curricular' && (
+                        <div>
+                            <label className="block text-xs font-medium text-foreground/80 mb-1">Select Subject</label>
+                            <select value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} className={inputStyle}>
+                                <option value="">-- Choose Subject --</option>
+                                {SUBJECTS.map(subject => <option key={subject} value={subject}>{subject}</option>)}
+                            </select>
+                        </div>
+                    )}
                     <div className="flex justify-end pt-2">
                         <button 
                             onClick={handleGenerateReport} 
-                            disabled={!selectedStudentId || !selectedSubject}
+                            disabled={
+                                (reportType === 'Formative' && !selectedStudentId) ||
+                                (reportType === 'Co-Curricular' && (!selectedStudentId || !selectedSubject))
+                            }
                             className="py-3 px-5 rounded-lg bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
                         >
                             Generate Report Sheet
