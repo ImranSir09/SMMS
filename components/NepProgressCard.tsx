@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Student, SchoolDetails, Mark, HPCReportData } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -162,6 +161,7 @@ const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, schoo
                     <p className="font-semibold">Principal / Headmaster</p>
                 </div>
             </footer>
+            <p className="text-center text-[9px] text-gray-600 mt-1 z-10">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
         </div>
     </div>
   );

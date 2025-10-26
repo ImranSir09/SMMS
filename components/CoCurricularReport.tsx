@@ -70,6 +70,7 @@ const CoCurricularReport: React.FC<CoCurricularReportProps> = ({ student, school
               <p className="text-base">{schoolDetails.name}</p>
             </div>
           </footer>
+          <p className="text-center text-[9px] text-gray-600 mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
         </div>
       </div>
     </div>

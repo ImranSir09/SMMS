@@ -156,7 +156,7 @@ const HolisticProgressCard: React.FC<HPCProps> = ({
                         <p>{schoolDetails.name}</p>
                     </div>
                 </div>
-                 <p className="text-[8px] text-center mt-2">Software Developed by: Mr..Javeed Hassan Sofi (IT Expert) from Bandipora UT J&K</p>
+                 <p className="text-[8px] text-center mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
             </PageContainer>
             
             {/* Page 2 */}
@@ -233,7 +233,7 @@ const HolisticProgressCard: React.FC<HPCProps> = ({
                         <button className="bg-yellow-200 border border-yellow-400 px-4 py-1 rounded">3. Participation in activities</button>
                     </div>
                  </div>
-                 <p className="text-[8px] text-center mt-auto">Software Developed by: Mr..Javeed Hassan Sofi (IT Expert) from Bandipora UT J&K</p>
+                 <p className="text-[8px] text-center mt-auto">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
             </PageContainer>
 
              {/* Page 3 */}
@@ -260,7 +260,7 @@ const HolisticProgressCard: React.FC<HPCProps> = ({
                         <p className="font-bold">Principal/Headmaster</p>
                     </div>
                 </div>
-                 <p className="text-[8px] text-center mt-2">Software Developed by: Mr..Javeed Hassan Sofi (IT Expert) from Bandipora UT J&K</p>
+                 <p className="text-[8px] text-center mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
             </PageContainer>
 
             {/* Page 4 */}
@@ -270,7 +270,7 @@ const HolisticProgressCard: React.FC<HPCProps> = ({
                     <span></span>
                     <p className="font-semibold">{schoolDetails.name}</p>
                 </div>
-                <p className="text-[8px] text-center mt-2">Software Developed by: Mr..Javeed Hassan Sofi (IT Expert) from Bandipora UT J&K</p>
+                <p className="text-[8px] text-center mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
             </PageContainer>
         </div>
     );

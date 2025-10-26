@@ -143,6 +143,7 @@ const FormativeAssessmentReport: React.FC<FormativeAssessmentReportProps> = ({
                 </tr></tbody></table>
 
                 <SectionTitle title="5. Formative Assessment:" />
+                <p className="text-center text-[9px] text-gray-600 mt-auto">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
             </PageContainer>
             
             {/* Page 2 */}
@@ -198,6 +199,7 @@ const FormativeAssessmentReport: React.FC<FormativeAssessmentReportProps> = ({
                         <p className="text-xs">{schoolDetails.name}</p>
                     </div>
                 </div>
+                <p className="text-center text-[9px] text-gray-600 mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
             </PageContainer>
         </div>
     );

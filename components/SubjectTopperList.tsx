@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 
@@ -76,6 +74,7 @@ const SubjectTopperList: React.FC<SubjectTopperListProps> = ({ toppers, examName
                      <p className="font-semibold">Head of Institution</p>
                 </div>
             </footer>
+            <p className="text-center text-[9px] text-gray-600 mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
         </div>
       </div>
     </div>

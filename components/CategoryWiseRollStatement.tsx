@@ -93,6 +93,7 @@ const CategoryWiseRollStatement: React.FC<RollStatementProps> = ({ students, cla
           <span>Date: {new Date().toLocaleDateString('en-GB')}</span>
           <span>Grand Total Students: {grandTotal}</span>
         </footer>
+        <p className="text-center text-[9px] text-gray-600 mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
       </div>
     </div>
     );
