@@ -21,13 +21,14 @@ export interface Student {
   mothersName: string;
   contact: string;
   address: string;
-  photo: string | null;
   admissionDate?: string; // YYYY-MM-DD
   category?: string;
   bloodGroup?: string;
   aadharNo?: string;
   accountNo?: string;
   ifscCode?: string;
+  // FIX: Added optional 'photo' property to resolve a type error in BulkAddStudentsModal.tsx and align with usage across the application.
+  photo?: string | null;
 }
 
 export interface Exam {

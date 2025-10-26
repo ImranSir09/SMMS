@@ -73,7 +73,7 @@ const Students: React.FC = () => {
     }, [activeClass, searchTerm]);
 
     const handleAdd = () => {
-        setEditingStudent({ gender: 'Male', photo: null, className: activeClass || '', section: 'A' });
+        setEditingStudent({ gender: 'Male', className: activeClass || '', section: 'A' });
         setIsFormOpen(true);
     };
     

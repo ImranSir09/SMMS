@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Student } from '../types';
-import PhotoUploadModal from './PhotoUploadModal';
 import { CLASS_OPTIONS, CATEGORY_OPTIONS, BLOOD_GROUP_OPTIONS } from '../constants';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
@@ -55,7 +54,6 @@ const validateStudent = (student: Partial<Student>): { [key: string]: string } =
 export const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave, onClose }) => {
     const [formData, setFormData] = useState<Partial<Student>>({});
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
     
     useEffect(() => {
         setFormData(studentToEdit);
@@ -74,11 +72,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave,
         }
     };
     
-    const handlePhotoSave = (photoBase64: string) => {
-        setFormData(prev => ({ ...prev, photo: photoBase64 }));
-        setIsPhotoModalOpen(false);
-    };
-
     const handleSaveClick = () => {
         const validationErrors = validateStudent(formData);
         if (Object.keys(validationErrors).length > 0) {
@@ -91,19 +84,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave,
     return (
         <div className="flex flex-col h-full">
             <div className="p-4 space-y-4 flex-1">
-                <div className="flex items-center gap-4 border-b border-border pb-4">
-                    {formData.photo ? (
-                        <img src={formData.photo} alt="Student" className="w-24 h-32 object-cover rounded-md border border-border" />
-                    ) : (
-                        <div className="w-24 h-32 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Photo</div>
-                    )}
-                    <div className="flex flex-col gap-2">
-                        <label className={labelStyle}>Student Photo</label>
-                        <button type="button" onClick={() => setIsPhotoModalOpen(true)} className={`${secondaryButtonStyle} text-sm`}>
-                            Upload / Crop Photo
-                        </button>
-                    </div>
-                </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div className="col-span-2">
                        <label htmlFor="name" className={labelStyle}>Name</label>
@@ -207,13 +187,6 @@ export const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave,
                 <button type="button" onClick={onClose} className={secondaryButtonStyle}>Cancel</button>
                 <button type="button" onClick={handleSaveClick} className={successButtonStyle}>Save</button>
             </footer>
-            <PhotoUploadModal
-                isOpen={isPhotoModalOpen}
-                onClose={() => setIsPhotoModalOpen(false)}
-                onSave={handlePhotoSave}
-                title="Upload Student Photo"
-                aspectRatio={4 / 5}
-            />
         </div>
     );
 };

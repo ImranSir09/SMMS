@@ -108,16 +108,9 @@ const StudentProfile: React.FC = () => {
     return (
         <div className="flex flex-col gap-3 animate-fade-in">
             {/* Profile Header */}
-            <Card className="flex-shrink-0 flex items-center gap-3 p-3">
-                {student.photo ? (
-                    <img src={student.photo} alt={student.name} className="w-16 h-20 object-cover rounded-md border-2 border-border" />
-                ) : (
-                    <div className="w-16 h-20 rounded-md bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
-                )}
-                <div className="flex-1">
-                    <h2 className="text-xl font-bold">{student.name}</h2>
-                    <p className="text-sm text-foreground/80">Class {student.className} '{student.section}' | Roll No: {student.rollNo}</p>
-                </div>
+            <Card className="flex-shrink-0 p-3">
+                <h2 className="text-xl font-bold">{student.name}</h2>
+                <p className="text-sm text-foreground/80">Class {student.className} '{student.section}' | Roll No: {student.rollNo}</p>
             </Card>
 
             {/* Action Buttons */}
