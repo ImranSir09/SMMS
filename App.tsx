@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from 'react';
-// FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors.
+// FIX: Update react-router-dom imports for v6
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppContext } from './contexts/AppContext';
 import Header from './components/Header';
@@ -13,17 +13,12 @@ import Certificates from './pages/Certificates';
 import ExamMarks from './pages/ExamMarks';
 import StudentProfile from './pages/StudentProfile';
 import PrintRollStatement from './pages/PrintRollStatement';
-// FIX: Corrected import path for Holistic component.
-import Holistic from './pages/Holistic';
 import PrintHPC from './pages/PrintHPC';
+import PrintCategoryRollStatement from './pages/PrintCategoryRollStatement';
 import SBA from './pages/SBA';
-import HolisticAssessment from './pages/HolisticAssessment';
+import SbaDataEntry from './pages/SbaDataEntry';
 import FormativeAssessment from './pages/FormativeAssessment';
 import StudentReport from './pages/StudentReport';
-import FormativeAssessmentRecord from './pages/FormativeAssessmentRecord';
-import CoCurricularReport from './pages/CoCurricularReport';
-import SbaResultSheet from './pages/SbaResultSheet';
-import PrintCategoryRollStatement from './pages/PrintCategoryRollStatement';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -46,13 +41,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       const registerServiceWorker = () => {
-        // FIX: Corrected service worker registration syntax from `service-worker` to `serviceWorker`.
         navigator.serviceWorker.register('/sw.js')
           .then(registration => console.log('Service Worker registered successfully:', registration))
           .catch(error => console.error('Service Worker registration failed:', error));
       };
       
-      // The 'load' event is the safest moment to register the service worker.
       window.addEventListener('load', registerServiceWorker);
       
       return () => {
@@ -77,7 +70,7 @@ const App: React.FC = () => {
       <div className={`relative z-10 h-screen flex flex-col ${backgroundStyle}`}>
         <Header />
         <main className="flex-1 p-3 pb-28 overflow-y-auto">
-            {/* FIX: Replaced v5 <Switch> and <Route component={...}> with v6 <Routes> and <Route element={...}> */}
+            {/* FIX: Replaced Switch with Routes and component prop with element prop for react-router-dom v6 */}
             <Routes>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/students" element={<Students />} />
@@ -85,16 +78,12 @@ const App: React.FC = () => {
                 <Route path="/exams" element={<Exams />} />
                 <Route path="/exams/:examId" element={<ExamMarks />} />
                 <Route path="/reports" element={<Reports />} />
-                <Route path="/reports/student-report" element={<StudentReport />} />
-                <Route path="/reports/formative-assessment-record" element={<FormativeAssessmentRecord />} />
-                <Route path="/reports/co-curricular-record" element={<CoCurricularReport />} />
-                <Route path="/reports/sba-result-sheet" element={<SbaResultSheet />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/certificates" element={<Certificates />} />
-                <Route path="/holistic" element={<Holistic />} />
                 <Route path="/sba" element={<SBA />} />
-                <Route path="/holistic-assessment" element={<HolisticAssessment />} />
-                <Route path="/formative-assessment" element={<FormativeAssessment />} />
+                <Route path="/sba-entry" element={<SbaDataEntry />} />
+                <Route path="/formative-entry" element={<FormativeAssessment />} />
+                <Route path="/student-report" element={<StudentReport />} />
                 <Route path="/print/roll-statement/:className" element={<PrintRollStatement />} />
                 <Route path="/print/category-roll-statement" element={<PrintCategoryRollStatement />} />
                 <Route path="/print/hpc/:studentId" element={<PrintHPC />} />

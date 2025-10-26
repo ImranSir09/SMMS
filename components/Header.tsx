@@ -1,6 +1,5 @@
-
 import React from 'react';
-// FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
+// FIX: Update react-router-dom imports for v6. useHistory is replaced by useNavigate.
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppData } from '../hooks/useAppData';
 import { SunIcon, MoonIcon, ArrowLeftIcon } from './icons';
@@ -8,7 +7,7 @@ import { SunIcon, MoonIcon, ArrowLeftIcon } from './icons';
 const Header: React.FC = () => {
   const { theme, toggleTheme } = useAppData();
   const location = useLocation();
-  // FIX: Replaced v5 useHistory with v6 useNavigate.
+  // FIX: Replace useHistory with useNavigate for react-router-dom v6.
   const navigate = useNavigate();
 
   const getPageTitle = () => {
@@ -32,7 +31,7 @@ const Header: React.FC = () => {
       <div className="flex items-center justify-start">
         {showBackButton && (
           <button
-            // FIX: Updated navigation call to use navigate(-1) for v6.
+            // FIX: Replace history.goBack() with navigate(-1) for react-router-dom v6.
             onClick={() => navigate(-1)}
             className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
             aria-label="Go back"

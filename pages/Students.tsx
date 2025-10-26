@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -8,7 +6,7 @@ import { StudentsIcon, UploadIcon, PlusIcon, SearchIcon, ArrowLeftIcon, ArrowRig
 import BulkAddStudentsModal from '../components/BulkAddStudentsModal';
 import Modal from '../components/Modal';
 import { StudentForm } from '../components/StudentForm';
-// FIX: Updated react-router-dom imports from v5 to v6 to resolve export errors. Using useNavigate instead of useHistory.
+// FIX: Update react-router-dom imports for v6. useHistory is replaced by useNavigate.
 import { useNavigate } from 'react-router-dom';
 import StudentCard from '../components/StudentCard';
 import { useToast } from '../contexts/ToastContext';
@@ -29,7 +27,7 @@ const Students: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const { addToast } = useToast();
     
-    // FIX: Replaced v5 useHistory with v6 useNavigate.
+    // FIX: Replace useHistory with useNavigate for react-router-dom v6.
     const navigate = useNavigate();
 
     const classTabs = useLiveQuery(
@@ -107,7 +105,7 @@ const Students: React.FC = () => {
     }
 
     const handleCardClick = (studentId: number) => {
-        // FIX: Updated navigation call to use navigate() for v6.
+        // FIX: Replace history.push with navigate for react-router-dom v6.
         navigate(`/student/${studentId}`);
     };
 

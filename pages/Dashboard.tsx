@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+// FIX: Update react-router-dom imports for v6. useHistory is replaced by useNavigate.
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
@@ -32,6 +33,7 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string; }> = ({ ic
 );
 
 const Dashboard: React.FC = () => {
+    // FIX: Replace useHistory with useNavigate for react-router-dom v6.
     const navigate = useNavigate();
     const { schoolDetails } = useAppData();
 
@@ -93,6 +95,7 @@ const Dashboard: React.FC = () => {
                     {dashboardData?.classNames.map(className => (
                         <button 
                             key={className} 
+                            // FIX: Replace history.push with navigate for react-router-dom v6.
                             onClick={() => navigate('/students')}
                             className="py-2 px-4 bg-card border border-border rounded-lg text-sm font-semibold hover-lift"
                         >

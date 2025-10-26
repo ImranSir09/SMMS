@@ -1,181 +1,137 @@
-
-
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../services/db';
-import { Student, HPCReportData } from '../types';
+import { Student, SbaReportData, HPCReportData, Mark, DetailedFormativeAssessment, StudentExamData, Exam } from '../types';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import HPCFoundationalCard from '../components/HPCFoundationalCard';
-import HPCPreparatoryCard from '../components/HPCPreparatoryCard';
-import HPCMiddleCard from '../components/HPCMiddleCard';
+import HolisticProgressCard from '../components/HolisticProgressCard';
 import { ACADEMIC_YEAR } from '../constants';
-import PhotoUploadModal from '../components/PhotoUploadModal';
 
-
-const getStageForClass = (className: string): 'Foundational' | 'Preparatory' | 'Middle' | null => {
-    const foundational = ['PP1', 'PP2', 'Balvatika', '1st', '2nd'];
-    const preparatory = ['3rd', '4th', '5th'];
-    const middle = ['6th', '7th', '8th'];
-
-    if (foundational.includes(className)) return 'Foundational';
-    if (preparatory.includes(className)) return 'Preparatory';
-    if (middle.includes(className)) return 'Middle';
-    return null;
-};
+// A type to hold all the fetched data for a student
+interface StudentReportBundle {
+    student: Student;
+    sbaData: SbaReportData | null;
+    hpcData: HPCReportData | null;
+    allMarks: Mark[];
+    allDetailedFA: DetailedFormativeAssessment[];
+    allStudentExamData: StudentExamData[];
+}
 
 const PrintHPC: React.FC = () => {
   const { studentId } = useParams<{ studentId: string }>();
-  const numericStudentId = useMemo(() => Number(studentId), [studentId]);
-  
-  const [student, setStudent] = useState<Student | null>(null);
-  const [hpcData, setHpcData] = useState<HPCReportData | null>(null);
-  const [tempPhoto, setTempPhoto] = useState<string | null>(null);
-  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-  
+  const [reportData, setReportData] = useState<StudentReportBundle | null>(null);
+  const [allExams, setAllExams] = useState<Exam[]>([]);
   const { schoolDetails } = useAppData();
 
   useEffect(() => {
-    if (numericStudentId) {
-      db.students.get(numericStudentId).then(studentData => {
-          setStudent(studentData || null);
-          if (studentData) {
-              setTempPhoto(studentData.photo);
-          }
-      });
-      db.hpcReports.where({ studentId: numericStudentId, academicYear: ACADEMIC_YEAR }).first().then(data => setHpcData(data || null));
-    }
-  }, [numericStudentId]);
+    const studentNumId = Number(studentId);
+    if (isNaN(studentNumId)) return;
+
+    const fetchData = async () => {
+        const [student, sbaData, hpcData, allMarks, allDetailedFA, allStudentExamData, exams] = await Promise.all([
+            db.students.get(studentNumId),
+            db.sbaReports.where({ studentId: studentNumId, academicYear: ACADEMIC_YEAR }).first(),
+            db.hpcReports.where({ studentId: studentNumId, academicYear: ACADEMIC_YEAR }).first(),
+            db.marks.where({ studentId: studentNumId }).toArray(),
+            db.detailedFormativeAssessments.where({ studentId: studentNumId, academicYear: ACADEMIC_YEAR }).toArray(),
+            db.studentExamData.where({ studentId: studentNumId }).toArray(),
+            db.exams.toArray()
+        ]);
+
+        if (student) {
+            setReportData({
+                student,
+                sbaData: sbaData || null,
+                hpcData: hpcData || null,
+                allMarks,
+                allDetailedFA,
+                allStudentExamData
+            });
+            setAllExams(exams);
+        }
+    };
+
+    fetchData();
+  }, [studentId]);
 
   const handlePrint = () => {
     window.print();
   };
-  
-  const handleDownloadPdf = async () => {
-    if (student && hpcData && schoolDetails) {
-        let cardComponent;
-        switch(hpcData.stage) {
-            case 'Foundational':
-                cardComponent = <HPCFoundationalCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
-                break;
-            case 'Preparatory':
-                cardComponent = <HPCPreparatoryCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
-                break;
-            case 'Middle':
-                cardComponent = <HPCMiddleCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
-                break;
-            default:
-                alert(`HPC Card for ${hpcData.stage} stage is not yet implemented.`);
-                return;
-        }
 
+  const handleDownloadPdf = async () => {
+    if (reportData && schoolDetails && allExams) {
         await generatePdfFromComponent(
-            cardComponent,
-            `HPC-${hpcData.stage}-${student.admissionNo}`
+            <HolisticProgressCard
+                {...reportData}
+                schoolDetails={schoolDetails}
+                allExams={allExams}
+            />,
+            `HPC-${reportData.student.name}-${reportData.student.admissionNo}`
         );
     }
   };
 
-  const stage = student ? getStageForClass(student.className) : null;
-  let cardToRender = null;
-  if (student && hpcData && schoolDetails && stage) {
-      if (stage === 'Foundational') {
-          cardToRender = <HPCFoundationalCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
-      } else if (stage === 'Preparatory') {
-          cardToRender = <HPCPreparatoryCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
-      } else if (stage === 'Middle') {
-          cardToRender = <HPCMiddleCard student={student} schoolDetails={schoolDetails} hpcData={hpcData} photo={tempPhoto} />;
-      }
-  }
-
-  if (!student || !schoolDetails) {
-    return <div>Loading data...</div>;
+  if (!reportData || !schoolDetails) {
+    return <div className="p-4 text-center">Loading Report Data...</div>;
   }
   
-  if (!hpcData) {
-      return <div className="p-4 text-center">No Holistic Progress Card data found for <strong>{student.name}</strong> for the {ACADEMIC_YEAR} academic year. Please enter data on the Holistic page.</div>;
-  }
-  
-  if (!stage) {
-      return <div>Holistic Progress Card is not configured for student's class ({student.className}).</div>;
-  }
-  
-  if (!cardToRender) {
-       return <div>HPC Report for the {stage} stage is not yet implemented.</div>;
-  }
+  const student = reportData.student;
 
   const ControlPanel = () => (
-      <div className="w-full mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
-        <h1 className="text-2xl font-bold text-gray-800">HPC Preview</h1>
-        <p className="text-gray-600 mb-4">Preview for {student.name}'s {stage} Stage HPC.</p>
-        <div className="flex items-start gap-4">
-             <div className="flex-shrink-0">
-                <p className="text-sm font-semibold mb-1 text-gray-700">Student Photo:</p>
-                {tempPhoto ? (
-                    <img src={tempPhoto} alt="Student" className="w-24 h-32 object-cover rounded border border-gray-300" />
-                ) : (
-                    <div className="w-24 h-32 bg-gray-200 rounded flex items-center justify-center text-center text-xs text-gray-500 p-2">No Photo Provided</div>
-                )}
-                <button 
-                    onClick={() => setIsPhotoModalOpen(true)} 
-                    className="w-full mt-2 py-1 px-2 bg-gray-200 text-gray-800 text-xs rounded hover:bg-gray-300 transition-colors">
-                    Change Photo
-                </button>
-            </div>
-            <div className="flex-grow">
-                <p className="text-sm font-semibold mb-1 text-gray-700">Actions:</p>
-                <div className="flex flex-col gap-2">
-                    <button
-                        onClick={handleDownloadPdf}
-                        className="flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none"
-                    >
-                        <DownloadIcon className="w-5 h-5"/> Download PDF
-                    </button>
-                    <button
-                        onClick={handlePrint}
-                        className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none"
-                    >
-                        <PrintIcon className="w-5 h-5"/> Print
-                    </button>
-                </div>
-            </div>
+      <div className="max-w-4xl mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
+        <h1 className="text-2xl font-bold text-gray-800">Document Preview</h1>
+        <p className="text-gray-600 mb-4">Preview for {student.name}'s Holistic Progress Card.</p>
+        <div className="flex flex-wrap gap-4">
+             <button
+                onClick={handleDownloadPdf}
+                className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none"
+             >
+                <DownloadIcon className="w-5 h-5"/> Download PDF
+            </button>
+            <button
+                onClick={handlePrint}
+                className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none"
+            >
+                <PrintIcon className="w-5 h-5"/> Print
+            </button>
         </div>
       </div>
   );
 
   return (
-    <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white flex flex-col items-center">
-      <ControlPanel />
+    <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
+        <ControlPanel />
       
-      <div id="hpc-printable-area">
-         {cardToRender}
-      </div>
+        <div className="flex justify-center items-start">
+             <HolisticProgressCard 
+                {...reportData}
+                schoolDetails={schoolDetails}
+                allExams={allExams}
+             />
+        </div>
 
-        <PhotoUploadModal
-            isOpen={isPhotoModalOpen}
-            onClose={() => setIsPhotoModalOpen(false)}
-            onSave={(photo) => { setTempPhoto(photo); setIsPhotoModalOpen(false); }}
-            title="Upload & Crop Student Photo"
-            aspectRatio={4 / 5}
-        />
-
-      <style>{`
-        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        @page { size: A4 portrait; margin: 0; }
-        @media print {
-          body, html { background-color: white; }
-          body * { visibility: hidden; }
-          #hpc-printable-area, #hpc-printable-area * { visibility: visible; }
-          #hpc-printable-area { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
-          .A4-page { box-shadow: none !important; margin: 0 !important; page-break-after: always; }
-          .A4-page:last-child { page-break-after: auto; }
-        }
-        .A4-page {
-          width: 210mm;
-          min-height: 297mm;
-        }
-      `}</style>
+        <style>{`
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            @page { size: A4; margin: 0; }
+            @media print {
+                body * { visibility: hidden; }
+                .A4-page-container, .A4-page-container * { visibility: visible; }
+                .A4-page-container { 
+                    position: absolute; left: 0; top: 0; 
+                    transform: scale(1.0);
+                    box-shadow: none;
+                    margin: 0;
+                }
+            }
+            .A4-page-container {
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                transform: scale(0.75);
+                transform-origin: top center;
+            }
+        `}</style>
     </div>
   );
 };
