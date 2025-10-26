@@ -57,7 +57,37 @@ const DISEASE_FOUND_OPTIONS = [
 ];
 
 const PROFICIENCY_OPTIONS: SbaProficiencyLevel[] = ['High', 'Medium', 'Low'];
-const TALENT_OPTIONS: SbaTalentLevel[] = ['Highly Talented', 'Talented', 'No talent'];
+const TALENT_OPTIONS: SbaTalentLevel[] = [
+  'No talent',
+  'Painting and Drawing',
+  'Playing musical instruments',
+  'Singing',
+  'Dancing',
+  'Acting or Drama',
+  'Photography',
+  'Writing (Poetry, Fiction)',
+  'Cooking or Baking',
+  'Gardening',
+  'Outdoor activities',
+  'Playing Sports',
+  'Crafting (Knitting, wood-working)',
+  'Gaming (Video games, board game)',
+  'Meditation',
+  'Yoga',
+  'Volunteer Work',
+  'Travelling or Exploring',
+  'Fashion design or Sewing',
+  'Rock Climbing',
+  'Martial Arts',
+  'Horse back riding',
+  'Water Sports',
+  'Video editing',
+  'Model Building',
+  'Magic Tricks',
+  'Leadership',
+  'Multitalented',
+  'Other Unique talent',
+];
 
 const defaultFormData = (studentId: number): Omit<SbaReportData, 'id'> => ({
     studentId,
@@ -70,7 +100,7 @@ const defaultFormData = (studentId: number): Omit<SbaReportData, 'id'> => ({
     communicationSkill: 'Medium',
     problemSolvingAbility: 'Medium',
     collaboration: 'Medium',
-    studentsTalent: 'Talented',
+    studentsTalent: 'No talent',
     participationInActivities: 'Medium',
     attitudeAndValues: 'Medium',
     presentationSkill: 'Medium',

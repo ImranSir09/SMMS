@@ -272,7 +272,36 @@ export interface MiddleData {
 }
 // FIX: Added new types for School Based Assessment (SBA)
 export type SbaProficiencyLevel = 'High' | 'Medium' | 'Low';
-export type SbaTalentLevel = 'No talent' | 'Talented' | 'Highly Talented';
+export type SbaTalentLevel =
+  | 'No talent'
+  | 'Painting and Drawing'
+  | 'Playing musical instruments'
+  | 'Singing'
+  | 'Dancing'
+  | 'Acting or Drama'
+  | 'Photography'
+  | 'Writing (Poetry, Fiction)'
+  | 'Cooking or Baking'
+  | 'Gardening'
+  | 'Outdoor activities'
+  | 'Playing Sports'
+  | 'Crafting (Knitting, wood-working)'
+  | 'Gaming (Video games, board game)'
+  | 'Meditation'
+  | 'Yoga'
+  | 'Volunteer Work'
+  | 'Travelling or Exploring'
+  | 'Fashion design or Sewing'
+  | 'Rock Climbing'
+  | 'Martial Arts'
+  | 'Horse back riding'
+  | 'Water Sports'
+  | 'Video editing'
+  | 'Model Building'
+  | 'Magic Tricks'
+  | 'Leadership'
+  | 'Multitalented'
+  | 'Other Unique talent';
 
 export interface SbaReportData {
   id?: number;
