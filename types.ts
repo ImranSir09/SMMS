@@ -1,3 +1,4 @@
+// FIX: Define and export the SchoolDetails interface. The previous import was circular.
 export interface SchoolDetails {
   id?: number;
   name: string;
@@ -8,13 +9,24 @@ export interface SchoolDetails {
   logo: string | null;
 }
 
+export interface Session {
+  id?: number;
+  name: string; // e.g., "2024-25"
+}
+
+export interface StudentSessionInfo {
+  id?: number;
+  studentId: number;
+  session: string;
+  className: string;
+  section: string;
+  rollNo: string;
+}
+
 export interface Student {
   id?: number;
   name: string;
-  rollNo: string;
   admissionNo: string;
-  className: string;
-  section: string;
   dob: string; // YYYY-MM-DD
   gender: 'Male' | 'Female' | 'Other';
   fathersName: string;
@@ -27,14 +39,19 @@ export interface Student {
   aadharNo?: string;
   accountNo?: string;
   ifscCode?: string;
-  // FIX: Added optional 'photo' property to resolve a type error in BulkAddStudentsModal.tsx and align with usage across the application.
   photo?: string | null;
+  // FIX: Add optional properties to match UI component expectations after DB schema change.
+  // The UI logic has not been updated to handle the separation of student and session info.
+  className?: string;
+  section?: string;
+  rollNo?: string;
 }
 
 export interface Exam {
   id?: number;
   name: string;
   className: string;
+  session: string;
 }
 
 export interface Mark {
@@ -80,7 +97,7 @@ export type HpcPerformanceLevel = HpcFoundationalPerformanceLevel | HpcPreparato
 export interface HPCReportData {
   id?: number;
   studentId: number;
-  academicYear: string;
+  session: string;
   stage: Stage;
   attendance?: {
     [month: string]: { working?: number; present?: number };
@@ -271,7 +288,6 @@ export interface MiddleData {
     [subject: string]: HpcMiddleSubjectAssessment;
   };
 }
-// FIX: Added new types for School Based Assessment (SBA)
 export type SbaProficiencyLevel = 'High' | 'Medium' | 'Low';
 export type SbaTalentLevel =
   | 'No talent'
@@ -307,7 +323,7 @@ export type SbaTalentLevel =
 export interface SbaReportData {
   id?: number;
   studentId: number;
-  academicYear: string;
+  session: string;
   physicalWellbeing: string;
   mentalWellbeing: string;
   diseaseFound: string;
@@ -324,13 +340,12 @@ export interface SbaReportData {
   comprehensionSkill: SbaProficiencyLevel;
 }
 
-// FIX: Added new types for detailed Formative Assessment
 export type FormativeProficiencyLevel = 'Sky' | 'Mountain' | 'Stream' | 'Not-Satisfied';
 
 export interface DetailedFormativeAssessment {
   id?: number;
   studentId: number;
-  academicYear: string;
+  session: string;
   subject: string;
   assessmentName: string; // e.g., F1, F2
   examRollNo?: string;

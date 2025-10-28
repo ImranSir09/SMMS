@@ -1,97 +1,42 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Student, SbaReportData, SbaProficiencyLevel, SbaTalentLevel } from '../types';
+import { Student, SbaReportData, SbaProficiencyLevel, SbaTalentLevel, StudentSessionInfo } from '../types';
 import { useToast } from '../contexts/ToastContext';
-import { ACADEMIC_YEAR } from '../constants';
 import SectionCard from '../components/SectionCard';
+import { useAppData } from '../hooks/useAppData';
 
 const DEBOUNCE_DELAY = 1500;
 
 const PHYSICAL_WELLBEING_OPTIONS = [
-  'Normal and Healthy',
-  'Not Well groomed',
-  'Lethargic or Lazy',
-  'Consuming unhealthy food',
-  'Listening or Speaking Problem',
-  'Heart related issue',
-  'Kidney related issue',
-  'Persistent Cough',
-  'Dry skin, lips and infrequent urination',
-  'Excessive Sleep',
-  'Observed musculoskeletal issue',
-  'Allergic to food or Medicines',
-  'Chronic Condition (Asthma, Diabetes, Thyroid)',
-  'Slow recovery from injuries or illness',
-  'Under weight or Under growth',
-  'Dental issue',
-  'Vision Problem',
-  'Headaches, Stomachaches or other discomforts',
-  'Multiple physical disorder',
+  'Normal and Healthy', 'Not Well groomed', 'Lethargic or Lazy', 'Consuming unhealthy food', 'Listening or Speaking Problem',
+  'Heart related issue', 'Kidney related issue', 'Persistent Cough', 'Dry skin, lips and infrequent urination', 'Excessive Sleep',
+  'Observed musculoskeletal issue', 'Allergic to food or Medicines', 'Chronic Condition (Asthma, Diabetes, Thyroid)',
+  'Slow recovery from injuries or illness', 'Under weight or Under growth', 'Dental issue', 'Vision Problem',
+  'Headaches, Stomachaches or other discomforts', 'Multiple physical disorder',
 ];
 
 const MENTAL_WELLBEING_OPTIONS = [
-  'Normal and Healthy',
-  'Irritative or Aggressive',
-  'Consistently Sad, Anxious or excessively moody',
-  'Remain isolated and avoiding Social relations',
-  'Showing lack of interest in school work',
-  'Changes in sleep patterns and appetite',
-  'Neglecting personal hygiene or self-care routines',
-  'Loss of interest in activities',
-  'Unable to communicate their thoughts and feelings',
-  'Stressed (Nail-biting, Hair-pulling or other nervous habits)',
-  'Observed suicidal thoughts or self harming behaviour',
-  'Stressful in exams, conflicts or changes in their life',
-  'Frequent absence from school',
-  'Smoker or Drug abuser',
-  'Multiple Mental disorders',
+  'Normal and Healthy', 'Irritative or Aggressive', 'Consistently Sad, Anxious or excessively moody', 'Remain isolated and avoiding Social relations',
+  'Showing lack of interest in school work', 'Changes in sleep patterns and appetite', 'Neglecting personal hygiene or self-care routines',
+  'Loss of interest in activities', 'Unable to communicate their thoughts and feelings', 'Stressed (Nail-biting, Hair-pulling or other nervous habits)',
+  'Observed suicidal thoughts or self harming behaviour', 'Stressful in exams, conflicts or changes in their life', 'Frequent absence from school',
+  'Smoker or Drug abuser', 'Multiple Mental disorders',
 ];
 
-const DISEASE_FOUND_OPTIONS = [
-  'Normal and Healthy',
-  'Infectious disease',
-  'Deficiency disease',
-  'Genetic disease',
-  'Other Fatal disease',
-];
-
+const DISEASE_FOUND_OPTIONS = ['Normal and Healthy', 'Infectious disease', 'Deficiency disease', 'Genetic disease', 'Other Fatal disease'];
 const PROFICIENCY_OPTIONS: SbaProficiencyLevel[] = ['High', 'Medium', 'Low'];
 const TALENT_OPTIONS: SbaTalentLevel[] = [
-  'No talent',
-  'Painting and Drawing',
-  'Playing musical instruments',
-  'Singing',
-  'Dancing',
-  'Acting or Drama',
-  'Photography',
-  'Writing (Poetry, Fiction)',
-  'Cooking or Baking',
-  'Gardening',
-  'Outdoor activities',
-  'Playing Sports',
-  'Crafting (Knitting, wood-working)',
-  'Gaming (Video games, board game)',
-  'Meditation',
-  'Yoga',
-  'Volunteer Work',
-  'Travelling or Exploring',
-  'Fashion design or Sewing',
-  'Rock Climbing',
-  'Martial Arts',
-  'Horse back riding',
-  'Water Sports',
-  'Video editing',
-  'Model Building',
-  'Magic Tricks',
-  'Leadership',
-  'Multitalented',
-  'Other Unique talent',
+  'No talent', 'Painting and Drawing', 'Playing musical instruments', 'Singing', 'Dancing', 'Acting or Drama', 'Photography', 'Writing (Poetry, Fiction)',
+  'Cooking or Baking', 'Gardening', 'Outdoor activities', 'Playing Sports', 'Crafting (Knitting, wood-working)', 'Gaming (Video games, board game)',
+  'Meditation', 'Yoga', 'Volunteer Work', 'Travelling or Exploring', 'Fashion design or Sewing', 'Rock Climbing', 'Martial Arts', 'Horse back riding',
+  'Water Sports', 'Video editing', 'Model Building', 'Magic Tricks', 'Leadership', 'Multitalented', 'Other Unique talent',
 ];
 
-const defaultFormData = (studentId: number): Omit<SbaReportData, 'id'> => ({
+const defaultFormData = (studentId: number, session: string): Omit<SbaReportData, 'id'> => ({
     studentId,
-    academicYear: ACADEMIC_YEAR,
+    session,
     physicalWellbeing: 'Normal and Healthy',
     mentalWellbeing: 'Normal and Healthy',
     diseaseFound: 'Normal and Healthy',
@@ -114,17 +59,35 @@ const SbaDataEntry: React.FC = () => {
     const [formData, setFormData] = useState<Partial<SbaReportData> | null>(null);
     const [saveStatus, setSaveStatus] = useState<'synced' | 'pending' | 'saving' | 'error'>('synced');
     const { addToast } = useToast();
+    const { activeSession } = useAppData();
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const classOptions = useLiveQuery(
-        () => db.students.orderBy('className').uniqueKeys()
-            .then(keys => (keys as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))),
-        []
-    );
+    const classOptions = useLiveQuery(async () => {
+        if (!activeSession) return [];
+        const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
+        const classNames = [...new Set(sessionInfos.map(info => info.className))];
+        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
+        return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    }, [activeSession]);
     
-    const studentsInClass = useLiveQuery(() => 
-        selectedClass ? db.students.where({ className: selectedClass }).sortBy('rollNo') : Promise.resolve([]),
-    [selectedClass]);
+    const studentsInClass = useLiveQuery(async () => {
+        if (!selectedClass || !activeSession) return [];
+        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
+        const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ className: selectedClass, session: activeSession }).toArray();
+        if (sessionInfos.length === 0) return [];
+
+        const studentIds = sessionInfos.map(info => info.studentId);
+        const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
+        const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
+        
+        // FIX: Error on this line is resolved by typing `sessionInfos` above.
+        const mergedStudents = studentDetails.map(student => ({
+            ...student,
+            rollNo: sessionInfoMap.get(student.id!)?.rollNo || '',
+        }));
+
+        return mergedStudents.sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
+    }, [selectedClass, activeSession]);
     
      useEffect(() => {
         if (classOptions && classOptions.length > 0 && !selectedClass) {
@@ -139,16 +102,16 @@ const SbaDataEntry: React.FC = () => {
 
     useEffect(() => {
         const loadData = async () => {
-            if (!selectedStudentId) {
+            if (!selectedStudentId || !activeSession) {
                 setFormData(null);
                 return;
             }
-            const existingData = await db.sbaReports.where({ studentId: selectedStudentId, academicYear: ACADEMIC_YEAR }).first();
-            setFormData(existingData || defaultFormData(selectedStudentId));
+            const existingData = await db.sbaReports.where({ studentId: selectedStudentId, session: activeSession }).first();
+            setFormData(existingData || defaultFormData(selectedStudentId, activeSession));
             setSaveStatus('synced');
         };
         loadData();
-    }, [selectedStudentId]);
+    }, [selectedStudentId, activeSession]);
 
     const saveData = useCallback(async (dataToSave: Partial<SbaReportData>) => {
         if (!dataToSave || !dataToSave.studentId) return;

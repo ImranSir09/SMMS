@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -5,6 +6,8 @@ import { BarChart3Icon, ClipboardListIcon, EditIcon, ExamsIcon, HolisticIcon } f
 import Modal from '../components/Modal';
 import { db } from '../services/db';
 import { SUBJECTS } from '../constants';
+import { useAppData } from '../hooks/useAppData';
+import { StudentSessionInfo } from '../types';
 
 const SbaButton: React.FC<{ title: string; onClick: () => void; icon: React.ReactNode }> = ({ title, onClick, icon }) => (
     <button onClick={onClick} className="w-full bg-card text-card-foreground p-4 rounded-lg flex items-center gap-4 border border-border shadow-sm hover-lift text-left">
@@ -19,34 +22,49 @@ const inputStyle = "p-3 w-full bg-background border border-input rounded-md focu
 
 const SBA: React.FC = () => {
     const navigate = useNavigate();
+    const { activeSession } = useAppData();
     
-    // State for the report generation modal
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [reportType, setReportType] = useState<'Formative' | 'Co-Curricular' | null>(null);
-
-    // State for the dropdowns inside the modal
     const [selectedClass, setSelectedClass] = useState('');
     const [selectedStudentId, setSelectedStudentId] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('');
     
-    const classOptions = useLiveQuery(
-        () => db.students.orderBy('className').uniqueKeys()
-            .then(keys => (keys as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))),
-        []
-    );
+    const classOptions = useLiveQuery(async () => {
+        if (!activeSession) return [];
+        const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
+        const classNames = [...new Set(sessionInfos.map(info => info.className))];
+        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
+        return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    }, [activeSession]);
     
-    const studentsInClass = useLiveQuery(() => 
-        selectedClass ? db.students.where({ className: selectedClass }).sortBy('rollNo') : Promise.resolve([]),
-    [selectedClass]);
+    const studentsInClass = useLiveQuery(async () => {
+        if (!selectedClass || !activeSession) return [];
+        
+        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
+        const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ className: selectedClass, session: activeSession }).toArray();
+        if (sessionInfos.length === 0) return [];
 
-    // Set initial class when options load
+        const studentIds = sessionInfos.map(info => info.studentId);
+        const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
+        const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
+        
+        // FIX: Error on this line is resolved by typing `sessionInfos` above.
+        const mergedStudents = studentDetails.map(student => ({
+            ...student,
+            rollNo: sessionInfoMap.get(student.id!)?.rollNo || '',
+        }));
+
+        return mergedStudents.sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
+    }, [selectedClass, activeSession]);
+
+
     useEffect(() => {
         if (classOptions && classOptions.length > 0 && !selectedClass) {
             setSelectedClass(classOptions[0]);
         }
     }, [classOptions, selectedClass]);
 
-    // Reset student selection when class changes
     useEffect(() => {
         setSelectedStudentId('');
     }, [selectedClass]);
@@ -144,7 +162,7 @@ const SBA: React.FC = () => {
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Select Student</label>
                         <select value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)} disabled={!selectedClass} className={inputStyle}>
                             <option value="">-- Choose Student --</option>
-                            {studentsInClass?.map(s => <option key={s.id} value={s.id}>{s.name} (Roll: {s.rollNo})</option>)}
+                            {studentsInClass?.map(s => <option key={s.id} value={String(s.id!)}>{s.name} (Roll: {s.rollNo})</option>)}
                         </select>
                     </div>
                     {reportType === 'Co-Curricular' && (

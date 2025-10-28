@@ -1,8 +1,6 @@
 import Dexie, { Table } from 'dexie';
-// FIX: Added SbaReportData and DetailedFormativeAssessment to imports
-import { SchoolDetails, Student, Exam, Mark, DailyLog, HPCReportData, StudentExamData, SbaReportData, DetailedFormativeAssessment } from '../types';
+import { SchoolDetails, Student, Exam, Mark, DailyLog, HPCReportData, StudentExamData, SbaReportData, DetailedFormativeAssessment, Session, StudentSessionInfo } from '../types';
 
-// FIX: Added sbaReports and detailedFormativeAssessments tables
 export const db = new Dexie('AegisSchoolDB') as Dexie & {
   schoolDetails: Table<SchoolDetails, number>;
   students: Table<Student, number>;
@@ -13,216 +11,12 @@ export const db = new Dexie('AegisSchoolDB') as Dexie & {
   studentExamData: Table<StudentExamData, number>;
   sbaReports: Table<SbaReportData, number>;
   detailedFormativeAssessments: Table<DetailedFormativeAssessment, number>;
+  sessions: Table<Session, number>;
+  studentSessionInfo: Table<StudentSessionInfo, number>;
 };
 
-// Dexie versions must be in ascending order.
+// ... (previous versions remain the same)
 
-// The previous version is kept for reference of the upgrade path
-db.version(1).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject+assessment], studentId, examId'
-});
-
-db.version(2).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject+assessment], studentId, examId'
-}).upgrade(tx => {
-  // Migration logic for future versions can go here.
-  // For v1 to v2, we are just adding new tables, which Dexie handles automatically.
-});
-
-db.version(3).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject+assessment], studentId, examId',
-  dailyLogs: '++id, &date'
-}).upgrade(tx => {
-  // This is a new table, so no data migration is needed from v2 to v3.
-});
-
-db.version(4).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject+assessment], studentId, examId',
-  dailyLogs: '++id, &date',
-  timetable: '++id, &[staffId+day+period], staffId, day, period'
-});
-
-db.version(5).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject]', // Changed from assessment to subject
-  dailyLogs: '++id, &date',
-  timetable: '++id, &[staffId+day+period], staffId, day, period',
-  studentExamData: '++id, &[examId+studentId]'
-}).upgrade(tx => {
-    // This upgrade modifies the marks table. If there was existing data, a migration would be needed.
-    // For this case, we assume it's a structural change for new data.
-    return tx.table('marks').toCollection().modify(mark => {
-        // Example migration: if old marks exist, convert them.
-        // This is a destructive change in this case as old schema is incompatible.
-        // We will just let Dexie recreate the table based on the new schema.
-    });
-});
-
-db.version(6).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject], [examId+subject]',
-  dailyLogs: '++id, &date',
-  timetable: '++id, &[staffId+day+period], staffId, day, period',
-  studentExamData: '++id, &[examId+studentId]'
-});
-
-db.version(7).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject], [examId+subject]',
-  dailyLogs: '++id, &date',
-  timetable: '++id, &[staffId+day+period], staffId, day, period',
-  studentExamData: '++id, &[examId+studentId]'
-}).upgrade(tx => {
-    return tx.table('schoolDetails').toCollection().modify(detail => {
-        detail.phone = detail.contact || ''; // Migrate from 'contact' to 'phone'
-        detail.email = detail.email || ''; // Add new field with default value
-        detail.udiseCode = detail.udiseCode || ''; // Add new field with default value
-        delete detail.contact; // Remove old field
-    });
-});
-
-db.version(8).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject], [examId+subject]',
-  dailyLogs: '++id, &date',
-  timetable: '++id, &[staffId+day+period], staffId, day, period',
-  studentExamData: '++id, &[examId+studentId]'
-}).upgrade(tx => {
-    return tx.table('students').toCollection().modify((student: any) => {
-        if (typeof student.guardianInfo !== 'undefined') {
-            student.fathersName = student.guardianInfo;
-            delete student.guardianInfo;
-        } else if (typeof student.fathersName === 'undefined') {
-            student.fathersName = '';
-        }
-        if (typeof student.mothersName === 'undefined') {
-            student.mothersName = '';
-        }
-    });
-});
-
-// v9: Correctly redefine the ENTIRE schema while adding new indexes
-db.version(9).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId', // <-- Index added
-  dailyLogs: '++id, &date',
-  timetable: '++id, &[staffId+day+period], staffId, day, period',
-  studentExamData: '++id, &[examId+studentId], studentId' // <-- Index added
-});
-
-// v10: Data migration only, no schema change. Omit .stores()
-db.version(10).upgrade(tx => {
-    return tx.table('students').toCollection().modify((student: any) => {
-        student.aadharNo = student.aadharNo || '';
-        student.accountNo = student.accountNo || '';
-        student.ifscCode = student.ifscCode || '';
-    });
-});
-
-// v11: Data migration only, no schema change. Omit .stores()
-db.version(11).upgrade(tx => {
-    return tx.table('students').toCollection().modify((student: any) => {
-        student.admissionDate = student.admissionDate || '';
-        student.category = student.category || '';
-        student.bloodGroup = student.bloodGroup || '';
-    });
-});
-
-// v12: Add holisticRecords table for NEP 2020 data
-db.version(12).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
-  dailyLogs: '++id, &date',
-  timetable: '++id, &[staffId+day+period], staffId, day, period',
-  studentExamData: '++id, &[examId+studentId], studentId',
-  holisticRecords: '++id, &[studentId+domain+aspect], studentId, className',
-});
-
-// v13: Remove timetable table
-db.version(13).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
-  dailyLogs: '++id, &date',
-  studentExamData: '++id, &[examId+studentId], studentId',
-  holisticRecords: '++id, &[studentId+domain+aspect], studentId, className',
-  timetable: null, // This deletes the table
-});
-
-// v14: Add index on gender for faster dashboard queries
-db.version(14).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className, gender',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
-  dailyLogs: '++id, &date',
-  studentExamData: '++id, &[examId+studentId], studentId',
-  holisticRecords: '++id, &[studentId+domain+aspect], studentId, className',
-});
-
-// v1s: Replace holisticRecords with comprehensive hpcReports table
-db.version(15).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className, gender',
-  staff: '++id, name, staffId, designation, subjects',
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
-  dailyLogs: '++id, &date',
-  studentExamData: '++id, &[examId+studentId], studentId',
-  hpcReports: '++id, &[studentId+academicYear], studentId', // New table
-  holisticRecords: null, // Delete old table
-});
-
-// v16: Remove staff table
-db.version(16).stores({
-  schoolDetails: '++id, name',
-  students: '++id, name, rollNo, admissionNo, className, gender',
-  staff: null, // Delete staff table
-  exams: '++id, name, className',
-  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
-  dailyLogs: '++id, &date',
-  studentExamData: '++id, &[examId+studentId], studentId',
-  hpcReports: '++id, &[studentId+academicYear], studentId',
-});
-
-// FIX: Add sbaReports and detailedFormativeAssessments tables
 db.version(17).stores({
   schoolDetails: '++id, name',
   students: '++id, name, rollNo, admissionNo, className, gender',
@@ -233,4 +27,66 @@ db.version(17).stores({
   hpcReports: '++id, &[studentId+academicYear], studentId',
   sbaReports: '++id, &[studentId+academicYear], studentId',
   detailedFormativeAssessments: '++id, &[studentId+subject+assessmentName], studentId',
+});
+
+db.version(18).stores({
+  // New tables
+  sessions: '++id, &name',
+  studentSessionInfo: '++id, &[studentId+session], studentId, session, className',
+
+  // Modified tables
+  students: '++id, name, admissionNo, gender', // Removed className, rollNo, section from schema
+  exams: '++id, &[name+className+session], className, session', // Added session
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  hpcReports: '++id, &[studentId+session], studentId, session', // Renamed academicYear
+  sbaReports: '++id, &[studentId+session], studentId, session', // Renamed academicYear
+  detailedFormativeAssessments: '++id, &[studentId+subject+assessmentName+session], studentId, session', // Renamed academicYear & added session index
+}).upgrade(async (tx) => {
+    const defaultSessionName = '2024-25';
+
+    // 1. Create a default session
+    const sessionsTable = tx.table('sessions');
+    await sessionsTable.add({ name: defaultSessionName });
+
+    // 2. Migrate student data
+    const studentsTable = tx.table('students');
+    const studentSessionInfoTable = tx.table('studentSessionInfo');
+    await studentsTable.toCollection().modify(async (student: any) => {
+      // Create a session info record for each student
+      if (student.id && student.className && student.rollNo) {
+        await studentSessionInfoTable.add({
+          studentId: student.id,
+          session: defaultSessionName,
+          className: student.className,
+          section: student.section,
+          rollNo: student.rollNo,
+        });
+      }
+      // Remove old fields from the student record
+      delete student.className;
+      delete student.section;
+      delete student.rollNo;
+    });
+
+    // 3. Add session to exams
+    const examsTable = tx.table('exams');
+    await examsTable.toCollection().modify((exam: any) => {
+      exam.session = defaultSessionName;
+    });
+    
+    // 4. Rename academicYear to session in other tables
+    const tablesToRename = ['sbaReports', 'detailedFormativeAssessments', 'hpcReports'];
+    for (const tableName of tablesToRename) {
+        const table = tx.table(tableName);
+        await table.toCollection().modify((record: any) => {
+            if (record.academicYear) {
+                record.session = record.academicYear;
+                delete record.academicYear;
+            } else {
+                record.session = defaultSessionName;
+            }
+        });
+    }
 });

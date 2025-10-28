@@ -1,6 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { db } from '../services/db';
-import { Student } from '../types';
+// FIX: Import StudentSessionInfo to explicitly type Dexie query results.
+import { Student, StudentSessionInfo } from '../types';
 import CategoryWiseRollStatement from '../components/CategoryWiseRollStatement';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
@@ -8,27 +10,48 @@ import { DownloadIcon, PrintIcon } from '../components/icons';
 
 const PrintCategoryRollStatement: React.FC = () => {
   const [studentsByClass, setStudentsByClass] = useState<Map<string, Student[]>>(new Map());
-  const { schoolDetails } = useAppData();
+  const { schoolDetails, activeSession } = useAppData();
 
   useEffect(() => {
     const fetchData = async () => {
-        const allStudents = await db.students.toArray();
-        
-        // FIX: Cast the array of unique class names to string[] to resolve type inference issues.
-        const classNames = ([...new Set(allStudents.map(s => s.className))] as string[])
-            .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        if (!activeSession) return;
+
+        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
+        const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ session: activeSession }).toArray();
+        if (sessionInfos.length === 0) {
+            setStudentsByClass(new Map());
+            return;
+        }
+
+        const studentIds = sessionInfos.map(info => info.studentId);
+        const allStudentDetails = await db.students.where('id').anyOf(studentIds).toArray();
+        const studentDetailsMap = new Map(allStudentDetails.map(s => [s.id!, s]));
+
+        const allStudentsForSession = sessionInfos.map(info => {
+            const details = studentDetailsMap.get(info.studentId);
+            // FIX: Ensure student details exist before spreading to prevent error on undefined.
+            if (!details) return null;
+            return {
+                ...details,
+                ...info,
+            };
+        }).filter(Boolean);
+
+        const classNames = [...new Set(allStudentsForSession.map(s => s!.className))]
+            // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
+            .sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
         const grouped = new Map<string, Student[]>();
         classNames.forEach(className => {
-            const classStudents = allStudents
-                .filter(s => s.className === className)
-                .sort((a, b) => a.rollNo.localeCompare(b.rollNo, undefined, { numeric: true, sensitivity: 'base' }));
-            grouped.set(className, classStudents);
+            const classStudents = allStudentsForSession
+                .filter(s => s!.className === className)
+                .sort((a, b) => (a!.rollNo || '').localeCompare(b!.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
+            grouped.set(className, classStudents as Student[]);
         });
         setStudentsByClass(grouped);
     };
     fetchData();
-  }, []);
+  }, [activeSession]);
 
   const handlePrint = () => {
     window.print();
@@ -53,7 +76,7 @@ const PrintCategoryRollStatement: React.FC = () => {
   };
 
   if (studentsByClass.size === 0 || !schoolDetails) {
-    return <div className="p-4 text-center">Loading student data...</div>;
+    return <div className="p-4 text-center">Loading student data for the active session...</div>;
   }
   
   const ControlPanel = () => (
@@ -87,6 +110,7 @@ const PrintCategoryRollStatement: React.FC = () => {
                 <CategoryWiseRollStatement
                     key={className}
                     students={classStudents}
+                    // FIX: Error on this line is resolved by type fixes above.
                     className={className}
                     schoolDetails={schoolDetails}
                 />

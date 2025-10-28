@@ -1,23 +1,23 @@
 import React, { useState, useMemo } from 'react';
-// FIX: Update react-router-dom imports for v6. useHistory is replaced by useNavigate.
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Student, Mark, Exam } from '../types';
+import { Student, Mark, Exam, StudentSessionInfo } from '../types';
 import Card from '../components/Card';
 import { EditIcon, TrashIcon, CertificateIcon, UserIcon, HeartHandIcon, CreditCardIcon, BarChart3Icon, HolisticIcon } from '../components/icons';
 import LineChart from '../components/LineChart';
 import Modal from '../components/Modal';
 import { StudentForm } from '../components/StudentForm';
 import { useToast } from '../contexts/ToastContext';
+import { useAppData } from '../hooks/useAppData';
 
 const buttonStyle = "py-2 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors";
 
 const StudentProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    // FIX: Replace useHistory with useNavigate for react-router-dom v6.
     const navigate = useNavigate();
     const { addToast } = useToast();
+    const { activeSession } = useAppData();
 
     const studentId = useMemo(() => {
         const numId = Number(id);
@@ -26,7 +26,24 @@ const StudentProfile: React.FC = () => {
 
     const [isFormOpen, setIsFormOpen] = useState(false);
     
-    const student = useLiveQuery(() => studentId ? db.students.get(studentId) : undefined, [studentId]);
+    const student = useLiveQuery(async () => {
+        if (!studentId || !activeSession) return null;
+
+        const studentData = await db.students.get(studentId);
+        if (!studentData) return null;
+
+        const sessionInfo = await db.studentSessionInfo
+            .where({ studentId, session: activeSession })
+            .first();
+            
+        return {
+            ...studentData,
+            className: sessionInfo?.className,
+            section: sessionInfo?.section,
+            rollNo: sessionInfo?.rollNo,
+        };
+    }, [studentId, activeSession]);
+
     const marks = useLiveQuery(() => studentId ? db.marks.where('studentId').equals(studentId).toArray() : [], [studentId]);
     const exams = useLiveQuery(() => db.exams.toArray(), []);
 
@@ -66,7 +83,29 @@ const StudentProfile: React.FC = () => {
     const handleSave = async (studentData: Student) => {
         if (studentId) {
             try {
-                await db.students.update(studentId, studentData);
+                const { className, section, rollNo, ...coreStudentData } = studentData;
+                await db.transaction('rw', db.students, db.studentSessionInfo, async () => {
+                    await db.students.update(studentId, coreStudentData);
+
+                    const existingSessionInfo = await db.studentSessionInfo
+                        .where({ studentId, session: activeSession })
+                        .first();
+                    
+                    const sessionInfoPayload: Omit<StudentSessionInfo, 'id'> = {
+                        studentId,
+                        session: activeSession,
+                        className: className || '',
+                        section: section || '',
+                        rollNo: rollNo || '',
+                    };
+
+                    if (existingSessionInfo?.id) {
+                        await db.studentSessionInfo.update(existingSessionInfo.id, sessionInfoPayload);
+                    } else {
+                        await db.studentSessionInfo.add(sessionInfoPayload);
+                    }
+                });
+
                 setIsFormOpen(false);
                 addToast('Student details updated successfully!', 'success');
             } catch (error) {
@@ -79,13 +118,15 @@ const StudentProfile: React.FC = () => {
     const handleDelete = async () => {
         if (student && studentId && window.confirm(`Are you sure you want to delete ${student.name}? This will also delete all associated marks and cannot be undone.`)) {
             try {
-                await db.transaction('rw', db.students, db.marks, db.studentExamData, db.hpcReports, async () => {
+                await db.transaction('rw', db.students, db.marks, db.studentExamData, db.hpcReports, db.sbaReports, db.detailedFormativeAssessments, db.studentSessionInfo, async () => {
                     await db.marks.where('studentId').equals(studentId).delete();
                     await db.studentExamData.where('studentId').equals(studentId).delete();
                     await db.hpcReports.where('studentId').equals(studentId).delete();
+                    await db.sbaReports.where('studentId').equals(studentId).delete();
+                    await db.detailedFormativeAssessments.where('studentId').equals(studentId).delete();
+                    await db.studentSessionInfo.where('studentId').equals(studentId).delete();
                     await db.students.delete(studentId);
                 });
-                // FIX: Replace history.push with navigate for react-router-dom v6.
                 navigate('/students');
                 addToast(`${student.name} was deleted successfully.`, 'success');
             } catch (error) {
@@ -172,5 +213,4 @@ const StudentProfile: React.FC = () => {
     );
 };
 
-// FIX: Added missing default export.
 export default StudentProfile;

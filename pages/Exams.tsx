@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-// FIX: Update react-router-dom imports for v6. useHistory is replaced by useNavigate.
 import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import { Exam } from '../types';
@@ -9,14 +8,16 @@ import { ClipboardListIcon, ExamsIcon, PlusIcon, TrashIcon } from '../components
 import Modal from '../components/Modal';
 import { useToast } from '../contexts/ToastContext';
 import { CLASS_OPTIONS } from '../constants';
+import { useAppData } from '../hooks/useAppData';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
 const Exams: React.FC = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newExamData, setNewExamData] = useState({ name: '', className: '' });
-    const exams = useLiveQuery(() => db.exams.toArray(), []);
-    // FIX: Replace useHistory with useNavigate for react-router-dom v6.
+    
+    const { activeSession } = useAppData();
+    const exams = useLiveQuery(() => db.exams.where({ session: activeSession }).toArray(), [activeSession]);
     const navigate = useNavigate();
     const { addToast } = useToast();
     
@@ -31,10 +32,13 @@ const Exams: React.FC = () => {
                 addToast("Please provide an assessment name and select a class.", 'error');
                 return;
             }
-            const newId = await db.exams.add({ name: newExamData.name, className: newExamData.className });
+            const newId = await db.exams.add({ 
+                name: newExamData.name, 
+                className: newExamData.className,
+                session: activeSession 
+            });
             setIsCreateModalOpen(false);
             addToast('Assessment created successfully!', 'success');
-            // FIX: Replace history.push with navigate for react-router-dom v6.
             navigate(`/exams/${newId}`);
         } catch (error) {
             console.error("Failed to save exam:", error);
@@ -90,7 +94,7 @@ const Exams: React.FC = () => {
                     <ExamsIcon className="w-10 h-10 text-foreground/20" />
                     <h3 className="text-md font-semibold mt-2">No Summative Assessments Found</h3>
                     <p className="mt-1 text-xs text-foreground/60">
-                        Tap the button above to create one.
+                        Tap the button above to create one for this session.
                     </p>
                 </div>
             )}

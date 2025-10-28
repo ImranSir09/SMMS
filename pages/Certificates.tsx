@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../services/db';
@@ -18,21 +16,21 @@ const inputStyle = "p-3 w-full bg-background border border-input rounded-md focu
 const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
 const docButtonStyle = "flex items-center justify-center gap-1 py-3 px-2 rounded-lg text-white text-xs font-semibold transition-colors disabled:opacity-60 text-center";
 
+type StudentWithSessionInfo = Student & { className?: string; section?: string; rollNo?: string; };
+
 const Certificates: React.FC = () => {
   const location = useLocation();
   
   const [searchId, setSearchId] = useState(location.state?.searchId || '');
-  const [foundStudent, setFoundStudent] = useState<Student | null>(null);
+  const [foundStudent, setFoundStudent] = useState<StudentWithSessionInfo | null>(null);
   const [error, setError] = useState('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const { schoolDetails } = useAppData();
+  const { schoolDetails, activeSession } = useAppData();
   
-  // Certificate Generation Modal States
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [certType, setCertType] = useState<'dob' | 'bonafide' | null>(null);
   const [certPhoto, setCertPhoto] = useState<string | null>(null);
 
-  // NEP Modal States
   const [isNepCardModalOpen, setIsNepCardModalOpen] = useState(false);
   const [classExams, setClassExams] = useState<Exam[]>([]);
   const [selectedExamIdForNep, setSelectedExamIdForNep] = useState('');
@@ -46,10 +44,19 @@ const Certificates: React.FC = () => {
       return;
     }
 
-    const result = await db.students.where('admissionNo').equals(searchId).first();
-    if (result) setFoundStudent(result);
-    else setError('No student found.');
-  }, [searchId]);
+    const student = await db.students.where('admissionNo').equals(searchId).first();
+    if (student) {
+        const sessionInfo = await db.studentSessionInfo.where({ studentId: student.id!, session: activeSession }).first();
+        setFoundStudent({
+            ...student,
+            className: sessionInfo?.className,
+            section: sessionInfo?.section,
+            rollNo: sessionInfo?.rollNo,
+        });
+    } else {
+        setError('No student found.');
+    }
+  }, [searchId, activeSession]);
   
   useEffect(() => {
     if (location.state?.searchId) {
@@ -57,10 +64,9 @@ const Certificates: React.FC = () => {
     }
   }, [location.state, handleSearch]);
   
-  // Fetch exams when modal is opened for a student
   useEffect(() => {
-      if (isNepCardModalOpen && foundStudent) {
-          db.exams.where('className').equals(foundStudent.className).toArray()
+      if (isNepCardModalOpen && foundStudent?.className) {
+          db.exams.where({ className: foundStudent.className, session: activeSession }).toArray()
               .then(exams => {
                   setClassExams(exams);
                   if (exams.length > 0) {
@@ -70,7 +76,7 @@ const Certificates: React.FC = () => {
                   }
               });
       }
-  }, [isNepCardModalOpen, foundStudent]);
+  }, [isNepCardModalOpen, foundStudent, activeSession]);
 
   const generateDoc = async (component: React.ReactElement, fileName: string) => {
       if (!schoolDetails) return;
@@ -138,7 +144,7 @@ const Certificates: React.FC = () => {
         if (!exam) throw new Error("Exam not found");
 
         const studentMarks = await db.marks.where({ studentId: foundStudent.id!, examId }).toArray();
-        const studentHpcReport = await db.hpcReports.where({ studentId: foundStudent.id!, academicYear: ACADEMIC_YEAR }).first();
+        const studentHpcReport = await db.hpcReports.where({ studentId: foundStudent.id!, session: ACADEMIC_YEAR }).first();
         
         if (studentMarks.length === 0) {
             alert(`No marks found for ${foundStudent.name} in the selected exam.`);

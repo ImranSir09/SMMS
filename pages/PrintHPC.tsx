@@ -22,7 +22,7 @@ const PrintHPC: React.FC = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const [reportData, setReportData] = useState<StudentReportBundle | null>(null);
   const [allExams, setAllExams] = useState<Exam[]>([]);
-  const { schoolDetails } = useAppData();
+  const { schoolDetails, activeSession } = useAppData();
 
   useEffect(() => {
     const studentNumId = Number(studentId);
@@ -31,10 +31,10 @@ const PrintHPC: React.FC = () => {
     const fetchData = async () => {
         const [student, sbaData, hpcData, allMarks, allDetailedFA, allStudentExamData, exams] = await Promise.all([
             db.students.get(studentNumId),
-            db.sbaReports.where({ studentId: studentNumId, academicYear: ACADEMIC_YEAR }).first(),
-            db.hpcReports.where({ studentId: studentNumId, academicYear: ACADEMIC_YEAR }).first(),
+            db.sbaReports.where({ studentId: studentNumId, session: activeSession }).first(),
+            db.hpcReports.where({ studentId: studentNumId, session: activeSession }).first(),
             db.marks.where({ studentId: studentNumId }).toArray(),
-            db.detailedFormativeAssessments.where({ studentId: studentNumId, academicYear: ACADEMIC_YEAR }).toArray(),
+            db.detailedFormativeAssessments.where({ studentId: studentNumId, session: activeSession }).toArray(),
             db.studentExamData.where({ studentId: studentNumId }).toArray(),
             db.exams.toArray()
         ]);
@@ -53,7 +53,7 @@ const PrintHPC: React.FC = () => {
     };
 
     fetchData();
-  }, [studentId]);
+  }, [studentId, activeSession]);
 
   const handlePrint = () => {
     window.print();

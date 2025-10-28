@@ -12,4 +12,4 @@ const SectionCard: React.FC<{ title: string; colorClasses: string; children: Rea
     );
 };
 
-export default SectionCard;
+export default React.memo(SectionCard);

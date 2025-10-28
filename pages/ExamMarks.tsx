@@ -1,22 +1,19 @@
 
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Exam, Student, Mark, StudentExamData } from '../types';
+// FIX: Import StudentSessionInfo to explicitly type Dexie query results.
+import { Exam, Student, Mark, StudentExamData, StudentSessionInfo } from '../types';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import ProgressCard from '../components/ProgressCard';
 import { PrintIcon } from '../components/icons';
 import { SUBJECTS } from '../constants';
 
-// FIX: Create a specific type for mark fields to ensure type safety.
 type NumericMarkField = Exclude<keyof Mark, 'id' | 'examId' | 'studentId' | 'subject'>;
-// FIX: Create a specific type for student extra data fields to ensure type safety.
 type StudentExtraDataField = 'remarks' | 'proficiencyLevel';
 
-// FIX: Use the specific NumericMarkField type for keys.
 const ALL_MARK_FIELDS: { key: NumericMarkField; label: string; max: number }[] = [
     { key: 'fa1', label: 'FA1', max: 5 },
     { key: 'fa2', label: 'FA2', max: 5 },
@@ -27,7 +24,7 @@ const ALL_MARK_FIELDS: { key: NumericMarkField; label: string; max: number }[] =
     { key: 'coCurricular', label: 'CCA', max: 20 },
     { key: 'summative', label: 'SA', max: 50 },
 ];
-const DEBOUNCE_DELAY = 2000; // 2 seconds
+const DEBOUNCE_DELAY = 2000;
 
 const ExamMarks: React.FC = () => {
     const { examId } = useParams<{ examId: string }>();
@@ -43,12 +40,31 @@ const ExamMarks: React.FC = () => {
     const [activeSubject, setActiveSubject] = useState<string | null>(null);
 
     const exam = useLiveQuery(() => db.exams.get(numericExamId), [numericExamId]);
-    const students = useLiveQuery(() => 
-        exam ? db.students.where('className').equals(exam.className).sortBy('rollNo') : Promise.resolve([]), 
-    [exam]);
+    
+    const students = useLiveQuery(async () => {
+        if (!exam) return [];
+        
+        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
+        const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo
+            .where({ session: exam.session, className: exam.className })
+            .toArray();
+
+        if (sessionInfos.length === 0) return [];
+        
+        const studentIds = sessionInfos.map(info => info.studentId);
+        const studentsDetails = await db.students.where('id').anyOf(studentIds).toArray();
+        
+        const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
+        const mergedStudents = studentsDetails.map(student => ({
+            ...student,
+            // FIX: Error on this line is resolved by typing `sessionInfos` above.
+            rollNo: sessionInfoMap.get(student.id!)?.rollNo || '',
+        }));
+
+        return mergedStudents.sort((a, b) => a.rollNo.localeCompare(b.rollNo, undefined, { numeric: true, sensitivity: 'base' }));
+    }, [exam]);
 
     const displayedMarkFields = useMemo(() => {
-        // Only show the summative assessment field
         return ALL_MARK_FIELDS.filter(f => f.key === 'summative');
     }, []);
 
@@ -81,7 +97,6 @@ const ExamMarks: React.FC = () => {
         loadData();
     }, [exam, students, numericExamId]);
     
-    // FIX: Use specific NumericMarkField type for the 'field' parameter to ensure type safety and resolve misleading spread operator error.
     const handleMarkChange = (studentId: number, subject: string, field: NumericMarkField, value: string) => {
         const key = `${studentId}-${subject}`;
         const numericValue = value === '' ? undefined : Number(value);
@@ -89,7 +104,6 @@ const ExamMarks: React.FC = () => {
         const fieldDefinition = ALL_MARK_FIELDS.find(f => f.key === field);
         const max = fieldDefinition ? fieldDefinition.max : Infinity;
 
-        // Validation
         const newValidationErrors = new Map(validationErrors);
         const inputKey = `${key}-${String(field)}`;
         if (numericValue !== undefined && (numericValue < 0 || numericValue > max)) {
@@ -101,7 +115,6 @@ const ExamMarks: React.FC = () => {
 
         setMarksData(prev => {
             const newMap = new Map(prev);
-            // FIX: Explicitly type currentMark to resolve spread operator error.
             const currentMark: Partial<Mark> = newMap.get(key) || { studentId, examId: numericExamId, subject };
             const updatedMark = { ...currentMark, [field]: numericValue };
             newMap.set(key, updatedMark);
@@ -112,12 +125,10 @@ const ExamMarks: React.FC = () => {
         setSaveStatus('pending');
     };
 
-    // FIX: Use specific StudentExtraDataField type for the 'field' parameter to ensure type safety and resolve misleading spread operator error.
     const handleExtraDataChange = (studentId: number, field: StudentExtraDataField, value: string) => {
         const key = `${studentId}-extra`;
         setStudentExtraData(prev => {
             const newMap = new Map(prev);
-            // FIX: Explicitly type currentData to resolve spread operator error.
             const currentData: Partial<StudentExamData> = newMap.get(studentId) || { studentId, examId: numericExamId };
             const updatedData = { ...currentData, [field]: value } as Partial<StudentExamData>;
             newMap.set(studentId, updatedData);
@@ -141,8 +152,6 @@ const ExamMarks: React.FC = () => {
         const currentDirtyKeys = new Set(dirtyKeys);
         setDirtyKeys(new Set());
 
-        // FIX: Replaced for...of loop with forEach to avoid TypeScript type inference issues where 'key' was 'unknown'.
-        // FIX: Explicitly type 'key' as string to resolve method errors.
         currentDirtyKeys.forEach((key: string) => {
             if (key.endsWith('-extra')) {
                 const studentId = Number(key.split('-')[0]);

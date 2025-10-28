@@ -1,13 +1,13 @@
 
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Student, DetailedFormativeAssessment, FormativeProficiencyLevel } from '../types';
+import { Student, DetailedFormativeAssessment, FormativeProficiencyLevel, StudentSessionInfo } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import { SearchIcon } from '../components/icons';
-import { ACADEMIC_YEAR, SUBJECTS } from '../constants';
+import { SUBJECTS } from '../constants';
 import SectionCard from '../components/SectionCard';
+import { useAppData } from '../hooks/useAppData';
 
 const DEBOUNCE_DELAY = 1500;
 
@@ -24,9 +24,9 @@ const COCURRICULAR_FIELDS = [
     { key: 'attendance', label: 'Attendance' },
 ];
 
-const defaultFormData = (studentId: number, subject: string, assessmentName: string): Omit<DetailedFormativeAssessment, 'id'> => ({
+const defaultFormData = (studentId: number, subject: string, assessmentName: string, session: string): Omit<DetailedFormativeAssessment, 'id'> => ({
     studentId,
-    academicYear: ACADEMIC_YEAR,
+    session,
     subject,
     assessmentName,
     examRollNo: '0',
@@ -36,18 +36,10 @@ const defaultFormData = (studentId: number, subject: string, assessmentName: str
     learningOutcomeCode: '',
     academicProficiency: 'Sky',
     cocurricularRatings: {
-        physicalActivity: 'Sky',
-        participationInSchoolActivities: 'Sky',
-        culturalAndCreativeActivities: 'Sky',
-        healthAndHygiene: 'Sky',
-        environmentAndITAwareness: 'Sky',
-        discipline: 'Sky',
-        attendance: 'Sky',
+        physicalActivity: 'Sky', participationInSchoolActivities: 'Sky', culturalAndCreativeActivities: 'Sky',
+        healthAndHygiene: 'Sky', environmentAndITAwareness: 'Sky', discipline: 'Sky', attendance: 'Sky',
     },
-    anecdotalRecord: {
-        date: new Date().toISOString().split('T')[0],
-        observation: '',
-    },
+    anecdotalRecord: { date: new Date().toISOString().split('T')[0], observation: '' },
 });
 
 const FormativeAssessment: React.FC = () => {
@@ -57,22 +49,34 @@ const FormativeAssessment: React.FC = () => {
     const [formData, setFormData] = useState<Partial<DetailedFormativeAssessment> | null>(null);
     const [saveStatus, setSaveStatus] = useState<'synced' | 'pending' | 'saving' | 'error'>('synced');
     const [searchTerm, setSearchTerm] = useState('');
-
     const [selectedSubject, setSelectedSubject] = useState(SUBJECTS[0]);
     const [selectedAssessmentName, setSelectedAssessmentName] = useState(FA_OPTIONS[0]);
 
     const { addToast } = useToast();
+    const { activeSession } = useAppData();
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const classOptions = useLiveQuery(
-        () => db.students.orderBy('className').uniqueKeys()
-            .then(keys => (keys as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))),
-        []
-    );
+    const classOptions = useLiveQuery(async () => {
+        if (!activeSession) return [];
+        const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
+        const classNames = [...new Set(sessionInfos.map(info => info.className))];
+        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
+        return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    }, [activeSession]);
     
-    const studentsInClass = useLiveQuery(() => 
-        selectedClass ? db.students.where({ className: selectedClass }).sortBy('rollNo') : Promise.resolve([]),
-    [selectedClass]);
+    const studentsInClass = useLiveQuery(async () => {
+        if (!selectedClass || !activeSession) return [];
+        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
+        const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ className: selectedClass, session: activeSession }).toArray();
+        if (sessionInfos.length === 0) return [];
+        const studentIds = sessionInfos.map(info => info.studentId);
+        const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
+        const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
+        
+        // FIX: Error on this line is resolved by typing `sessionInfos` above.
+        const mergedStudents = studentDetails.map(student => ({ ...student, rollNo: sessionInfoMap.get(student.id!)?.rollNo || '' }));
+        return mergedStudents.sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
+    }, [selectedClass, activeSession]);
 
     const filteredStudents = useMemo(() => {
         if (!studentsInClass) return [];
@@ -80,7 +84,7 @@ const FormativeAssessment: React.FC = () => {
         const lowercasedTerm = searchTerm.toLowerCase();
         return studentsInClass.filter(student =>
             student.name.toLowerCase().includes(lowercasedTerm) ||
-            student.rollNo.includes(lowercasedTerm) ||
+            (student.rollNo || '').includes(lowercasedTerm) ||
             student.admissionNo.includes(lowercasedTerm)
         );
     }, [studentsInClass, searchTerm]);
@@ -102,24 +106,29 @@ const FormativeAssessment: React.FC = () => {
 
     useEffect(() => {
         const loadData = async () => {
-            if (!selectedStudentId) {
+            if (!selectedStudentId || !activeSession) {
                 setStudentProfile(null);
                 setFormData(null);
                 return;
             }
             
             const student = await db.students.get(selectedStudentId);
-            setStudentProfile(student || null);
+            if (student) {
+                const sessionInfo = await db.studentSessionInfo.where({ studentId: selectedStudentId, session: activeSession }).first();
+                setStudentProfile({ ...student, ...sessionInfo });
+            } else {
+                setStudentProfile(null);
+            }
 
             const existingData = await db.detailedFormativeAssessments
-                .where({ studentId: selectedStudentId, subject: selectedSubject, assessmentName: selectedAssessmentName })
+                .where({ studentId: selectedStudentId, subject: selectedSubject, assessmentName: selectedAssessmentName, session: activeSession })
                 .first();
 
-            setFormData(existingData || defaultFormData(selectedStudentId, selectedSubject, selectedAssessmentName));
+            setFormData(existingData || defaultFormData(selectedStudentId, selectedSubject, selectedAssessmentName, activeSession));
             setSaveStatus('synced');
         };
         loadData();
-    }, [selectedStudentId, selectedSubject, selectedAssessmentName]);
+    }, [selectedStudentId, selectedSubject, selectedAssessmentName, activeSession]);
 
     const saveData = useCallback(async (dataToSave: Partial<DetailedFormativeAssessment>) => {
         if (!dataToSave || !dataToSave.studentId) return;

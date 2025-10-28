@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails, Mark, HPCReportData } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -111,7 +112,7 @@ const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, schoo
                         <tr>
                             <th className={headerCellStyle}>Domain/Subject</th>
                             <th className={headerCellStyle}>Awareness</th>
-                            <th className={headerCellStyle}>Sensitivity</th>
+                            <th className="headerCellStyle">Sensitivity</th>
                             <th className={headerCellStyle}>Creativity</th>
                         </tr>
                     </thead>

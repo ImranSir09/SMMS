@@ -1,13 +1,11 @@
-
-
 import React, { useState, useCallback } from 'react';
 import Modal from './Modal';
 import { db } from '../services/db';
-import { Student } from '../types';
+import { Student, StudentSessionInfo } from '../types';
 import { DownloadIcon, UploadIcon } from './icons';
 import { useToast } from '../contexts/ToastContext';
+import { useAppData } from '../hooks/useAppData';
 
-// Define the fields we want to map from the CSV
 const STUDENT_FIELDS: { key: keyof Student; label: string; required: boolean }[] = [
     { key: 'name', label: 'Full Name', required: true },
     { key: 'rollNo', label: 'Roll No', required: true },
@@ -38,8 +36,9 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
     const [mapping, setMapping] = useState<Mapping>({});
     const [error, setError] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
-    const [importResult, setImportResult] = useState<{ success: number; failed: number } | null>(null);
+    const [importResult, setImportResult] = useState<{ success: number; failed: number, errors: string[] } | null>(null);
     const { addToast } = useToast();
+    const { activeSession } = useAppData();
 
     const resetState = useCallback(() => {
         setStep('upload');
@@ -57,7 +56,6 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
     };
 
     const parseCSV = (text: string) => {
-        // Basic parser, may not handle all edge cases like commas in quoted fields.
         const lines = text.trim().replace(/\r\n/g, '\n').split('\n');
         if (lines.length < 2) {
             throw new Error("CSV must have a header row and at least one data row.");
@@ -141,24 +139,60 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         setError('');
         const studentsToImport = getMappedStudents();
         let successCount = 0;
-        const CHUNK_SIZE = 50;
+        let failedRecords: string[] = [];
 
         try {
-            for (let i = 0; i < studentsToImport.length; i += CHUNK_SIZE) {
-                const chunk = studentsToImport.slice(i, i + CHUNK_SIZE);
-                await db.students.bulkAdd(chunk);
-                successCount += chunk.length;
-            }
-            setImportResult({ success: successCount, failed: 0 });
+            await db.transaction('rw', db.students, db.studentSessionInfo, async () => {
+                for (const studentData of studentsToImport) {
+                    try {
+                        const { className, section, rollNo, ...coreStudentData } = studentData;
+                        
+                        if (!coreStudentData.admissionNo) {
+                             failedRecords.push(`${studentData.name || 'Unknown'} - Missing Admission No`);
+                            continue;
+                        }
+
+                        const existingStudent = await db.students.where('admissionNo').equals(coreStudentData.admissionNo).first();
+                        if (existingStudent) {
+                            failedRecords.push(`${coreStudentData.name} (Adm No: ${coreStudentData.admissionNo}) - Duplicate`);
+                            continue;
+                        }
+                        
+                        // @ts-ignore
+                        delete coreStudentData.id;
+                        const studentId = await db.students.add(coreStudentData as Omit<Student, 'id'>);
+                        
+                        const sessionInfo: Omit<StudentSessionInfo, 'id'> = {
+                            studentId,
+                            session: activeSession,
+                            className: className || '',
+                            section: section || '',
+                            rollNo: rollNo || '',
+                        };
+                        await db.studentSessionInfo.add(sessionInfo);
+                        
+                        successCount++;
+                    } catch (e: any) {
+                        failedRecords.push(`${studentData.name} - ${e.message}`);
+                    }
+                }
+            });
+
+            const failedCount = studentsToImport.length - successCount;
+            setImportResult({ success: successCount, failed: failedCount, errors: failedRecords });
             setStep('result');
             addToast(`${successCount} students imported successfully!`, 'success');
-        } catch (err) {
-            console.error("Bulk add failed:", err);
-            const failedCount = studentsToImport.length - successCount;
-            setError("An error occurred during import. Some records may not have been saved.");
-            setImportResult({ success: successCount, failed: failedCount });
+            if (failedCount > 0) {
+                addToast(`${failedCount} records failed to import.`, 'error');
+                console.error("Failed records:", failedRecords);
+            }
+
+        } catch (err: any) {
+            console.error("Bulk add transaction failed:", err);
+            setError(`A critical error occurred during import: ${err.message}. Operation was rolled back.`);
+            setImportResult({ success: successCount, failed: studentsToImport.length - successCount, errors: failedRecords });
             setStep('result');
-            addToast(`An error occurred during import. ${successCount} records were saved.`, 'error');
+            addToast('A critical error occurred. The import process was stopped.', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -192,7 +226,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     <div>
                         <h3 className="text-lg font-medium">Map CSV Columns to Student Fields</h3>
                         <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Match the columns from your CSV file to the required student information fields.
+                            Match columns from your file to the required fields. Data will be added to the active session: <strong>{activeSession}</strong>.
                         </p>
                         <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                            {STUDENT_FIELDS.map(field => (
@@ -219,12 +253,12 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     </div>
                 );
             case 'preview':
-                const previewStudents = getMappedStudents().slice(0, 5); // Show first 5 records
+                const previewStudents = getMappedStudents().slice(0, 5);
                  return (
                     <div>
                         <h3 className="text-lg font-medium">Preview Data</h3>
                         <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Review the first few records to ensure the mapping is correct. A total of <strong>{csvData.length}</strong> students will be imported.
+                            Review the first few records. A total of <strong>{csvData.length}</strong> students will be imported into session <strong>{activeSession}</strong>.
                         </p>
                         <div className="overflow-x-auto max-h-64 border border-border rounded-md">
                            <table className="w-full text-left text-sm">
@@ -258,6 +292,12 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                              <div className="space-y-1">
                                 <p className="text-green-600 dark:text-green-400">Successfully imported: {importResult.success} students</p>
                                 {importResult.failed > 0 && <p className="text-red-500">Failed to import: {importResult.failed} students</p>}
+                            </div>
+                        )}
+                        {importResult && importResult.errors.length > 0 && (
+                            <div className="mt-4 text-left text-xs bg-background p-2 rounded-md max-h-32 overflow-y-auto">
+                                <p className="font-semibold mb-1">Error Details:</p>
+                                {importResult.errors.map((err, i) => <p key={i}>{err}</p>)}
                             </div>
                         )}
                         {error && <p className="text-red-500 text-sm mt-4">{error}</p>}

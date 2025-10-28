@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { db } from '../services/db';
@@ -6,6 +5,7 @@ import { SchoolDetails } from '../types';
 import Card from '../components/Card';
 import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon } from '../components/icons';
 import { useToast } from '../contexts/ToastContext';
+import SessionManager from '../components/SessionManager';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const buttonStyle = "py-3 px-5 rounded-lg text-sm font-semibold transition-colors";
@@ -129,28 +129,13 @@ const Settings: React.FC = () => {
                 if(typeof text !== 'string') throw new Error("Invalid file content");
                 
                 const data = JSON.parse(text);
-
-                const tableOrder = [
-                    'schoolDetails', 'students', 'staff', 'exams', 'dailyLogs',
-                    'marks', 'studentExamData', 'timetable'
-                ];
                 
-                const backupTables = Object.keys(data);
-                if (!backupTables.length || !db.tables.some(t => backupTables.includes(t.name))) {
-                    throw new Error("This does not appear to be a valid backup file.");
-                }
-
                 await db.transaction('rw', db.tables, async () => {
-                    // @ts-ignore
-                    const tablesToClear = tableOrder.filter(name => db[name]).reverse();
-                    for (const tableName of tablesToClear) {
+                    for (const tableName of Object.keys(data)) {
                         // @ts-ignore
-                        await db[tableName].clear();
-                    }
-
-                    for (const tableName of tableOrder) {
-                        // @ts-ignore
-                        if (data[tableName] && db[tableName]) {
+                        if (db[tableName]) {
+                            // @ts-ignore
+                            await db[tableName].clear();
                             // @ts-ignore
                             await db[tableName].bulkPut(data[tableName]);
                         }
@@ -263,6 +248,8 @@ const Settings: React.FC = () => {
                     <button onClick={handleSaveDetails} className={`${primaryButtonStyle} w-full flex items-center justify-center gap-2`}><SaveIcon className="w-4 h-4"/> Save Details</button>
                 </div>
             </Card>
+
+            <SessionManager />
 
             <Card className="p-3">
                 <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">

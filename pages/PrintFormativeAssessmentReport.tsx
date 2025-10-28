@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../services/db';
@@ -18,7 +19,7 @@ interface ReportBundle {
 const PrintFormativeAssessmentReport: React.FC = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const [reportData, setReportData] = useState<ReportBundle | null>(null);
-  const { schoolDetails } = useAppData();
+  const { schoolDetails, activeSession } = useAppData();
 
   useEffect(() => {
     const studentNumId = Number(studentId);
@@ -27,9 +28,11 @@ const PrintFormativeAssessmentReport: React.FC = () => {
     const fetchData = async () => {
         const [student, sbaData, allMarks, allDetailedFA] = await Promise.all([
             db.students.get(studentNumId),
-            db.sbaReports.where({ studentId: studentNumId, academicYear: ACADEMIC_YEAR }).first(),
+            // FIX: Rename 'academicYear' to 'session' to match the updated database schema.
+            db.sbaReports.where({ studentId: studentNumId, session: activeSession }).first(),
             db.marks.where({ studentId: studentNumId }).toArray(),
-            db.detailedFormativeAssessments.where({ studentId: studentNumId, academicYear: ACADEMIC_YEAR }).toArray(),
+            // FIX: Rename 'academicYear' to 'session' to match the updated database schema.
+            db.detailedFormativeAssessments.where({ studentId: studentNumId, session: activeSession }).toArray(),
         ]);
 
         if (student) {
@@ -43,7 +46,7 @@ const PrintFormativeAssessmentReport: React.FC = () => {
     };
 
     fetchData();
-  }, [studentId]);
+  }, [studentId, activeSession]);
 
   const handlePrint = () => {
     window.print();

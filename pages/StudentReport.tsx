@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-import { Student } from '../types';
+// FIX: Import StudentSessionInfo to explicitly type Dexie query results.
+import { Student, StudentSessionInfo } from '../types';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import HolisticProgressCard from '../components/HolisticProgressCard';
@@ -16,21 +17,35 @@ const StudentReport: React.FC = () => {
     const [selectedClass, setSelectedClass] = useState('');
     const [selectedStudentIds, setSelectedStudentIds] = useState<Set<number>>(new Set());
     const [isGenerating, setIsGenerating] = useState(false);
-    const { schoolDetails } = useAppData();
+    const { schoolDetails, activeSession } = useAppData();
     const { addToast } = useToast();
     
     const [tempPhotos, setTempPhotos] = useState<Map<number, string | null>>(new Map());
     const [photoModalStudentId, setPhotoModalStudentId] = useState<number | null>(null);
 
-    const classOptions = useLiveQuery(
-        () => db.students.orderBy('className').uniqueKeys()
-            .then(keys => (keys as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))),
-        []
-    );
+    const classOptions = useLiveQuery(async () => {
+        if (!activeSession) return [];
+        const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
+        const classNames = [...new Set(sessionInfos.map(info => info.className))];
+        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
+        return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    }, [activeSession]);
 
-    const studentsInClass = useLiveQuery(() => 
-        selectedClass ? db.students.where({ className: selectedClass }).sortBy('rollNo') : Promise.resolve([]),
-    [selectedClass]);
+    const studentsInClass = useLiveQuery(async () => {
+        if (!selectedClass || !activeSession) return [];
+        
+        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
+        const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ className: selectedClass, session: activeSession }).toArray();
+        if (sessionInfos.length === 0) return [];
+
+        const studentIds = sessionInfos.map(info => info.studentId);
+        const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
+        const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
+
+        // FIX: The error on rollNo is resolved by typing `sessionInfos` above.
+        const mergedStudents = studentDetails.map(s => ({ ...s, rollNo: sessionInfoMap.get(s.id!)?.rollNo || '' }));
+        return mergedStudents.sort((a, b) => a.rollNo.localeCompare(b.rollNo, undefined, { numeric: true, sensitivity: 'base' }));
+    }, [selectedClass, activeSession]);
 
     const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedClass(e.target.value);
@@ -78,10 +93,10 @@ const StudentReport: React.FC = () => {
                 if (!student) continue;
 
                 const [sbaData, hpcData, allMarks, allDetailedFA, allStudentExamData] = await Promise.all([
-                    db.sbaReports.where({ studentId, academicYear: ACADEMIC_YEAR }).first(),
-                    db.hpcReports.where({ studentId, academicYear: ACADEMIC_YEAR }).first(),
+                    db.sbaReports.where({ studentId, session: activeSession }).first(),
+                    db.hpcReports.where({ studentId, session: activeSession }).first(),
                     db.marks.where({ studentId }).toArray(),
-                    db.detailedFormativeAssessments.where({ studentId, academicYear: ACADEMIC_YEAR }).toArray(),
+                    db.detailedFormativeAssessments.where({ studentId, session: activeSession }).toArray(),
                     db.studentExamData.where({ studentId }).toArray()
                 ]);
 
@@ -117,7 +132,7 @@ const StudentReport: React.FC = () => {
                 <h2 className="text-md font-semibold mb-2">Generate Holistic Progress Card</h2>
                 <select value={selectedClass} onChange={handleClassChange} className="p-3 bg-background border border-input rounded-md w-full text-sm mb-2">
                     <option value="">-- Select Class --</option>
-                    {classOptions?.map(c => <option key={c} value={c}>Class {c}</option>)}
+                    {classOptions?.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
                 {studentsInClass && studentsInClass.length > 0 && (
                     <div className="mb-2">

@@ -1,27 +1,52 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../services/db';
-import { Student } from '../types';
+// FIX: Import StudentSessionInfo to explicitly type Dexie query results.
+import { Student, StudentSessionInfo } from '../types';
 import RollStatement from '../components/RollStatement';
 import { useAppData } from '../hooks/useAppData';
-// FIX: Changed import from 'generatePdf' to 'generatePdfFromComponent' and updated the function call to pass the component directly.
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 
 const PrintRollStatement: React.FC = () => {
   const { className } = useParams<{ className: string }>();
   const [students, setStudents] = useState<Student[]>([]);
-  const { schoolDetails } = useAppData();
+  const { schoolDetails, activeSession } = useAppData();
 
   useEffect(() => {
-    if (className) {
-      db.students
-        .where('className')
-        .equals(className)
-        .sortBy('rollNo')
-        .then(setStudents);
-    }
-  }, [className]);
+    const fetchStudents = async () => {
+        if (className && activeSession) {
+            // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
+            const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo
+                .where({ className, session: activeSession })
+                .toArray();
+            
+            if (sessionInfos.length === 0) {
+                setStudents([]);
+                return;
+            }
+
+            const studentIds = sessionInfos.map(info => info.studentId);
+            const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
+            const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
+
+            const mergedStudents = studentDetails.map(student => {
+                const sessionInfo = sessionInfoMap.get(student.id!);
+                return {
+                    ...student,
+                    // FIX: Errors on these lines are resolved by typing `sessionInfos` above.
+                    className: sessionInfo?.className,
+                    section: sessionInfo?.section,
+                    rollNo: sessionInfo?.rollNo,
+                };
+            }).sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
+            
+            setStudents(mergedStudents);
+        }
+    };
+    fetchStudents();
+  }, [className, activeSession]);
 
   const handlePrint = () => {
     window.print();
@@ -36,8 +61,12 @@ const PrintRollStatement: React.FC = () => {
     }
   };
 
-  if (!students.length || !schoolDetails) {
-    return <div>Loading student data or no students found for this class...</div>;
+  if (!schoolDetails || !activeSession) {
+    return <div>Loading...</div>;
+  }
+  
+  if (students.length === 0) {
+      return <div>Loading student data or no students found for this class in the current session...</div>;
   }
   
   const ControlPanel = () => (

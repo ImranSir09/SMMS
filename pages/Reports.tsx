@@ -1,6 +1,6 @@
+
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-// FIX: Update react-router-dom imports for v6. useHistory is replaced by useNavigate.
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import { db } from '../services/db';
@@ -14,11 +14,12 @@ import { SUBJECTS } from '../constants';
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
 const Reports: React.FC = () => {
-    const { schoolDetails } = useAppData();
-    // FIX: Replace useHistory with useNavigate for react-router-dom v6.
+    const { schoolDetails, activeSession } = useAppData();
     const navigate = useNavigate();
 
-    const exams = useLiveQuery(() => db.exams.toArray(), []);
+    const exams = useLiveQuery(() => 
+        activeSession ? db.exams.where({ session: activeSession }).toArray() : [], 
+    [activeSession]);
     
     const [selectedExamId, setSelectedExamId] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('');
@@ -27,11 +28,13 @@ const Reports: React.FC = () => {
 
     const [selectedClass, setSelectedClass] = useState('');
     
-    const classOptions = useLiveQuery(
-        () => db.students.orderBy('className').uniqueKeys()
-            .then(keys => (keys as string[]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))),
-        []
-    );
+    const classOptions = useLiveQuery(async () => {
+        if (!activeSession) return [];
+        const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
+        const classNames = [...new Set(sessionInfos.map(info => info.className))];
+        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
+        return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    }, [activeSession]);
     
     const handleGenerateTopperList = async () => {
         if (!selectedExamId || !selectedSubject) {
@@ -90,13 +93,11 @@ const Reports: React.FC = () => {
 
     const handleGenerateRollStatement = () => {
         if (selectedClass) {
-            // FIX: Replace history.push with navigate for react-router-dom v6.
             navigate(`/print/roll-statement/${selectedClass}`);
         }
     };
 
     const handleGenerateCategoryRollStatement = () => {
-        // FIX: Replace history.push with navigate for react-router-dom v6.
         navigate(`/print/category-roll-statement`);
     };
 
@@ -113,7 +114,7 @@ const Reports: React.FC = () => {
                         <label className="block text-xs font-medium text-foreground/80 mb-1">Select Exam</label>
                         <select value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)} className={inputStyle}>
                             <option value="">-- Choose Exam --</option>
-                            {exams?.map(exam => <option key={exam.id} value={exam.id}>{exam.name} - Class {exam.className}</option>)}
+                            {exams?.map(exam => <option key={exam.id} value={String(exam.id!)}>{exam.name} - Class {exam.className}</option>)}
                         </select>
                     </div>
                      <div>
