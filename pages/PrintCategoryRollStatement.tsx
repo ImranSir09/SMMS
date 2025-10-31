@@ -1,12 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { db } from '../services/db';
-// FIX: Import StudentSessionInfo to explicitly type Dexie query results.
 import { Student, StudentSessionInfo } from '../types';
-import CategoryWiseRollStatement from '../components/CategoryWiseRollStatement';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
+import ConsolidatedRollStatement from '../components/Wizard'; // Renamed from CategoryWiseRollStatement
 
 const PrintCategoryRollStatement: React.FC = () => {
   const [studentsByClass, setStudentsByClass] = useState<Map<string, Student[]>>(new Map());
@@ -16,7 +15,6 @@ const PrintCategoryRollStatement: React.FC = () => {
     const fetchData = async () => {
         if (!activeSession) return;
 
-        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
         const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ session: activeSession }).toArray();
         if (sessionInfos.length === 0) {
             setStudentsByClass(new Map());
@@ -29,24 +27,27 @@ const PrintCategoryRollStatement: React.FC = () => {
 
         const allStudentsForSession = sessionInfos.map(info => {
             const details = studentDetailsMap.get(info.studentId);
-            // FIX: Ensure student details exist before spreading to prevent error on undefined.
             if (!details) return null;
+            // FIX: Reverted to spread syntax for better type inference.
             return {
                 ...details,
-                ...info,
+                className: info.className,
+                section: info.section,
+                rollNo: info.rollNo,
             };
+        // FIX: Removed invalid type predicate. `filter(Boolean)` correctly removes nulls and preserves the inferred type.
         }).filter(Boolean);
 
-        const classNames = [...new Set(allStudentsForSession.map(s => s!.className))]
-            // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
-            .sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        const classNames = [...new Set(allStudentsForSession.map(s => s.className!))]
+            .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
         const grouped = new Map<string, Student[]>();
         classNames.forEach(className => {
             const classStudents = allStudentsForSession
-                .filter(s => s!.className === className)
-                .sort((a, b) => (a!.rollNo || '').localeCompare(b!.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
-            grouped.set(className, classStudents as Student[]);
+                .filter(s => s.className === className)
+                .sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
+            // FIX: The type of classStudents is now correctly inferred and assignable to Student[].
+            grouped.set(className, classStudents);
         });
         setStudentsByClass(grouped);
     };
@@ -60,17 +61,13 @@ const PrintCategoryRollStatement: React.FC = () => {
   const handleDownloadPdf = async () => {
     if (studentsByClass.size > 0 && schoolDetails) {
         await generatePdfFromComponent(
-            <div id="pdf-content">
-                {Array.from(studentsByClass.entries()).map(([className, classStudents]) => (
-                    <CategoryWiseRollStatement
-                        key={className}
-                        students={classStudents}
-                        className={className}
-                        schoolDetails={schoolDetails}
-                    />
-                ))}
-            </div>,
-            `Category-Roll-Statement-All-Classes`
+            <ConsolidatedRollStatement
+                studentsByClass={studentsByClass}
+                schoolDetails={schoolDetails}
+                session={activeSession}
+            />,
+            `Consolidated-Roll-Statement-${activeSession}`,
+            { orientation: 'l' } // Landscape orientation
         );
     }
   };
@@ -82,7 +79,7 @@ const PrintCategoryRollStatement: React.FC = () => {
   const ControlPanel = () => (
       <div className="max-w-4xl mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
         <h1 className="text-2xl font-bold text-gray-800">Document Preview</h1>
-        <p className="text-gray-600 mb-4">Preview for All Classes: Gender & Category Wise Roll Statement.</p>
+        <p className="text-gray-600 mb-4">Preview for Consolidated Roll Statement for session {activeSession}.</p>
         <div className="flex flex-wrap gap-4">
              <button
                 onClick={handleDownloadPdf}
@@ -100,26 +97,21 @@ const PrintCategoryRollStatement: React.FC = () => {
       </div>
   );
 
-
   return (
     <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
         <ControlPanel />
       
-        <div id="printable-area" className="flex flex-col items-center justify-start gap-4 print:gap-0">
-             {Array.from(studentsByClass.entries()).map(([className, classStudents]) => (
-                <CategoryWiseRollStatement
-                    key={className}
-                    students={classStudents}
-                    // FIX: Error on this line is resolved by type fixes above.
-                    className={className}
-                    schoolDetails={schoolDetails}
-                />
-            ))}
+        <div id="printable-area" className="flex flex-col items-center justify-start">
+            <ConsolidatedRollStatement
+                studentsByClass={studentsByClass}
+                schoolDetails={schoolDetails}
+                session={activeSession}
+            />
         </div>
 
         <style>{`
-             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            @page { size: A4; margin: 0; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            @page { size: A4 landscape; margin: 0; }
             @media print {
                 body * { visibility: hidden; }
                 #printable-area, #printable-area * { visibility: visible; }
@@ -128,8 +120,11 @@ const PrintCategoryRollStatement: React.FC = () => {
                     transform: scale(1.0);
                     box-shadow: none;
                     margin: 0;
-                    page-break-after: always;
                 }
+            }
+            .A4-page-container.landscape {
+                transform: scale(0.75) rotate(0);
+                transform-origin: top center;
             }
         `}</style>
     </div>
