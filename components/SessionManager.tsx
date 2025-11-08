@@ -17,8 +17,12 @@ const promoteClass = (className: string): string | null => {
     const match = className.match(/(\d+)/);
     if (match) {
         const num = parseInt(match[1], 10);
-        const suffix = className.replace(String(num), ''); // e.g., 'st', 'nd', 'rd', 'th'
-        return `${num + 1}${suffix}`;
+        const newNum = num + 1;
+        let suffix = 'th';
+        if (newNum % 10 === 1 && newNum % 100 !== 11) suffix = 'st';
+        else if (newNum % 10 === 2 && newNum % 100 !== 12) suffix = 'nd';
+        else if (newNum % 10 === 3 && newNum % 100 !== 13) suffix = 'rd';
+        return `${newNum}${suffix}`;
     }
     return className;
 };

@@ -10,7 +10,7 @@ import { DownloadIcon, PrintIcon } from '../components/icons';
 const PrintCoCurricularReport: React.FC = () => {
   const { studentId, subject } = useParams<{ studentId: string; subject: string }>();
   const [student, setStudent] = useState<Student | null>(null);
-  const { schoolDetails } = useAppData();
+  const { schoolDetails, activeSession } = useAppData();
 
   useEffect(() => {
     if (studentId) {
@@ -25,7 +25,7 @@ const PrintCoCurricularReport: React.FC = () => {
   const handleDownloadPdf = async () => {
     if (student && schoolDetails && subject) {
       await generatePdfFromComponent(
-        <CoCurricularReport student={student} schoolDetails={schoolDetails} subject={subject} />,
+        <CoCurricularReport student={student} schoolDetails={schoolDetails} subject={subject} session={activeSession} />,
         `CoCurricular-Report-${student.admissionNo}-${subject}`
       );
     }
@@ -60,7 +60,7 @@ const PrintCoCurricularReport: React.FC = () => {
     <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
       <ControlPanel />
       <div className="flex justify-center items-start">
-        <CoCurricularReport student={student} schoolDetails={schoolDetails} subject={subject} />
+        <CoCurricularReport student={student} schoolDetails={schoolDetails} subject={subject} session={activeSession} />
       </div>
       <style>{`
         body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

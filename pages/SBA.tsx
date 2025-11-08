@@ -25,6 +25,7 @@ const SBA: React.FC = () => {
     const { activeSession } = useAppData();
     
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
     const [reportType, setReportType] = useState<'Formative' | 'Co-Curricular' | null>(null);
     const [selectedClass, setSelectedClass] = useState('');
     const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -34,14 +35,12 @@ const SBA: React.FC = () => {
         if (!activeSession) return [];
         const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
         const classNames = [...new Set(sessionInfos.map(info => info.className))];
-        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
         return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
     }, [activeSession]);
     
     const studentsInClass = useLiveQuery(async () => {
         if (!selectedClass || !activeSession) return [];
         
-        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
         const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ className: selectedClass, session: activeSession }).toArray();
         if (sessionInfos.length === 0) return [];
 
@@ -49,7 +48,6 @@ const SBA: React.FC = () => {
         const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
         const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
         
-        // FIX: Error on this line is resolved by typing `sessionInfos` above.
         const mergedStudents = studentDetails.map(student => ({
             ...student,
             rollNo: sessionInfoMap.get(student.id!)?.rollNo || '',
@@ -57,7 +55,6 @@ const SBA: React.FC = () => {
 
         return mergedStudents.sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
     }, [selectedClass, activeSession]);
-
 
     useEffect(() => {
         if (classOptions && classOptions.length > 0 && !selectedClass) {
@@ -119,11 +116,6 @@ const SBA: React.FC = () => {
             title: "Co-Curricular Activity Report",
             icon: <BarChart3Icon className="w-6 h-6" />,
             action: () => handleOpenReportModal('Co-Curricular')
-        },
-        {
-            title: "SBA Result Sheet",
-            icon: <BarChart3Icon className="w-6 h-6" />,
-            action: () => alert('This feature is not yet implemented.')
         }
     ];
 

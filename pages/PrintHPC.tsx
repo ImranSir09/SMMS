@@ -6,7 +6,6 @@ import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 import HolisticProgressCard from '../components/HolisticProgressCard';
-import { ACADEMIC_YEAR } from '../constants';
 
 // A type to hold all the fetched data for a student
 interface StudentReportBundle {

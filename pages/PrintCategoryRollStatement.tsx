@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { db } from '../services/db';
 import { Student, StudentSessionInfo } from '../types';
@@ -24,25 +23,28 @@ const PrintCategoryRollStatement: React.FC = () => {
         const studentIds = sessionInfos.map(info => info.studentId);
         const allStudentDetails = await db.students.where('id').anyOf(studentIds).toArray();
         const studentDetailsMap = new Map(allStudentDetails.map(s => [s.id!, s]));
+        const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
 
-        const allStudentsForSession = sessionInfos.map(info => {
-            const details = studentDetailsMap.get(info.studentId);
-            if (!details) return null;
-            // FIX: Reverted to spread syntax for better type inference.
+        // FIX: Reworked logic to iterate over student details first, ensuring the spread operator is always used on a valid Student object.
+        const allStudentsForSession = allStudentDetails.map(student => {
+            const info = sessionInfoMap.get(student.id!);
+            if (!info) return null;
             return {
-                ...details,
+                ...student,
                 className: info.className,
                 section: info.section,
                 rollNo: info.rollNo,
             };
-        // FIX: Removed invalid type predicate. `filter(Boolean)` correctly removes nulls and preserves the inferred type.
-        }).filter(Boolean);
+        // FIX: Replaced a potentially problematic filter with an explicit type guard to ensure nulls are removed and the type is correctly narrowed.
+        }).filter((student): student is NonNullable<typeof student> => student != null);
 
         const classNames = [...new Set(allStudentsForSession.map(s => s.className!))]
-            .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+            // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
+            .sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
         const grouped = new Map<string, Student[]>();
-        classNames.forEach(className => {
+        // FIX: Add explicit string type to forEach callback parameter to resolve index type error on 'grouped.set'.
+        classNames.forEach((className: string) => {
             const classStudents = allStudentsForSession
                 .filter(s => s.className === className)
                 .sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));

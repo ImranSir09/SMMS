@@ -10,7 +10,6 @@ import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import DobCertificate from '../components/DobCertificate';
 import BonafideCertificate from '../components/BonafideCertificate';
 import NepProgressCard from '../components/NepProgressCard';
-import { ACADEMIC_YEAR } from '../constants';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
@@ -144,7 +143,7 @@ const Certificates: React.FC = () => {
         if (!exam) throw new Error("Exam not found");
 
         const studentMarks = await db.marks.where({ studentId: foundStudent.id!, examId }).toArray();
-        const studentHpcReport = await db.hpcReports.where({ studentId: foundStudent.id!, session: ACADEMIC_YEAR }).first();
+        const studentHpcReport = await db.hpcReports.where({ studentId: foundStudent.id!, session: activeSession }).first();
         
         if (studentMarks.length === 0) {
             alert(`No marks found for ${foundStudent.name} in the selected exam.`);

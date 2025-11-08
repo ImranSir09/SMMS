@@ -64,9 +64,13 @@ const Dashboard: React.FC = () => {
     return (
         <div className="flex flex-col gap-6 animate-fade-in pb-8">
             <header className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl shadow-sm border border-primary/20">
-                 <div className="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-full flex-shrink-0">
-                    <SchoolIcon className="w-7 h-7 text-primary" />
-                </div>
+                 {schoolDetails?.logo ? (
+                    <img src={schoolDetails.logo} alt="School Logo" className="w-12 h-12 object-contain rounded-md flex-shrink-0" />
+                 ) : (
+                    <div className="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-md flex-shrink-0">
+                        <SchoolIcon className="w-7 h-7 text-primary" />
+                    </div>
+                 )}
                 <div>
                     <h1 className="text-2xl font-bold text-primary">
                         {schoolDetails?.name || 'School Name'}

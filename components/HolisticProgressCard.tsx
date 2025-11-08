@@ -2,7 +2,7 @@
 import React from 'react';
 // FIX: Import SbaProficiencyLevel to resolve type error.
 import { Student, SchoolDetails, SbaReportData, HPCReportData, Mark, DetailedFormativeAssessment, StudentExamData, Exam, FormativeProficiencyLevel, SbaProficiencyLevel } from '../types';
-import { ACADEMIC_YEAR, SUBJECTS } from '../constants';
+import { SUBJECTS } from '../constants';
 import ReportCardThermometer from './ReportCardThermometer';
 
 // Props Interface

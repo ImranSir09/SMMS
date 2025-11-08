@@ -10,6 +10,9 @@ interface ConsolidatedRollStatementProps {
 
 const GENDERS: ('Male' | 'Female' | 'Other')[] = ['Male', 'Female', 'Other'];
 
+// FIX: Moved GenderCounts type out of useMemo to make it accessible for typing and improve inference.
+type GenderCounts = { Male: number; Female: number; Other: number; };
+
 const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ studentsByClass, schoolDetails, session }) => {
 
     const summaryData = useMemo(() => {
@@ -17,7 +20,6 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
         const classNames = Array.from(studentsByClass.keys()).sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
         // FIX: Use a more specific type for gender counts to allow direct property access.
-        type GenderCounts = { Male: number; Female: number; Other: number; };
         const data: { [className: string]: { [category: string]: GenderCounts } } = {};
         const categoryTotals: { [category: string]: GenderCounts } = {};
         CATEGORY_OPTIONS.forEach(cat => {
@@ -125,10 +127,10 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
                                );
                            })}
                            {(() => {
-                               // FIX: With specific types, val is no longer 'unknown' and properties can be accessed.
-                               const grandMale = Object.values(summaryData.categoryTotals).reduce((sum, val) => sum + val.Male, 0);
-                               const grandFemale = Object.values(summaryData.categoryTotals).reduce((sum, val) => sum + val.Female, 0);
-                               const grandOther = Object.values(summaryData.categoryTotals).reduce((sum, val) => sum + val.Other, 0);
+                               // FIX: Changed from Object.values to Object.keys to avoid type inference issues on indexed objects.
+                               const grandMale = Object.keys(summaryData.categoryTotals).reduce((sum, key) => sum + summaryData.categoryTotals[key].Male, 0);
+                               const grandFemale = Object.keys(summaryData.categoryTotals).reduce((sum, key) => sum + summaryData.categoryTotals[key].Female, 0);
+                               const grandOther = Object.keys(summaryData.categoryTotals).reduce((sum, key) => sum + summaryData.categoryTotals[key].Other, 0);
                                return (
                                    <React.Fragment>
                                        <Td isTotal>{grandMale}</Td>

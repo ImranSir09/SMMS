@@ -1,3 +1,4 @@
+
 import React, { useContext, useEffect } from 'react';
 // FIX: Update react-router-dom imports for v6
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';

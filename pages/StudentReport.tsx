@@ -10,7 +10,6 @@ import HolisticProgressCard from '../components/HolisticProgressCard';
 import { DownloadIcon, UploadIcon } from '../components/icons';
 import Card from '../components/Card';
 import { useToast } from '../contexts/ToastContext';
-import { ACADEMIC_YEAR } from '../constants';
 import PhotoUploadModal from '../components/PhotoUploadModal';
 
 const StudentReport: React.FC = () => {

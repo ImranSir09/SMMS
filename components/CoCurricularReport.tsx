@@ -1,15 +1,15 @@
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
-import { ACADEMIC_YEAR } from '../constants';
 
 interface CoCurricularReportProps {
   student: Student;
   schoolDetails: SchoolDetails;
   subject: string;
+  session: string;
 }
 
-const CoCurricularReport: React.FC<CoCurricularReportProps> = ({ student, schoolDetails, subject }) => {
-  const sessionEndYear = parseInt(ACADEMIC_YEAR.split('-')[0]) + 1;
+const CoCurricularReport: React.FC<CoCurricularReportProps> = ({ student, schoolDetails, subject, session }) => {
+  const sessionEndYear = parseInt(session.split('-')[0]) + 1;
 
   return (
     <div className="A4-page-container">

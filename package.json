@@ -16,8 +16,7 @@
     "dexie-react-hooks": "^4.2.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.2",
-    "typescript": "^5.9.3",
-    "xlsx": "latest"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

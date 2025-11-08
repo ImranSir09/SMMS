@@ -7,7 +7,6 @@ import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 import FormativeAssessmentReport from '../components/FormativeAssessmentReport';
-import { ACADEMIC_YEAR } from '../constants';
 
 interface ReportBundle {
     student: Student;
