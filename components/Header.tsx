@@ -37,7 +37,7 @@ const Header: React.FC = () => {
             )}
             <div>
               <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground from-50% to-foreground/60">
-                  {schoolDetails?.name || 'School Management Pro'}
+                  {schoolDetails?.name || 'School Management Pro V2'}
               </h1>
               <p className="text-[10px] text-foreground/70 -mt-1">by Imran Gani Mugloo Teacher Zone Vailoo</p>
             </div>

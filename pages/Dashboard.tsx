@@ -12,6 +12,7 @@ import {
     InfoIcon,
     BriefcaseIcon,
 } from '../components/icons';
+import { CLASS_OPTIONS } from '../constants';
 
 const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: React.ReactNode; className: string; }> = ({ icon, label, value, className }) => (
     <div className={`p-3 rounded-xl flex items-center gap-3 ${className}`}>
@@ -51,7 +52,18 @@ const Dashboard: React.FC = () => {
         
         const classNames = [...new Set(studentSessionInfos.map(info => info.className))];
         // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
-        const sortedClassNames = classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        const sortedClassNames = classNames.sort((a: string, b: string) => {
+            const indexA = CLASS_OPTIONS.indexOf(a);
+            const indexB = CLASS_OPTIONS.indexOf(b);
+
+            if (indexA !== -1 && indexB !== -1) {
+                return indexA - indexB;
+            }
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            
+            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        });
 
         return {
             studentCount: students.length,
