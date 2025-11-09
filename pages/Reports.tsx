@@ -9,7 +9,7 @@ import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { BookmarkIcon, UserListIcon } from '../components/icons';
 import SubjectTopperList from '../components/SubjectTopperList';
 import { Student } from '../types';
-import { SUBJECTS } from '../constants';
+import { CLASS_OPTIONS, SUBJECTS } from '../constants';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
@@ -32,8 +32,14 @@ const Reports: React.FC = () => {
         if (!activeSession) return [];
         const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
         const classNames = [...new Set(sessionInfos.map(info => info.className))];
-        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
-        return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        return classNames.sort((a: string, b: string) => {
+            const indexA = CLASS_OPTIONS.indexOf(a);
+            const indexB = CLASS_OPTIONS.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        });
     }, [activeSession]);
     
     const handleGenerateTopperList = async () => {

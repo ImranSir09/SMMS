@@ -12,6 +12,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import StudentCard from '../components/StudentCard';
 import { useToast } from '../contexts/ToastContext';
 import { useAppData } from '../hooks/useAppData';
+import { CLASS_OPTIONS } from '../constants';
 
 const buttonStyle = "py-3 px-4 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
@@ -39,8 +40,14 @@ const Students: React.FC = () => {
             if (!activeSession) return [];
             const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
             const classNames = [...new Set(sessionInfos.map(info => info.className))];
-            // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
-            return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+            return classNames.sort((a: string, b: string) => {
+                const indexA = CLASS_OPTIONS.indexOf(a);
+                const indexB = CLASS_OPTIONS.indexOf(b);
+                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                if (indexA !== -1) return -1;
+                if (indexB !== -1) return 1;
+                return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+            });
         },
         [activeSession],
         []

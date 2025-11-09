@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { db } from '../services/db';
 import { Student, StudentSessionInfo } from '../types';
@@ -5,6 +6,7 @@ import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 import ConsolidatedRollStatement from '../components/Wizard'; // Renamed from CategoryWiseRollStatement
+import { CLASS_OPTIONS } from '../constants';
 
 const PrintCategoryRollStatement: React.FC = () => {
   const [studentsByClass, setStudentsByClass] = useState<Map<string, Student[]>>(new Map());
@@ -39,8 +41,14 @@ const PrintCategoryRollStatement: React.FC = () => {
         }).filter((student): student is NonNullable<typeof student> => student != null);
 
         const classNames = [...new Set(allStudentsForSession.map(s => s.className!))]
-            // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
-            .sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+            .sort((a: string, b: string) => {
+                const indexA = CLASS_OPTIONS.indexOf(a);
+                const indexB = CLASS_OPTIONS.indexOf(b);
+                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                if (indexA !== -1) return -1;
+                if (indexB !== -1) return 1;
+                return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+            });
 
         const grouped = new Map<string, Student[]>();
         // FIX: Add explicit string type to forEach callback parameter to resolve index type error on 'grouped.set'.

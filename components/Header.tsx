@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppData } from '../hooks/useAppData';
@@ -37,9 +38,9 @@ const Header: React.FC = () => {
             )}
             <div>
               <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground from-50% to-foreground/60">
-                  {schoolDetails?.name || 'School Management Pro V2'}
+                  {schoolDetails?.name || 'School Name'}
               </h1>
-              <p className="text-[10px] text-foreground/70 -mt-1">by Imran Gani Mugloo Teacher Zone Vailoo</p>
+              <p className="text-[10px] text-foreground/70 -mt-1">School Management Pro V2</p>
             </div>
           </>
         ) : (

@@ -99,7 +99,7 @@ const FormativeAssessmentReport: React.FC<FormativeAssessmentReportProps> = ({
             <PageContainer id={`fa-report-p1-${student.id}`}>
                 <header className="text-center">
                     <p className="font-semibold">Govt. of Jammu and Kashmir</p>
-                    <h1 className="text-2xl font-bold">{schoolDetails.name}</h1>
+                    <h1 className="text-2xl font-bold font-gothic">{schoolDetails.name}</h1>
                 </header>
 
                 <div className="grid grid-cols-3 gap-2 my-2">
@@ -114,10 +114,10 @@ const FormativeAssessmentReport: React.FC<FormativeAssessmentReportProps> = ({
                 <SectionTitle title="1. Student Profile:" />
                 <table className="w-full border-collapse">
                     <thead><tr>
-                        {['Adm No', 'Name', "Father's", "Mother's", 'D.O.B', 'Address', 'Class', 'Category', 'Aadhal No', 'Contact'].map(h => <Th key={h}>{h}</Th>)}
+                        {['Adm No', 'Name', "Father's", "Mother's", 'D.O.B', 'Class', 'Category', 'Aadhar No', 'Contact'].map(h => <Th key={h}>{h}</Th>)}
                     </tr></thead>
                     <tbody><tr>
-                        {[student.admissionNo, student.name, student.fathersName, student.mothersName, student.dob, student.address, student.className, student.category, student.aadharNo, student.contact].map((d,i) => <Td key={i} className="h-5">{d}</Td>)}
+                        {[student.admissionNo, student.name, student.fathersName, student.mothersName, student.dob, student.className, student.category, student.aadharNo, student.contact].map((d,i) => <Td key={i} className="h-5">{d}</Td>)}
                     </tr></tbody>
                 </table>
                 

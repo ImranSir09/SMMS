@@ -11,6 +11,7 @@ import { DownloadIcon, UploadIcon } from '../components/icons';
 import Card from '../components/Card';
 import { useToast } from '../contexts/ToastContext';
 import PhotoUploadModal from '../components/PhotoUploadModal';
+import { CLASS_OPTIONS } from '../constants';
 
 const StudentReport: React.FC = () => {
     const [selectedClass, setSelectedClass] = useState('');
@@ -26,8 +27,14 @@ const StudentReport: React.FC = () => {
         if (!activeSession) return [];
         const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
         const classNames = [...new Set(sessionInfos.map(info => info.className))];
-        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
-        return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        return classNames.sort((a: string, b: string) => {
+            const indexA = CLASS_OPTIONS.indexOf(a);
+            const indexB = CLASS_OPTIONS.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        });
     }, [activeSession]);
 
     const studentsInClass = useLiveQuery(async () => {

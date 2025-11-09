@@ -1,4 +1,3 @@
-
 import React from 'react';
 // FIX: Import SbaProficiencyLevel to resolve type error.
 import { Student, SchoolDetails, SbaReportData, HPCReportData, Mark, DetailedFormativeAssessment, StudentExamData, Exam, FormativeProficiencyLevel, SbaProficiencyLevel } from '../types';
@@ -123,7 +122,7 @@ const HolisticProgressCard: React.FC<HPCProps> = ({
             {/* Page 1 */}
             <PageContainer id={`hpc-page1-${student.id}`}>
                 <p className="text-center font-semibold">Govt. of Jammu and Kashmir</p>
-                <h1 className="text-center text-xl font-bold border-y-2 border-black my-2 py-1">GOVERNMENT MIDDLE SCHOOL SENZI</h1>
+                <h1 className="text-center text-xl font-bold border-y-2 border-black my-2 py-1 font-gothic">GOVERNMENT MIDDLE SCHOOL SENZI</h1>
                 <h2 className="text-center text-lg font-bold text-cyan-600 my-4">Holistic Progress Card</h2>
                 <h3 className="text-center text-md font-bold underline my-4">Student Profile</h3>
 
@@ -137,7 +136,7 @@ const HolisticProgressCard: React.FC<HPCProps> = ({
                                     {label: "Admission No", value: student.admissionNo}, {label: "Name", value: student.name},
                                     {label: "Father's Name", value: student.fathersName}, {label: "Mother's Name", value: student.mothersName},
                                     {label: "Father's Occupation", value: fatherOccupation}, {label: "Date of Birth", value: student.dob},
-                                    {label: "Address", value: student.address}, {label: "Gender", value: student.gender},
+                                    {label: "Gender", value: student.gender},
                                     {label: "Class", value: student.className}, {label: "Category", value: student.category},
                                     {label: "Aadhar No", value: student.aadharNo}, {label: "Bank Account", value: student.accountNo},
                                     {label: "Bank Name", value: schoolDetails.name}, // Assuming school bank, not student's. Document is ambiguous.

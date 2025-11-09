@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Student, SchoolDetails, Mark, HPCReportData } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -68,7 +67,7 @@ const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, schoo
             <header className="text-center mb-2 z-10">
                 {schoolDetails.logo && <img src={schoolDetails.logo} alt="School Logo" className="h-28 w-28 mx-auto object-contain mb-1" />}
                 <h1 className="text-2xl font-bold font-gothic tracking-wide">{schoolDetails.name.toUpperCase()}</h1>
-                <p className="text-xs">{schoolDetails.address}</p>
+                <p className="text-xs">Email: {schoolDetails.email} | UDISE: {schoolDetails.udiseCode}</p>
             </header>
 
             <div className="text-center border-y-2 border-slate-800 py-1 mb-2 z-10">

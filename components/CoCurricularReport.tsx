@@ -22,7 +22,8 @@ const CoCurricularReport: React.FC<CoCurricularReportProps> = ({ student, school
 
           <header className="text-center mb-4 mt-2">
             <p className="font-semibold text-lg">Govt. of Jammu and Kashmir</p>
-            <h1 className="text-4xl font-bold mt-2">{schoolDetails.name}</h1>
+            <h1 className="text-4xl font-bold mt-2 font-gothic">{schoolDetails.name}</h1>
+            <p className="text-sm">Email: {schoolDetails.email} | UDISE: {schoolDetails.udiseCode}</p>
             <h2 className="text-lg font-semibold mt-4 border-b-2 border-black inline-block px-4">
               Format for recording Co-Curricular activities session: {sessionEndYear}
             </h2>

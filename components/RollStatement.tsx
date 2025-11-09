@@ -12,10 +12,10 @@ const RollStatement: React.FC<RollStatementProps> = ({ students, className, scho
     <div className="A4-page-container">
       <div id="roll-statement" className="w-[210mm] h-auto min-h-[297mm] bg-white p-8 font-sans text-black flex flex-col">
         <header className="text-center mb-6">
-          <h1 className="text-2xl font-bold uppercase">{schoolDetails?.name || 'School Name'}</h1>
-          <p className="text-md">{schoolDetails?.address || 'School Address'}</p>
+          <h1 className="text-2xl font-bold uppercase font-gothic">{schoolDetails?.name || 'School Name'}</h1>
+          <p className="text-sm">Email: {schoolDetails?.email} | UDISE: {schoolDetails?.udiseCode}</p>
           <p className="text-xs text-gray-600 mt-1">
-            Ph: {schoolDetails?.phone} | Email: {schoolDetails?.email} | UDISE: {schoolDetails?.udiseCode}
+            Ph: {schoolDetails?.phone}
           </p>
           <h2 className="text-xl font-semibold mt-4">Roll Statement - Class {className}</h2>
         </header>
