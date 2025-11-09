@@ -1,51 +1,43 @@
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { db } from '../services/db';
-import { Student } from '../types';
-import DobCertificate from '../components/DobCertificate';
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
+import SubjectTopperList from '../components/SubjectTopperList';
+import { Student } from '../types';
 
-const PrintDobCertificate: React.FC = () => {
-  const { studentId } = useParams<{ studentId: string }>();
+const PrintTopperList: React.FC = () => {
   const location = useLocation();
-  const { photo } = location.state || {};
-
-  const [student, setStudent] = useState<Student | null>(null);
   const { schoolDetails } = useAppData();
+  const { toppers, examName, subjectName } = location.state as {
+      toppers: { student: Student; totalScore: number }[];
+      examName: string;
+      subjectName: string;
+  } || {};
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    if (studentId) {
-      db.students.get(Number(studentId)).then(setStudent);
-    }
-  }, [studentId]);
-
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   const handleDownloadPdf = async () => {
-    if (student && schoolDetails) {
-        setIsProcessing(true);
-        await generatePdfFromComponent(
-            <DobCertificate student={student} schoolDetails={schoolDetails} photo={photo} />,
-            `DOB-Certificate-${student.admissionNo}-${student.name}`
-        );
-        setIsProcessing(false);
+    if (toppers && schoolDetails) {
+      setIsProcessing(true);
+      await generatePdfFromComponent(
+        <SubjectTopperList toppers={toppers} examName={examName} subjectName={subjectName} schoolDetails={schoolDetails} />,
+        `Topper-List-${examName}-${subjectName}`
+      );
+      setIsProcessing(false);
     }
   };
 
-  if (!student || !schoolDetails) {
-    return <div className="p-4 text-center">Loading student data...</div>;
+  if (!toppers || !schoolDetails) {
+    return <div className="p-4 text-center">Loading report data...</div>;
   }
 
   const ControlPanel = () => (
       <div className="control-panel w-full bg-card p-3 mb-4 rounded-lg shadow-md print:hidden">
         <h1 className="text-lg font-bold">Document Preview</h1>
-        <p className="text-sm text-foreground/70 mb-3">Preview for {student.name}'s DOB Certificate.</p>
+        <p className="text-sm text-foreground/70 mb-3">Preview for {subjectName} Topper List in {examName}.</p>
         <div className="flex flex-wrap gap-2">
              <button
                 onClick={handleDownloadPdf}
@@ -69,7 +61,7 @@ const PrintDobCertificate: React.FC = () => {
         <ControlPanel />
       
         <div id="printable-content" className="w-full">
-            <DobCertificate student={student} schoolDetails={schoolDetails} photo={photo} />
+            <SubjectTopperList toppers={toppers} examName={examName} subjectName={subjectName} schoolDetails={schoolDetails} />
         </div>
 
         <style>{`
@@ -124,4 +116,4 @@ const PrintDobCertificate: React.FC = () => {
   );
 };
 
-export default PrintDobCertificate;
+export default PrintTopperList;

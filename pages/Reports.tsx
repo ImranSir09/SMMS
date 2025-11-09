@@ -5,16 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { BookmarkIcon, UserListIcon } from '../components/icons';
-import SubjectTopperList from '../components/SubjectTopperList';
 import { Student } from '../types';
 import { CLASS_OPTIONS, SUBJECTS } from '../constants';
 
-const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
+const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus-outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
 const Reports: React.FC = () => {
-    const { schoolDetails, activeSession } = useAppData();
+    const { activeSession } = useAppData();
     const navigate = useNavigate();
 
     const exams = useLiveQuery(() => 
@@ -79,18 +77,16 @@ const Reports: React.FC = () => {
             .sort((a, b) => b.totalScore - a.totalScore)
             .slice(0, 5); // Get top 5
 
-            await generatePdfFromComponent(
-                <SubjectTopperList
-                    toppers={rankedStudents as { student: Student; totalScore: number }[]}
-                    examName={exam.name}
-                    subjectName={selectedSubject}
-                    schoolDetails={schoolDetails!}
-                />,
-                `Topper-List-${exam.name}-${selectedSubject}`
-            );
+            navigate('/print/topper-list', {
+                state: {
+                    toppers: rankedStudents as { student: Student; totalScore: number }[],
+                    examName: exam.name,
+                    subjectName: selectedSubject,
+                }
+            });
 
         } catch (err: any) {
-            console.error("Failed to generate topper list:", err);
+            console.error("Failed to prepare topper list:", err);
             setTopperListError(err.message || 'An unexpected error occurred.');
         } finally {
             setIsGeneratingTopperList(false);
@@ -136,7 +132,7 @@ const Reports: React.FC = () => {
                         disabled={isGeneratingTopperList}
                         className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
                     >
-                        {isGeneratingTopperList ? 'Generating...' : 'Generate Topper List PDF'}
+                        {isGeneratingTopperList ? 'Preparing...' : 'Generate Topper List'}
                     </button>
                 </div>
             </Card>
@@ -160,13 +156,13 @@ const Reports: React.FC = () => {
                         disabled={!selectedClass}
                         className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold disabled:opacity-60"
                     >
-                        Generate Class Roll Statement PDF
+                        Generate Class Roll Statement
                     </button>
                     <button 
                         onClick={handleGenerateCategoryRollStatement} 
                         className="w-full py-3 px-5 rounded-md bg-accent text-accent-foreground hover:bg-accent-hover text-sm font-semibold"
                     >
-                        Generate Category Wise PDF (All Classes)
+                        Generate Category Wise (All Classes)
                     </button>
                 </div>
             </Card>

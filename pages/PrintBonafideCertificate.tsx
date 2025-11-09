@@ -3,12 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student } from '../types';
-import DobCertificate from '../components/DobCertificate';
+import BonafideCertificate from '../components/BonafideCertificate';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 
-const PrintDobCertificate: React.FC = () => {
+const PrintBonafideCertificate: React.FC = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const location = useLocation();
   const { photo } = location.state || {};
@@ -31,8 +31,8 @@ const PrintDobCertificate: React.FC = () => {
     if (student && schoolDetails) {
         setIsProcessing(true);
         await generatePdfFromComponent(
-            <DobCertificate student={student} schoolDetails={schoolDetails} photo={photo} />,
-            `DOB-Certificate-${student.admissionNo}-${student.name}`
+            <BonafideCertificate student={student} schoolDetails={schoolDetails} photo={photo} />,
+            `Bonafide-Certificate-${student.admissionNo}-${student.name}`
         );
         setIsProcessing(false);
     }
@@ -45,7 +45,7 @@ const PrintDobCertificate: React.FC = () => {
   const ControlPanel = () => (
       <div className="control-panel w-full bg-card p-3 mb-4 rounded-lg shadow-md print:hidden">
         <h1 className="text-lg font-bold">Document Preview</h1>
-        <p className="text-sm text-foreground/70 mb-3">Preview for {student.name}'s DOB Certificate.</p>
+        <p className="text-sm text-foreground/70 mb-3">Preview for {student.name}'s Bonafide Certificate.</p>
         <div className="flex flex-wrap gap-2">
              <button
                 onClick={handleDownloadPdf}
@@ -69,7 +69,7 @@ const PrintDobCertificate: React.FC = () => {
         <ControlPanel />
       
         <div id="printable-content" className="w-full">
-            <DobCertificate student={student} schoolDetails={schoolDetails} photo={photo} />
+            <BonafideCertificate student={student} schoolDetails={schoolDetails} photo={photo} />
         </div>
 
         <style>{`
@@ -124,4 +124,4 @@ const PrintDobCertificate: React.FC = () => {
   );
 };
 
-export default PrintDobCertificate;
+export default PrintBonafideCertificate;

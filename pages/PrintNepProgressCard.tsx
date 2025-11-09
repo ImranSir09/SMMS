@@ -2,50 +2,74 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { db } from '../services/db';
-import { Student } from '../types';
-import DobCertificate from '../components/DobCertificate';
+import { Student, Mark, HPCReportData, Exam } from '../types';
+import NepProgressCard from '../components/NepProgressCard';
 import { useAppData } from '../hooks/useAppData';
 import { generatePdfFromComponent } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 
-const PrintDobCertificate: React.FC = () => {
+const PrintNepProgressCard: React.FC = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const location = useLocation();
-  const { photo } = location.state || {};
+  const { examId: examIdStr } = location.state || {};
+  const examId = Number(examIdStr);
 
   const [student, setStudent] = useState<Student | null>(null);
-  const { schoolDetails } = useAppData();
+  const [marks, setMarks] = useState<Mark[]>([]);
+  const [hpcReport, setHpcReport] = useState<HPCReportData | null>(null);
+  const [exam, setExam] = useState<Exam | null>(null);
+  const { schoolDetails, activeSession } = useAppData();
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    if (studentId) {
-      db.students.get(Number(studentId)).then(setStudent);
-    }
-  }, [studentId]);
+    const studentNumId = Number(studentId);
+    if (isNaN(studentNumId) || isNaN(examId)) return;
+    
+    const fetchData = async () => {
+        const [studentData, marksData, hpcData, examData] = await Promise.all([
+            db.students.get(studentNumId),
+            db.marks.where({ studentId: studentNumId, examId: examId }).toArray(),
+            db.hpcReports.where({ studentId: studentNumId, session: activeSession }).first(),
+            db.exams.get(examId)
+        ]);
+        setStudent(studentData || null);
+        setMarks(marksData);
+        setHpcReport(hpcData || null);
+        setExam(examData || null);
+    };
+    fetchData();
+
+  }, [studentId, examId, activeSession]);
 
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownloadPdf = async () => {
-    if (student && schoolDetails) {
+    if (student && schoolDetails && exam) {
         setIsProcessing(true);
         await generatePdfFromComponent(
-            <DobCertificate student={student} schoolDetails={schoolDetails} photo={photo} />,
-            `DOB-Certificate-${student.admissionNo}-${student.name}`
+            <NepProgressCard 
+                student={student} 
+                marks={marks}
+                schoolDetails={schoolDetails} 
+                hpcReport={hpcReport}
+                examName={exam.name}
+            />,
+            `NEP-Card-${exam.name}-${student.admissionNo}`
         );
         setIsProcessing(false);
     }
   };
 
-  if (!student || !schoolDetails) {
-    return <div className="p-4 text-center">Loading student data...</div>;
+  if (!student || !schoolDetails || !exam) {
+    return <div className="p-4 text-center">Loading report data...</div>;
   }
 
   const ControlPanel = () => (
       <div className="control-panel w-full bg-card p-3 mb-4 rounded-lg shadow-md print:hidden">
         <h1 className="text-lg font-bold">Document Preview</h1>
-        <p className="text-sm text-foreground/70 mb-3">Preview for {student.name}'s DOB Certificate.</p>
+        <p className="text-sm text-foreground/70 mb-3">Preview for {student.name}'s NEP Progress Card for {exam.name}.</p>
         <div className="flex flex-wrap gap-2">
              <button
                 onClick={handleDownloadPdf}
@@ -69,7 +93,13 @@ const PrintDobCertificate: React.FC = () => {
         <ControlPanel />
       
         <div id="printable-content" className="w-full">
-            <DobCertificate student={student} schoolDetails={schoolDetails} photo={photo} />
+            <NepProgressCard 
+                student={student}
+                marks={marks}
+                schoolDetails={schoolDetails}
+                hpcReport={hpcReport}
+                examName={exam.name}
+            />
         </div>
 
         <style>{`
@@ -124,4 +154,4 @@ const PrintDobCertificate: React.FC = () => {
   );
 };
 
-export default PrintDobCertificate;
+export default PrintNepProgressCard;

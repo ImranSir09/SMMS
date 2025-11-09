@@ -1,15 +1,12 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student, Exam } from '../types';
 import Card from '../components/Card';
 import { ExamsIcon, CalendarIcon, CertificateIcon, BonafideIcon, SearchIcon, UploadIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
-import DobCertificate from '../components/DobCertificate';
-import BonafideCertificate from '../components/BonafideCertificate';
-import NepProgressCard from '../components/NepProgressCard';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
@@ -19,12 +16,13 @@ type StudentWithSessionInfo = Student & { className?: string; section?: string; 
 
 const Certificates: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const [searchId, setSearchId] = useState(location.state?.searchId || '');
   const [foundStudent, setFoundStudent] = useState<StudentWithSessionInfo | null>(null);
   const [error, setError] = useState('');
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const { schoolDetails, activeSession } = useAppData();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { activeSession } = useAppData();
   
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [certType, setCertType] = useState<'dob' | 'bonafide' | null>(null);
@@ -77,13 +75,6 @@ const Certificates: React.FC = () => {
       }
   }, [isNepCardModalOpen, foundStudent, activeSession]);
 
-  const generateDoc = async (component: React.ReactElement, fileName: string) => {
-      if (!schoolDetails) return;
-      setIsGeneratingPdf(true);
-      await generatePdfFromComponent(component, fileName);
-      setIsGeneratingPdf(false);
-  };
-  
   const handleOpenCertModal = (type: 'dob' | 'bonafide') => {
     setCertType(type);
     setCertPhoto(null);
@@ -109,67 +100,23 @@ const Certificates: React.FC = () => {
     }
   };
 
-  const handleFinalGenerate = async () => {
-    if (!foundStudent || !certType || !schoolDetails) {
-        alert("Required data is missing to generate the certificate.");
-        return;
-    }
-
-    let componentToRender;
-    const fileName = `${certType === 'dob' ? 'DOB' : 'Bonafide'}-Cert-${foundStudent.admissionNo}`;
-
-    if (certType === 'dob') {
-        componentToRender = <DobCertificate student={foundStudent} schoolDetails={schoolDetails} photo={certPhoto} />;
-    } else if (certType === 'bonafide') {
-        componentToRender = <BonafideCertificate student={foundStudent} schoolDetails={schoolDetails} photo={certPhoto} />;
-    }
+  const handleFinalGenerate = () => {
+    if (!foundStudent || !certType) return;
     
-    if (componentToRender) {
-        await generateDoc(componentToRender, fileName);
-    }
-    
+    setIsProcessing(true);
+    const route = certType === 'dob' ? 'dob-certificate' : 'bonafide-certificate';
+    navigate(`/print/${route}/${foundStudent.id}`, { state: { photo: certPhoto } });
     setIsCertModalOpen(false);
+    setIsProcessing(false);
   };
 
-  const handleGenerateNepCard = async () => {
-    if (!foundStudent || !selectedExamIdForNep || !schoolDetails) {
-        alert("Required data is missing to generate the card.");
-        return;
-    }
-    setIsGeneratingPdf(true);
-    try {
-        const examId = Number(selectedExamIdForNep);
-        const exam = await db.exams.get(examId);
-        if (!exam) throw new Error("Exam not found");
-
-        const studentMarks = await db.marks.where({ studentId: foundStudent.id!, examId }).toArray();
-        const studentHpcReport = await db.hpcReports.where({ studentId: foundStudent.id!, session: activeSession }).first();
-        
-        if (studentMarks.length === 0) {
-            alert(`No marks found for ${foundStudent.name} in the selected exam.`);
-            setIsGeneratingPdf(false);
-            return;
-        }
-
-        await generateDoc(
-            <NepProgressCard 
-                student={foundStudent}
-                marks={studentMarks}
-                hpcReport={studentHpcReport || null}
-                schoolDetails={schoolDetails}
-                examName={exam.name}
-            />,
-            `NEP-Card-${exam.name}-${foundStudent.admissionNo}`
-        );
-        
-        setIsNepCardModalOpen(false);
-
-    } catch (error) {
-        console.error("NEP Card Generation failed:", error);
-        alert("Failed to generate NEP Progress Card.");
-    } finally {
-        setIsGeneratingPdf(false);
-    }
+  const handleGenerateNepCard = () => {
+    if (!foundStudent || !selectedExamIdForNep) return;
+    
+    setIsProcessing(true);
+    navigate(`/print/nep-progress-card/${foundStudent.id}`, { state: { examId: selectedExamIdForNep } });
+    setIsNepCardModalOpen(false);
+    setIsProcessing(false);
   };
 
   return (
@@ -195,13 +142,13 @@ const Certificates: React.FC = () => {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-2">
-               <button onClick={() => handleOpenCertModal('dob')} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-purple-600`}>
+               <button onClick={() => handleOpenCertModal('dob')} disabled={isProcessing} className={`${docButtonStyle} bg-purple-600`}>
                     <CalendarIcon className="w-3.5 h-3.5" /> DOB Cert
                </button>
-               <button onClick={() => handleOpenCertModal('bonafide')} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-pink-600`}>
+               <button onClick={() => handleOpenCertModal('bonafide')} disabled={isProcessing} className={`${docButtonStyle} bg-pink-600`}>
                     <BonafideIcon className="w-3.5 h-3.5" /> Bonafide
                </button>
-               <button onClick={() => setIsNepCardModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-green-600`}>
+               <button onClick={() => setIsNepCardModalOpen(true)} disabled={isProcessing} className={`${docButtonStyle} bg-green-600`}>
                     <ExamsIcon className="w-3.5 h-3.5" /> NEP Card
                </button>
           </div>
@@ -235,10 +182,10 @@ const Certificates: React.FC = () => {
                     <button type="button" onClick={() => setIsNepCardModalOpen(false)} className="py-3 px-5 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm font-semibold">Cancel</button>
                     <button 
                         onClick={handleGenerateNepCard}
-                        disabled={isGeneratingPdf || !selectedExamIdForNep} 
+                        disabled={isProcessing || !selectedExamIdForNep} 
                         className="py-3 px-5 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-semibold disabled:opacity-60"
                     >
-                        {isGeneratingPdf ? 'Generating...' : 'Generate'}
+                        {isProcessing ? 'Processing...' : 'Generate'}
                     </button>
                 </div>
             </div>
@@ -269,10 +216,10 @@ const Certificates: React.FC = () => {
                 <div className="flex justify-end pt-2">
                     <button 
                         onClick={handleFinalGenerate}
-                        disabled={isGeneratingPdf}
+                        disabled={isProcessing}
                         className="py-3 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors disabled:opacity-60"
                     >
-                        {isGeneratingPdf ? 'Generating...' : `Generate PDF ${certPhoto ? 'with' : 'without'} Photo`}
+                        {isProcessing ? 'Processing...' : `Preview PDF ${certPhoto ? 'with' : 'without'} Photo`}
                     </button>
                 </div>
             </div>

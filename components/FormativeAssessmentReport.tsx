@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails, SbaReportData, Mark, DetailedFormativeAssessment, FormativeProficiencyLevel } from '../types';
 import { SUBJECTS } from '../constants';
@@ -14,8 +15,8 @@ interface FormativeAssessmentReportProps {
 }
 
 // Helper Components
-const PageContainer: React.FC<{ children: React.ReactNode, id: string, isLastPage?: boolean }> = ({ children, id, isLastPage = false }) => (
-    <div id={id} className={`w-[210mm] h-[297mm] bg-white p-4 font-sans text-black text-xs relative overflow-hidden ${!isLastPage ? 'page-break' : ''}`}>
+const PageContainer: React.FC<{ children: React.ReactNode, id: string, className?: string }> = ({ children, id, className = '' }) => (
+    <div id={id} className={`w-[210mm] h-[297mm] bg-white p-4 font-sans text-black text-xs relative overflow-hidden ${className}`}>
         <div className="w-full h-full border-2 border-dashed border-black p-2 flex flex-col">
             {children}
         </div>
@@ -93,114 +94,114 @@ const FormativeAssessmentReport: React.FC<FormativeAssessmentReportProps> = ({
 
     return (
         <div>
-            <style>{`.page-break { page-break-after: always; }`}</style>
+            <div className="A4-page-container">
+                <PageContainer id={`fa-report-p1-${student.id}`} className="page-break">
+                    <header className="text-center">
+                        <p className="font-semibold">Govt. of Jammu and Kashmir</p>
+                        <h1 className="text-2xl font-bold font-gothic">{schoolDetails.name}</h1>
+                    </header>
+
+                    <div className="grid grid-cols-3 gap-2 my-2">
+                        <div className="col-span-1">
+                            {photo ? <img src={photo} alt="Student" className="w-full h-36 object-cover border-2 border-black" /> : <div className="w-full h-36 border-2 border-black bg-gray-200"></div>}
+                        </div>
+                        <div className="col-span-2 h-36">
+                            <ProficiencyBarChart data={chartData} title="Student Proficiency level" />
+                        </div>
+                    </div>
+
+                    <SectionTitle title="1. Student Profile:" />
+                    <table className="w-full border-collapse">
+                        <thead><tr>
+                            {['Adm No', 'Name', "Father's", "Mother's", 'D.O.B', 'Class', 'Category', 'Aadhar No', 'Contact'].map(h => <Th key={h}>{h}</Th>)}
+                        </tr></thead>
+                        <tbody><tr>
+                            {[student.admissionNo, student.name, student.fathersName, student.mothersName, student.dob, student.className, student.category, student.aadharNo, student.contact].map((d,i) => <Td key={i} className="h-5">{d}</Td>)}
+                        </tr></tbody>
+                    </table>
+                    
+                    <SectionTitle title="2. Student Physical and Mental Wellbeing:" />
+                    <table className="w-full border-collapse"><tbody><tr>
+                        <Th className="w-1/3">Physical Wellbeing</Th><Th className="w-1/3">Mental Wellbeing</Th><Th className="w-1/3">Disease Found</Th>
+                    </tr><tr>
+                        <Td className="h-5">{sbaData?.physicalWellbeing}</Td><Td>{sbaData?.mentalWellbeing}</Td><Td>{sbaData?.diseaseFound}</Td>
+                    </tr></tbody></table>
+
+                    <SectionTitle title="3. 21st century learning skills (Proficiency Levels):" />
+                    <table className="w-full border-collapse"><tbody><tr>
+                        <Th>Creativity</Th><Th>Critical Thinking</Th><Th>Communication</Th><Th>Problem Solving</Th><Th>Collaboration</Th>
+                    </tr><tr>
+                        <Td className="h-5">{sbaData?.creativity}</Td><Td>{sbaData?.criticalThinking}</Td><Td>{sbaData?.communicationSkill}</Td><Td>{sbaData?.problemSolvingAbility}</Td><Td>{sbaData?.collaboration}</Td>
+                    </tr></tbody></table>
+                    
+                    <SectionTitle title="4. Other Attributes:(Proficiency Levels):" />
+                    <table className="w-full border-collapse"><tbody><tr>
+                        <Th>Talent</Th><Th>Participation</Th><Th>Attitude</Th><Th>Presentation</Th><Th>Writing</Th><Th>Comprehension</Th>
+                    </tr><tr>
+                        <Td className="h-5">{sbaData?.studentsTalent}</Td><Td>{sbaData?.participationInActivities}</Td><Td>{sbaData?.attitudeAndValues}</Td><Td>{sbaData?.presentationSkill}</Td><Td>{sbaData?.writingSkill}</Td><Td>{sbaData?.comprehensionSkill}</Td>
+                    </tr></tbody></table>
+
+                    <SectionTitle title="5. Formative Assessment:" />
+                    <p className="text-[8px] text-center text-gray-600 mt-auto">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
+                </PageContainer>
+            </div>
             
-            {/* Page 1 */}
-            <PageContainer id={`fa-report-p1-${student.id}`}>
-                <header className="text-center">
-                    <p className="font-semibold">Govt. of Jammu and Kashmir</p>
-                    <h1 className="text-2xl font-bold font-gothic">{schoolDetails.name}</h1>
-                </header>
-
-                <div className="grid grid-cols-3 gap-2 my-2">
-                    <div className="col-span-1">
-                        {photo ? <img src={photo} alt="Student" className="w-full h-36 object-cover border-2 border-black" /> : <div className="w-full h-36 border-2 border-black bg-gray-200"></div>}
+            <div className="A4-page-container">
+                <PageContainer id={`fa-report-p2-${student.id}`} className="page-break">
+                    <div className="flex-grow space-y-2">
+                        <div>
+                            <h4 className="font-semibold ml-4">A. Aademic Performance:</h4>
+                            <table className="w-full border-collapse">
+                                <thead><tr>
+                                    <Th>Subject</Th><Th>F1</Th><Th>F2</Th><Th>F3</Th><Th>F4</Th><Th>F5</Th><Th>F6</Th><Th>Total Score @ 30</Th>
+                                </tr></thead>
+                                <tbody>
+                                {SUBJECTS.map(subject => {
+                                    const mark = academicMarksBySubject.get(subject);
+                                    const total = (mark?.fa1||0)+(mark?.fa2||0)+(mark?.fa3||0)+(mark?.fa4||0)+(mark?.fa5||0)+(mark?.fa6||0);
+                                    return (<tr key={subject}>
+                                        <Td className="text-left">{subject}</Td><Td>{mark?.fa1||'-'}</Td><Td>{mark?.fa2||'-'}</Td><Td>{mark?.fa3||'-'}</Td>
+                                        <Td>{mark?.fa4||'-'}</Td><Td>{mark?.fa5||'-'}</Td><Td>{mark?.fa6||'-'}</Td><Td>{total||'-'}</Td>
+                                    </tr>);
+                                })}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h4 className="font-semibold ml-4">B. Co-Curricular Activities:</h4>
+                            <table className="w-full border-collapse text-[9px]"><thead><tr>
+                               {['Formative Assess.', 'Physical Act. @4', 'Participation @4', 'Culture @4', 'Health @2', 'Env/IT @2', 'Discipline @2', 'Attendance @2', 'Total @20'].map(h => <Th key={h}>{h}</Th>)}
+                            </tr></thead><tbody><tr>
+                                <Td className="h-4">-</Td>
+                                <Td>{coCurricularScores['physicalActivity'] || '-'}</Td><Td>{coCurricularScores['participationInSchoolActivities'] || '-'}</Td>
+                                <Td>{coCurricularScores['culturalAndCreativeActivities'] || '-'}</Td><Td>{coCurricularScores['healthAndHygiene'] || '-'}</Td>
+                                <Td>{coCurricularScores['environmentAndITAwareness'] || '-'}</Td><Td>{coCurricularScores['discipline'] || '-'}</Td>
+                                <Td>{coCurricularScores['attendance'] || '-'}</Td><Td>{totalCoCurricularScore}</Td>
+                            </tr></tbody></table>
+                        </div>
+                         <div>
+                            <h4 className="font-bold text-sm">6. Anecdotal Record:</h4>
+                            <table className="w-full border-collapse"><thead><tr>
+                                <Th className="w-1/4">Dated</Th><Th>Teachers Observation</Th>
+                            </tr></thead><tbody>
+                                {allDetailedFA.slice(0, 5).map((fa, i) => (
+                                    <tr key={i}><Td className="h-8">{fa.anecdotalRecord?.date}</Td><Td className="text-left">{fa.anecdotalRecord?.observation}</Td></tr>
+                                ))}
+                                {Array.from({ length: Math.max(0, 5 - allDetailedFA.length) }).map((_, i) => (
+                                   <tr key={`empty-${i}`}><Td className="h-8">&nbsp;</Td><Td></Td></tr>
+                                ))}
+                            </tbody></table>
+                        </div>
                     </div>
-                    <div className="col-span-2 h-36">
-                        <ProficiencyBarChart data={chartData} title="Student Proficiency level" />
+                    <div className="mt-auto pt-16 flex justify-end">
+                        <div className="text-center">
+                            <p className="font-bold text-sm">Principal/Headmaster</p>
+                            <p className="text-xs">{schoolDetails.name}</p>
+                        </div>
                     </div>
-                </div>
-
-                <SectionTitle title="1. Student Profile:" />
-                <table className="w-full border-collapse">
-                    <thead><tr>
-                        {['Adm No', 'Name', "Father's", "Mother's", 'D.O.B', 'Class', 'Category', 'Aadhar No', 'Contact'].map(h => <Th key={h}>{h}</Th>)}
-                    </tr></thead>
-                    <tbody><tr>
-                        {[student.admissionNo, student.name, student.fathersName, student.mothersName, student.dob, student.className, student.category, student.aadharNo, student.contact].map((d,i) => <Td key={i} className="h-5">{d}</Td>)}
-                    </tr></tbody>
-                </table>
-                
-                <SectionTitle title="2. Student Physical and Mental Wellbeing:" />
-                <table className="w-full border-collapse"><tbody><tr>
-                    <Th className="w-1/3">Physical Wellbeing</Th><Th className="w-1/3">Mental Wellbeing</Th><Th className="w-1/3">Disease Found</Th>
-                </tr><tr>
-                    <Td className="h-5">{sbaData?.physicalWellbeing}</Td><Td>{sbaData?.mentalWellbeing}</Td><Td>{sbaData?.diseaseFound}</Td>
-                </tr></tbody></table>
-
-                <SectionTitle title="3. 21st century learning skills (Proficiency Levels):" />
-                <table className="w-full border-collapse"><tbody><tr>
-                    <Th>Creativity</Th><Th>Critical Thinking</Th><Th>Communication</Th><Th>Problem Solving</Th><Th>Collaboration</Th>
-                </tr><tr>
-                    <Td className="h-5">{sbaData?.creativity}</Td><Td>{sbaData?.criticalThinking}</Td><Td>{sbaData?.communicationSkill}</Td><Td>{sbaData?.problemSolvingAbility}</Td><Td>{sbaData?.collaboration}</Td>
-                </tr></tbody></table>
-                
-                <SectionTitle title="4. Other Attributes:(Proficiency Levels):" />
-                <table className="w-full border-collapse"><tbody><tr>
-                    <Th>Talent</Th><Th>Participation</Th><Th>Attitude</Th><Th>Presentation</Th><Th>Writing</Th><Th>Comprehension</Th>
-                </tr><tr>
-                    <Td className="h-5">{sbaData?.studentsTalent}</Td><Td>{sbaData?.participationInActivities}</Td><Td>{sbaData?.attitudeAndValues}</Td><Td>{sbaData?.presentationSkill}</Td><Td>{sbaData?.writingSkill}</Td><Td>{sbaData?.comprehensionSkill}</Td>
-                </tr></tbody></table>
-
-                <SectionTitle title="5. Formative Assessment:" />
-                <p className="text-center text-[9px] text-gray-600 mt-auto">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
-            </PageContainer>
-            
-            {/* Page 2 */}
-            <PageContainer id={`fa-report-p2-${student.id}`} isLastPage>
-                <div className="flex-grow space-y-2">
-                    <div>
-                        <h4 className="font-semibold ml-4">A. Aademic Performance:</h4>
-                        <table className="w-full border-collapse">
-                            <thead><tr>
-                                <Th>Subject</Th><Th>F1</Th><Th>F2</Th><Th>F3</Th><Th>F4</Th><Th>F5</Th><Th>F6</Th><Th>Total Score @ 30</Th>
-                            </tr></thead>
-                            <tbody>
-                            {SUBJECTS.map(subject => {
-                                const mark = academicMarksBySubject.get(subject);
-                                const total = (mark?.fa1||0)+(mark?.fa2||0)+(mark?.fa3||0)+(mark?.fa4||0)+(mark?.fa5||0)+(mark?.fa6||0);
-                                return (<tr key={subject}>
-                                    <Td className="text-left">{subject}</Td><Td>{mark?.fa1||'-'}</Td><Td>{mark?.fa2||'-'}</Td><Td>{mark?.fa3||'-'}</Td>
-                                    <Td>{mark?.fa4||'-'}</Td><Td>{mark?.fa5||'-'}</Td><Td>{mark?.fa6||'-'}</Td><Td>{total||'-'}</Td>
-                                </tr>);
-                            })}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div>
-                        <h4 className="font-semibold ml-4">B. Co-Curricular Activities:</h4>
-                        <table className="w-full border-collapse text-[9px]"><thead><tr>
-                           {['Formative Assess.', 'Physical Act. @4', 'Participation @4', 'Culture @4', 'Health @2', 'Env/IT @2', 'Discipline @2', 'Attendance @2', 'Total @20'].map(h => <Th key={h}>{h}</Th>)}
-                        </tr></thead><tbody><tr>
-                            <Td className="h-4">-</Td>
-                            <Td>{coCurricularScores['physicalActivity'] || '-'}</Td><Td>{coCurricularScores['participationInSchoolActivities'] || '-'}</Td>
-                            <Td>{coCurricularScores['culturalAndCreativeActivities'] || '-'}</Td><Td>{coCurricularScores['healthAndHygiene'] || '-'}</Td>
-                            <Td>{coCurricularScores['environmentAndITAwareness'] || '-'}</Td><Td>{coCurricularScores['discipline'] || '-'}</Td>
-                            <Td>{coCurricularScores['attendance'] || '-'}</Td><Td>{totalCoCurricularScore}</Td>
-                        </tr></tbody></table>
-                    </div>
-                     <div>
-                        <h4 className="font-bold text-sm">6. Anecdotal Record:</h4>
-                        <table className="w-full border-collapse"><thead><tr>
-                            <Th className="w-1/4">Dated</Th><Th>Teachers Observation</Th>
-                        </tr></thead><tbody>
-                            {allDetailedFA.slice(0, 5).map((fa, i) => (
-                                <tr key={i}><Td className="h-8">{fa.anecdotalRecord?.date}</Td><Td className="text-left">{fa.anecdotalRecord?.observation}</Td></tr>
-                            ))}
-                            {Array.from({ length: Math.max(0, 5 - allDetailedFA.length) }).map((_, i) => (
-                               <tr key={`empty-${i}`}><Td className="h-8">&nbsp;</Td><Td></Td></tr>
-                            ))}
-                        </tbody></table>
-                    </div>
-                </div>
-                <div className="mt-auto pt-16 flex justify-end">
-                    <div className="text-center">
-                        <p className="font-bold text-sm">Principal/Headmaster</p>
-                        <p className="text-xs">{schoolDetails.name}</p>
-                    </div>
-                </div>
-                <p className="text-center text-[9px] text-gray-600 mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
-            </PageContainer>
+                    <p className="text-center text-[9px] text-gray-600 mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
+                </PageContainer>
+            </div>
         </div>
     );
 };

@@ -22,6 +22,10 @@ import FormativeAssessment from './pages/FormativeAssessment';
 import StudentReport from './pages/StudentReport';
 import PrintCoCurricularReport from './pages/PrintCoCurricularReport';
 import PrintFormativeAssessmentReport from './pages/PrintFormativeAssessmentReport';
+import PrintTopperList from './pages/PrintTopperList';
+import PrintDobCertificate from './pages/PrintDobCertificate';
+import PrintBonafideCertificate from './pages/PrintBonafideCertificate';
+import PrintNepProgressCard from './pages/PrintNepProgressCard';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -92,6 +96,10 @@ const App: React.FC = () => {
                 <Route path="/print/hpc/:studentId" element={<PrintHPC />} />
                 <Route path="/print/co-curricular-report/:studentId/:subject" element={<PrintCoCurricularReport />} />
                 <Route path="/print/formative-assessment-report/:studentId" element={<PrintFormativeAssessmentReport />} />
+                <Route path="/print/topper-list" element={<PrintTopperList />} />
+                <Route path="/print/dob-certificate/:studentId" element={<PrintDobCertificate />} />
+                <Route path="/print/bonafide-certificate/:studentId" element={<PrintBonafideCertificate />} />
+                <Route path="/print/nep-progress-card/:studentId" element={<PrintNepProgressCard />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
