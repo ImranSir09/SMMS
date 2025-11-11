@@ -37,12 +37,14 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
                         {schoolDetails?.logo && (
                             <img src={schoolDetails.logo} alt="School Logo" className="w-28 h-28 mx-auto mb-2 object-contain" />
                         )}
-                        <h1 className="text-4xl font-bold text-gray-900 tracking-wider font-gothic">
+                        <h1 className="text-4xl font-bold text-gray-900 tracking-wider">
                             {schoolDetails?.name || 'School Name'}
                         </h1>
-                        <p className="text-sm text-gray-600">Email: {schoolDetails?.email} | UDISE: {schoolDetails?.udiseCode}</p>
+                        <p className="text-md text-gray-600">{schoolDetails?.address || 'School Address'}</p>
                          <p className="text-xs text-gray-500 mt-1">
                           {schoolDetails?.phone && <span>Ph: {schoolDetails.phone}</span>}
+                          {schoolDetails?.email && <span className="mx-2">| Email: {schoolDetails.email}</span>}
+                          {schoolDetails?.udiseCode && <span>| UDISE: {schoolDetails.udiseCode}</span>}
                         </p>
                     </header>
                     

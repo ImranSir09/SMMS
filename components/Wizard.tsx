@@ -1,7 +1,6 @@
-
 import React, { useMemo } from 'react';
 import { Student, SchoolDetails } from '../types';
-import { CATEGORY_OPTIONS, CLASS_OPTIONS } from '../constants';
+import { CATEGORY_OPTIONS } from '../constants';
 
 interface ConsolidatedRollStatementProps {
   studentsByClass: Map<string, Student[]>;
@@ -18,14 +17,7 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
 
     const summaryData = useMemo(() => {
         // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
-        const classNames = Array.from(studentsByClass.keys()).sort((a: string, b: string) => {
-            const indexA = CLASS_OPTIONS.indexOf(a);
-            const indexB = CLASS_OPTIONS.indexOf(b);
-            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-            if (indexA !== -1) return -1;
-            if (indexB !== -1) return 1;
-            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-        });
+        const classNames = Array.from(studentsByClass.keys()).sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
         // FIX: Use a more specific type for gender counts to allow direct property access.
         const data: { [className: string]: { [category: string]: GenderCounts } } = {};

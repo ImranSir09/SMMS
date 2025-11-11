@@ -51,6 +51,7 @@ const Dashboard: React.FC = () => {
         const femaleCount = students.filter(s => s.gender === 'Female').length;
         
         const classNames = [...new Set(studentSessionInfos.map(info => info.className))];
+        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
         const sortedClassNames = classNames.sort((a: string, b: string) => {
             const indexA = CLASS_OPTIONS.indexOf(a);
             const indexB = CLASS_OPTIONS.indexOf(b);
@@ -74,6 +75,21 @@ const Dashboard: React.FC = () => {
     
     return (
         <div className="flex flex-col gap-6 animate-fade-in pb-8">
+            <header className="flex items-center gap-3 p-4 bg-primary/10 rounded-xl shadow-sm border border-primary/20">
+                 {schoolDetails?.logo ? (
+                    <img src={schoolDetails.logo} alt="School Logo" className="w-12 h-12 object-contain rounded-md flex-shrink-0" />
+                 ) : (
+                    <div className="w-12 h-12 flex items-center justify-center bg-primary/20 rounded-md flex-shrink-0">
+                        <SchoolIcon className="w-7 h-7 text-primary" />
+                    </div>
+                 )}
+                <div>
+                    <h1 className="text-2xl font-bold text-primary">
+                        {schoolDetails?.name || 'School Name'}
+                    </h1>
+                </div>
+            </header>
+            
             <div className="grid grid-cols-2 gap-3">
                 <StatCard icon={<HashIcon className="w-5 h-5"/>} label="UDISE" value={schoolDetails?.udiseCode || 'N/A'} className="bg-slate-500 text-white"/>
                 <StatCard icon={<UsersIcon className="w-5 h-5"/>} label="Students" value={dashboardData?.studentCount ?? 0} className="bg-primary text-primary-foreground"/>

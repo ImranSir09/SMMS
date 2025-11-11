@@ -3,7 +3,7 @@ import { useAppData } from '../hooks/useAppData';
 import { db } from '../services/db';
 import { SchoolDetails } from '../types';
 import Card from '../components/Card';
-import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon, HelpCircleIcon } from '../components/icons';
+import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon } from '../components/icons';
 import { useToast } from '../contexts/ToastContext';
 import SessionManager from '../components/SessionManager';
 
@@ -266,46 +266,6 @@ const Settings: React.FC = () => {
                 </div>
             </Card>
 
-            <Card className="p-3">
-                <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">
-                    <HelpCircleIcon className="w-5 h-5" />
-                    <h2>Help & Support</h2>
-                </div>
-                <div className="space-y-3 text-sm text-foreground/90">
-                    <div>
-                        <h3 className="font-semibold">Quick Start Guide</h3>
-                        <ol className="list-decimal list-inside text-xs text-foreground/80 space-y-1 mt-1">
-                            <li>Go to <strong className="text-primary">Settings</strong> to enter your school's details.</li>
-                            <li>Use the <strong className="text-primary">Students</strong> tab to add students individually or in bulk via CSV.</li>
-                            <li>Navigate to <strong className="text-primary">SBA</strong> to manage assessments (Summative, Formative, SBA).</li>
-                            <li>Generate certificates and reports from the <strong className="text-primary">Reports</strong> and <strong className="text-primary">Certificates</strong> pages.</li>
-                        </ol>
-                    </div>
-                    <div>
-                        <h3 className="font-semibold">Frequently Asked Questions</h3>
-                        <div className="text-xs text-foreground/80 mt-1 space-y-2">
-                            <div>
-                                <p className="font-semibold">Q: How does data backup work?</p>
-                                <p>A: The "Backup Data" button downloads a single JSON file with all your data. To restore, use the "Restore Data" button on another device. This allows for offline data transfer.</p>
-                            </div>
-                            <div>
-                                <p className="font-semibold">Q: Is my data private?</p>
-                                <p>A: Absolutely. All data is stored locally on your device and is never sent to any external server, ensuring complete privacy.</p>
-                            </div>
-                        </div>
-                    </div>
-                     <div>
-                        <h3 className="font-semibold">Contact Support</h3>
-                        <p className="text-xs text-foreground/80 mt-1">
-                            For issues or feedback, please email us at: <a href="mailto:support@schoolmanagement.pro" className="text-primary underline">support@schoolmanagement.pro</a>
-                        </p>
-                    </div>
-                    <div className="text-center pt-2 border-t border-border">
-                        <p className="text-xs text-foreground/60">App Version: {getAutoVersion()}</p>
-                    </div>
-                </div>
-            </Card>
-
             <Card className="p-3 border-red-500/50 bg-red-500/5">
                 <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-red-500/20 pb-1 text-red-600 dark:text-red-400">
                     <AlertTriangleIcon className="w-5 h-5" />
@@ -324,6 +284,10 @@ const Settings: React.FC = () => {
                     </button>
                 </div>
             </Card>
+
+             <Card className="p-3 text-center">
+                <p className="text-xs text-foreground/60">App Version: {getAutoVersion()}</p>
+             </Card>
         </div>
     );
 };

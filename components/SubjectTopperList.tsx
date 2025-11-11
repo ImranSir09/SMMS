@@ -34,7 +34,7 @@ const SubjectTopperList: React.FC<SubjectTopperListProps> = ({ toppers, examName
                     <img src={schoolDetails.logo} alt="School Logo" className="w-28 h-28 mx-auto mb-2 object-contain" />
                 )}
               <h1 className="text-3xl font-bold font-gothic text-blue-900 tracking-wider">{schoolDetails.name}</h1>
-              <p className="text-md text-gray-700">Email: {schoolDetails.email} | UDISE: {schoolDetails.udiseCode}</p>
+              <p className="text-md text-gray-700">{schoolDetails.address}</p>
               <h2 className="text-2xl font-semibold mt-8 text-gray-800">Certificate of Academic Excellence</h2>
             </header>
 
