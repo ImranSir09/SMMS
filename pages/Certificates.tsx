@@ -1,276 +1,111 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+
+import React, { useState, useMemo } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
-import { Student, Exam } from '../types';
+import { Student, StudentSessionInfo } from '../types';
 import Card from '../components/Card';
-import { ExamsIcon, CalendarIcon, CertificateIcon, BonafideIcon, SearchIcon, UploadIcon } from '../components/icons';
-import Modal from '../components/Modal';
+import { SearchIcon, BonafideIcon, CertificateIcon, SchoolIcon } from '../components/icons';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponentAsImage, generateDobCertificateVectorPdf, generateBonafideCertificateVectorPdf } from '../utils/pdfGenerator';
-import NepProgressCard from '../components/NepProgressCard';
-
-const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
-const labelStyle = "block text-xs font-medium text-foreground/80 mb-1";
-const docButtonStyle = "flex items-center justify-center gap-1 py-3 px-2 rounded-lg text-white text-xs font-semibold transition-colors disabled:opacity-60 text-center";
-
-type StudentWithSessionInfo = Student & { className?: string; section?: string; rollNo?: string; };
 
 const Certificates: React.FC = () => {
-  const location = useLocation();
-  
-  const [searchId, setSearchId] = useState(location.state?.searchId || '');
-  const [foundStudent, setFoundStudent] = useState<StudentWithSessionInfo | null>(null);
-  const [error, setError] = useState('');
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const { schoolDetails, activeSession } = useAppData();
-  
-  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
-  const [certType, setCertType] = useState<'dob' | 'bonafide' | null>(null);
-  const [certPhoto, setCertPhoto] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const navigate = useNavigate();
+    const { activeSession } = useAppData();
 
-  const [isNepCardModalOpen, setIsNepCardModalOpen] = useState(false);
-  const [classExams, setClassExams] = useState<Exam[]>([]);
-  const [selectedExamIdForNep, setSelectedExamIdForNep] = useState('');
-
-  const handleSearch = useCallback(async () => {
-    setError('');
-    setFoundStudent(null);
-
-    if (!searchId.trim()) {
-      setError(`Please enter an ID.`);
-      return;
-    }
-
-    const student = await db.students.where('admissionNo').equals(searchId).first();
-    if (student) {
-        const sessionInfo = await db.studentSessionInfo.where({ studentId: student.id!, session: activeSession }).first();
-        setFoundStudent({
+    const students = useLiveQuery(async () => {
+        if (!activeSession) return [];
+        const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ session: activeSession }).toArray();
+        const studentIds = sessionInfos.map(s => s.studentId);
+        const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
+        const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
+        
+        return studentDetails.map(student => ({
             ...student,
-            className: sessionInfo?.className,
-            section: sessionInfo?.section,
-            rollNo: sessionInfo?.rollNo,
-        });
-    } else {
-        setError('No student found.');
-    }
-  }, [searchId, activeSession]);
-  
-  useEffect(() => {
-    if (location.state?.searchId) {
-        handleSearch();
-    }
-  }, [location.state, handleSearch]);
-  
-  useEffect(() => {
-      if (isNepCardModalOpen && foundStudent?.className) {
-          db.exams.where({ className: foundStudent.className, session: activeSession }).toArray()
-              .then(exams => {
-                  setClassExams(exams);
-                  if (exams.length > 0) {
-                      setSelectedExamIdForNep(String(exams[0].id!));
-                  } else {
-                      setSelectedExamIdForNep('');
-                  }
-              });
-      }
-  }, [isNepCardModalOpen, foundStudent, activeSession]);
-  
-  const handleOpenCertModal = (type: 'dob' | 'bonafide') => {
-    setCertType(type);
-    setCertPhoto(null);
-    setError('');
-    setIsCertModalOpen(true);
-  };
+            className: sessionInfoMap.get(student.id!)?.className,
+            section: sessionInfoMap.get(student.id!)?.section,
+            rollNo: sessionInfoMap.get(student.id!)?.rollNo,
+        }));
+    }, [activeSession], []);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-        const file = e.target.files[0];
-        if (file.size > 2 * 1024 * 1024) { // 2MB limit
-            setError('File is too large. Please select an image under 2MB.');
-            return;
-        }
-        setError('');
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setCertPhoto(reader.result as string);
+    const filteredStudents = useMemo(() => {
+        if (!searchTerm) return [];
+        if (!students) return [];
+        return students.filter(student =>
+            student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            student.admissionNo.includes(searchTerm)
+        ).slice(0, 5); // Limit results for performance
+    }, [students, searchTerm]);
+
+    const handleSelectStudent = (student: Student) => {
+        setSelectedStudent(student);
+        setSearchTerm('');
+    };
+    
+    const handleGenerateCertificate = (type: 'dob' | 'bonafide' | 'leaving' | 'admission') => {
+        if (!selectedStudent) return;
+        
+        const routeMap: { [key: string]: string } = {
+            dob: '/print/dob-certificate'
         };
-        reader.readAsDataURL(file);
-    } else {
-        setCertPhoto(null);
-    }
-  };
 
-  const handleFinalGenerate = async () => {
-    if (!foundStudent || !certType || !schoolDetails) {
-        alert("Required data is missing to generate the certificate.");
-        return;
-    }
-    setIsGeneratingPdf(true);
-    const fileName = `${certType === 'dob' ? 'DOB' : 'Bonafide'}-Cert-${foundStudent.admissionNo}`;
-
-    try {
-        if (certType === 'dob') {
-            await generateDobCertificateVectorPdf(foundStudent, schoolDetails, certPhoto, fileName);
-        } else if (certType === 'bonafide') {
-            await generateBonafideCertificateVectorPdf(foundStudent, schoolDetails, certPhoto, fileName);
+        if (routeMap[type]) {
+            navigate(routeMap[type], { state: { studentId: selectedStudent.id } });
+        } else {
+            alert('This certificate is not available for printing yet.');
         }
-    } catch (e) {
-        console.error("PDF generation failed", e);
-        alert("An error occurred while generating the PDF.");
-    } finally {
-        setIsGeneratingPdf(false);
-        setIsCertModalOpen(false);
-    }
-  };
+    };
 
-  const handleGenerateNepCard = async () => {
-    if (!foundStudent || !selectedExamIdForNep || !schoolDetails) {
-        alert("Required data is missing to generate the card.");
-        return;
-    }
-    setIsGeneratingPdf(true);
-    try {
-        const examId = Number(selectedExamIdForNep);
-        const exam = await db.exams.get(examId);
-        if (!exam) throw new Error("Exam not found");
-
-        const studentMarks = await db.marks.where({ studentId: foundStudent.id!, examId }).toArray();
-        const studentHpcReport = await db.hpcReports.where({ studentId: foundStudent.id!, session: activeSession }).first();
-        
-        if (studentMarks.length === 0) {
-            alert(`No marks found for ${foundStudent.name} in the selected exam.`);
-            setIsGeneratingPdf(false);
-            return;
-        }
-
-        await generatePdfFromComponentAsImage(
-            <NepProgressCard 
-                student={foundStudent}
-                marks={studentMarks}
-                hpcReport={studentHpcReport || null}
-                schoolDetails={schoolDetails}
-                examName={exam.name}
-            />,
-            `NEP-Card-${exam.name}-${foundStudent.admissionNo}`
-        );
-        
-        setIsNepCardModalOpen(false);
-
-    } catch (error) {
-        console.error("NEP Card Generation failed:", error);
-        alert("Failed to generate NEP Progress Card.");
-    } finally {
-        setIsGeneratingPdf(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-4 animate-fade-in">
-      <Card className="p-3">
-        <div className="flex items-center gap-2 mb-2">
-            <input id="searchId" type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder="Student Adm No." className={`${inputStyle} flex-1`} />
-        </div>
-        <button onClick={handleSearch} className="w-full py-3 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold flex items-center justify-center gap-2">
-            <SearchIcon className="w-4 h-4" />
-            Search Student
-        </button>
-        {error && !isCertModalOpen && <p className="text-red-500 text-xs mt-2 text-center">{error}</p>}
-      </Card>
-
-      {foundStudent && (
-        <Card className="p-3 animate-fade-in">
-          <div className="flex items-center gap-3 mb-2">
-             {foundStudent.photo ? <img src={foundStudent.photo} alt="" className="w-12 h-12 rounded-full object-cover border-2 border-border" /> : <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700"/>}
-            <div>
-              <h2 className="text-md font-bold">{foundStudent.name}</h2>
-              <p className="text-xs text-foreground/80">Class: {foundStudent.className} | Roll: {foundStudent.rollNo}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-               <button onClick={() => handleOpenCertModal('dob')} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-purple-600`}>
-                    <CalendarIcon className="w-3.5 h-3.5" /> DOB Cert
-               </button>
-               <button onClick={() => handleOpenCertModal('bonafide')} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-pink-600`}>
-                    <BonafideIcon className="w-3.5 h-3.5" /> Bonafide
-               </button>
-               <button onClick={() => setIsNepCardModalOpen(true)} disabled={isGeneratingPdf} className={`${docButtonStyle} bg-green-600`}>
-                    <ExamsIcon className="w-3.5 h-3.5" /> NEP Card
-               </button>
-          </div>
-        </Card>
-      )}
-
-        <Modal
-            isOpen={isNepCardModalOpen}
-            onClose={() => setIsNepCardModalOpen(false)}
-            title="Generate NEP Progress Card"
-        >
-            <div className="p-4 space-y-4">
-                <p>Select an examination to generate the report card for <strong>{foundStudent?.name}</strong>.</p>
-                <div>
-                    <label htmlFor="examSelect" className={labelStyle}>Examination</label>
-                    <select
-                        id="examSelect"
-                        value={selectedExamIdForNep}
-                        onChange={e => setSelectedExamIdForNep(e.target.value)}
-                        className={inputStyle}
-                        disabled={classExams.length === 0}
-                    >
-                        {classExams.length > 0 ? (
-                            classExams.map(exam => <option key={exam.id} value={String(exam.id)}>{exam.name}</option>)
+    return (
+        <div className="flex flex-col gap-4 animate-fade-in">
+            <div className="relative">
+                <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/50" />
+                <input
+                    type="text"
+                    placeholder="Search Student by Name or Admission No..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="p-3 pl-10 text-sm bg-background border border-input rounded-md w-full"
+                />
+                {searchTerm && (
+                    <div className="absolute top-full mt-1 w-full bg-card border border-border rounded-lg shadow-lg z-10">
+                        {filteredStudents?.length > 0 ? (
+                            filteredStudents.map(student => (
+                                <div key={student.id} onClick={() => handleSelectStudent(student)} className="p-3 cursor-pointer hover:bg-primary/10">
+                                    <p className="font-semibold">{student.name}</p>
+                                    <p className="text-xs text-foreground/70">Adm No: {student.admissionNo} | Class: {student.className}</p>
+                                </div>
+                            ))
                         ) : (
-                            <option>No exams found for this class</option>
+                            <p className="p-3 text-sm text-foreground/60">No students found.</p>
                         )}
-                    </select>
-                </div>
-                <div className="flex justify-end gap-2 pt-4">
-                    <button type="button" onClick={() => setIsNepCardModalOpen(false)} className="py-3 px-5 rounded-md bg-gray-500/80 hover:bg-gray-500 text-white text-sm font-semibold">Cancel</button>
-                    <button 
-                        onClick={handleGenerateNepCard}
-                        disabled={isGeneratingPdf || !selectedExamIdForNep} 
-                        className="py-3 px-5 rounded-md bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-semibold disabled:opacity-60"
-                    >
-                        {isGeneratingPdf ? 'Generating...' : 'Generate'}
-                    </button>
-                </div>
-            </div>
-        </Modal>
-        
-        <Modal
-            isOpen={isCertModalOpen}
-            onClose={() => setIsCertModalOpen(false)}
-            title={`Generate ${certType === 'dob' ? 'DOB Certificate' : 'Bonafide Certificate'}`}
-        >
-            <div className="p-4 space-y-4">
-                <div>
-                    <label className={labelStyle}>Student Photo (Optional)</label>
-                    <div className="mt-1 flex items-center gap-4">
-                        {certPhoto ? (
-                            <img src={certPhoto} alt="Preview" className="w-24 h-32 object-cover rounded-md border border-border" />
-                        ) : (
-                            <div className="w-24 h-32 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Photo</div>
-                        )}
-                        <label className="flex-1 flex flex-col items-center justify-center gap-2 cursor-pointer p-3 rounded-md bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5 h-32">
-                            <UploadIcon className="w-6 h-6 text-foreground/60" />
-                            <span className="text-xs text-foreground/80 text-center">Upload Photo<br/>(Max 2MB)</span>
-                            <input type="file" accept="image/png, image/jpeg" onChange={handlePhotoChange} className="hidden" />
-                        </label>
                     </div>
-                    {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
-                </div>
-                <div className="flex justify-end pt-2">
-                    <button 
-                        onClick={handleFinalGenerate}
-                        disabled={isGeneratingPdf}
-                        className="py-3 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors disabled:opacity-60"
-                    >
-                        {isGeneratingPdf ? 'Generating...' : `Generate PDF ${certPhoto ? 'with' : 'without'} Photo`}
-                    </button>
-                </div>
+                )}
             </div>
-        </Modal>
-    </div>
-  );
+
+            {selectedStudent && (
+                <Card className="p-4">
+                    <h2 className="text-lg font-bold">Selected Student:</h2>
+                    <p className="text-primary font-semibold">{selectedStudent.name}</p>
+                    <p className="text-sm text-foreground/80">Class {selectedStudent.className} | Adm No: {selectedStudent.admissionNo}</p>
+                    
+                    <div className="grid grid-cols-2 gap-3 mt-4">
+                        <button onClick={() => handleGenerateCertificate('dob')} className="p-3 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 text-xs"><CertificateIcon className="w-4 h-4"/> D.O.B Certificate</button>
+                        <button onClick={() => handleGenerateCertificate('bonafide')} className="p-3 bg-green-600 text-white rounded-lg flex items-center justify-center gap-2 text-xs opacity-50" disabled><BonafideIcon className="w-4 h-4"/> Bonafide</button>
+                        <button onClick={() => handleGenerateCertificate('leaving')} className="p-3 bg-orange-600 text-white rounded-lg flex items-center justify-center gap-2 text-xs opacity-50" disabled><SchoolIcon className="w-4 h-4"/> School Leaving</button>
+                        <button onClick={() => handleGenerateCertificate('admission')} className="p-3 bg-purple-600 text-white rounded-lg flex items-center justify-center gap-2 text-xs opacity-50" disabled><SchoolIcon className="w-4 h-4"/> Admission</button>
+                    </div>
+                </Card>
+            )}
+
+            {!selectedStudent && (
+                <div className="text-center p-8 text-foreground/60">
+                    <p>Search for a student to generate certificates.</p>
+                </div>
+            )}
+        </div>
+    );
 };
 
 export default Certificates;

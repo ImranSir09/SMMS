@@ -1,140 +1,112 @@
+
 import React, { useEffect, useState } from 'react';
 import { db } from '../services/db';
 import { Student, StudentSessionInfo } from '../types';
+import CategoryWiseRollStatement from '../components/CategoryWiseRollStatement';
 import { useAppData } from '../hooks/useAppData';
-// FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
-import { generatePdfFromComponentAsImage } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import ConsolidatedRollStatement from '../components/Wizard'; // Renamed from CategoryWiseRollStatement
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const PrintCategoryRollStatement: React.FC = () => {
-  const [studentsByClass, setStudentsByClass] = useState<Map<string, Student[]>>(new Map());
-  const { schoolDetails, activeSession } = useAppData();
+    const [studentsByClass, setStudentsByClass] = useState<Map<string, Student[]>>(new Map());
+    const [activeClassName, setActiveClassName] = useState<string>('');
+    const { schoolDetails, activeSession } = useAppData();
 
-  useEffect(() => {
-    const fetchData = async () => {
-        if (!activeSession) return;
+    useEffect(() => {
+        const fetchStudents = async () => {
+            if (activeSession) {
+                const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ session: activeSession }).toArray();
+                if (sessionInfos.length === 0) {
+                    setStudentsByClass(new Map());
+                    return;
+                }
+                const studentIds = sessionInfos.map(info => info.studentId);
+                const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
+                const studentMap = new Map(studentDetails.map(s => [s.id!, s]));
 
-        const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ session: activeSession }).toArray();
-        if (sessionInfos.length === 0) {
-            setStudentsByClass(new Map());
-            return;
+                const groupedByClass = new Map<string, Student[]>();
+                sessionInfos.forEach(info => {
+                    const student = studentMap.get(info.studentId);
+                    if (student) {
+                        const studentWithSessionInfo = { ...student, ...info };
+                        if (!groupedByClass.has(info.className)) {
+                            groupedByClass.set(info.className, []);
+                        }
+                        groupedByClass.get(info.className)?.push(studentWithSessionInfo);
+                    }
+                });
+
+                groupedByClass.forEach(students => students.sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' })));
+                
+                const sortedClassNames = Array.from(groupedByClass.keys()).sort((a,b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+                
+                const sortedMap = new Map<string, Student[]>();
+                sortedClassNames.forEach(name => {
+                    sortedMap.set(name, groupedByClass.get(name)!);
+                });
+
+                setStudentsByClass(sortedMap);
+                setActiveClassName(sortedClassNames[0] || '');
+            }
+        };
+        fetchStudents();
+    }, [activeSession]);
+
+    const handlePrint = () => window.print();
+
+    const handleDownloadPdf = async () => {
+        const element = document.getElementById('category-roll-statement');
+        if (element && activeClassName) {
+            const canvas = await html2canvas(element, { scale: 3 });
+            const data = canvas.toDataURL('image/jpeg');
+
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgProperties = pdf.getImageProperties(data);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
+
+            pdf.addImage(data, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Category-Roll-Statement-${activeClassName}.pdf`);
         }
-
-        const studentIds = sessionInfos.map(info => info.studentId);
-        const allStudentDetails = await db.students.where('id').anyOf(studentIds).toArray();
-        const studentDetailsMap = new Map(allStudentDetails.map(s => [s.id!, s]));
-        const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
-
-        // FIX: Reworked logic to iterate over student details first, ensuring the spread operator is always used on a valid Student object.
-        const allStudentsForSession = allStudentDetails.map(student => {
-            const info = sessionInfoMap.get(student.id!);
-            if (!info) return null;
-            return {
-                ...student,
-                className: info.className,
-                section: info.section,
-                rollNo: info.rollNo,
-            };
-        // FIX: Replaced a potentially problematic filter with an explicit type guard to ensure nulls are removed and the type is correctly narrowed.
-        }).filter((student): student is NonNullable<typeof student> => student != null);
-
-        const classNames = [...new Set(allStudentsForSession.map(s => s.className!))]
-            // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
-            .sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-
-        const grouped = new Map<string, Student[]>();
-        // FIX: Add explicit string type to forEach callback parameter to resolve index type error on 'grouped.set'.
-        classNames.forEach((className: string) => {
-            const classStudents = allStudentsForSession
-                .filter(s => s.className === className)
-                .sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
-            // FIX: The type of classStudents is now correctly inferred and assignable to Student[].
-            grouped.set(className, classStudents);
-        });
-        setStudentsByClass(grouped);
     };
-    fetchData();
-  }, [activeSession]);
+    
+    if (!schoolDetails || studentsByClass.size === 0) return <div>Loading...</div>;
 
-  const handlePrint = () => {
-    window.print();
-  };
+    const studentsForSelectedClass = studentsByClass.get(activeClassName) || [];
+    
+    return (
+        <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
+            <div className="max-w-4xl mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
+                <h1 className="text-2xl font-bold text-gray-800">Category-wise Roll Statement</h1>
+                <div className="flex flex-wrap items-center gap-4 mt-2">
+                    <div>
+                        <label htmlFor="class-select" className="text-sm font-medium mr-2">Select Class:</label>
+                        <select id="class-select" value={activeClassName} onChange={e => setActiveClassName(e.target.value)} className="p-2 border border-gray-300 rounded-md">
+                            {Array.from(studentsByClass.keys()).map(name => <option key={name} value={name}>{name}</option>)}
+                        </select>
+                    </div>
+                    <button onClick={handleDownloadPdf} className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700">
+                        <DownloadIcon className="w-5 h-5"/> Download PDF
+                    </button>
+                    <button onClick={handlePrint} className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700">
+                        <PrintIcon className="w-5 h-5"/> Print
+                    </button>
+                </div>
+            </div>
 
-  const handleDownloadPdf = async () => {
-    if (studentsByClass.size > 0 && schoolDetails) {
-        // FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
-        await generatePdfFromComponentAsImage(
-            <ConsolidatedRollStatement
-                studentsByClass={studentsByClass}
-                schoolDetails={schoolDetails}
-                session={activeSession}
-            />,
-            `Consolidated-Roll-Statement-${activeSession}`,
-            { orientation: 'l' } // Landscape orientation
-        );
-    }
-  };
-
-  if (studentsByClass.size === 0 || !schoolDetails) {
-    return <div className="p-4 text-center">Loading student data for the active session...</div>;
-  }
-  
-  const ControlPanel = () => (
-      <div className="max-w-4xl mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
-        <h1 className="text-2xl font-bold text-gray-800">Document Preview</h1>
-        <p className="text-gray-600 mb-4">Preview for Consolidated Roll Statement for session {activeSession}.</p>
-        <div className="flex flex-wrap gap-4">
-             <button
-                onClick={handleDownloadPdf}
-                className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none"
-             >
-                <DownloadIcon className="w-5 h-5"/> Download PDF
-            </button>
-            <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none"
-            >
-                <PrintIcon className="w-5 h-5"/> Print
-            </button>
+            <div className="flex justify-center items-start">
+                <CategoryWiseRollStatement students={studentsForSelectedClass} className={activeClassName} schoolDetails={schoolDetails} />
+            </div>
+             <style>{`
+                @media print {
+                    body * { visibility: hidden; }
+                    #category-roll-statement, #category-roll-statement * { visibility: visible; }
+                    #category-roll-statement { position: absolute; left: 0; top: 0; width: 100%; }
+                }
+            `}</style>
         </div>
-      </div>
-  );
-
-  return (
-    <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
-        <ControlPanel />
-      
-        <div id="printable-area" className="flex flex-col items-center justify-start">
-            <ConsolidatedRollStatement
-                studentsByClass={studentsByClass}
-                schoolDetails={schoolDetails}
-                session={activeSession}
-            />
-        </div>
-
-        <style>{`
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            @page { size: A4 landscape; margin: 0; }
-            @media print {
-                body * { visibility: hidden; }
-                #printable-area, #printable-area * { visibility: visible; }
-                #printable-area { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
-                .A4-page-container { transform: scale(1.0); }
-            }
-            .A4-page-container.landscape {
-                transform-origin: top center;
-                margin: 1rem 0;
-                transform: scale(0.85);
-            }
-            @media (max-width: 1280px) { .A4-page-container.landscape { transform: scale(0.75); } }
-            @media (max-width: 1024px) { .A4-page-container.landscape { transform: scale(0.6); } }
-            @media (max-width: 820px) { .A4-page-container.landscape { transform: scale(0.45); } }
-            @media (max-width: 640px) { .A4-page-container.landscape { transform: scale(0.35); } }
-            @media (max-width: 480px) { .A4-page-container.landscape { transform: scale(0.30); } }
-        `}</style>
-    </div>
-  );
+    );
 };
 
 export default PrintCategoryRollStatement;
