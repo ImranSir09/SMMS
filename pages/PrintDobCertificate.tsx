@@ -6,8 +6,7 @@ import { Student } from '../types';
 import DobCertificate from '../components/DobCertificate';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { generateDobCertificatePdf } from '../utils/pdfGenerator';
 
 const PrintDobCertificate: React.FC = () => {
     const { state } = useLocation();
@@ -31,18 +30,8 @@ const PrintDobCertificate: React.FC = () => {
     const handlePrint = () => window.print();
 
     const handleDownloadPdf = async () => {
-        const element = document.getElementById('dob-certificate');
-        if (element && student) {
-            const canvas = await html2canvas(element, { scale: 3 });
-            const data = canvas.toDataURL('image/png');
-
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const imgProperties = pdf.getImageProperties(data);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
-
-            pdf.addImage(data, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`DOB-Certificate-${student.name}.pdf`);
+        if (student && schoolDetails) {
+            await generateDobCertificatePdf(student, schoolDetails, student.photo);
         }
     };
 

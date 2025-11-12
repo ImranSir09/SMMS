@@ -6,8 +6,7 @@ import { Student, SbaReportData, HPCReportData, Mark, DetailedFormativeAssessmen
 import HolisticProgressCard from '../components/HolisticProgressCard';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { generateHpcPdf } from '../utils/pdfGenerator';
 
 type AllData = {
     student: Student | null;
@@ -67,22 +66,17 @@ const PrintHPC: React.FC = () => {
     }, [studentId, activeSession]);
 
     const handleDownloadPdf = async () => {
-        if (!data?.student) return;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageIds = [`hpc-page1-${studentId}`, `hpc-page2-${studentId}`, `hpc-page3-${studentId}`, `hpc-page4-${studentId}`];
-        
-        for (let i = 0; i < pageIds.length; i++) {
-            const element = document.getElementById(pageIds[i]);
-            if (element) {
-                const canvas = await html2canvas(element, { scale: 3 });
-                const imgData = canvas.toDataURL('image/png');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                if (i > 0) pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            }
+        if (data?.student && schoolDetails) {
+            await generateHpcPdf(
+                data.student,
+                schoolDetails,
+                data.sbaData,
+                data.hpcData,
+                data.allMarks,
+                data.allDetailedFA,
+                data.student.photo
+            );
         }
-        pdf.save(`HPC-${data.student.name}.pdf`);
     };
 
     if (isLoading) return <div>Loading Holistic Progress Card data...</div>;

@@ -6,8 +6,7 @@ import { Student, SbaReportData, Mark, DetailedFormativeAssessment } from '../ty
 import FormativeAssessmentReport from '../components/FormativeAssessmentReport';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { generateFormativeAssessmentReportPdf } from '../utils/pdfGenerator';
 
 type AllData = {
     student: Student | null;
@@ -58,22 +57,16 @@ const PrintFormativeAssessmentReport: React.FC = () => {
     }, [studentId, activeSession]);
 
     const handleDownloadPdf = async () => {
-        if (!data?.student) return;
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pageIds = [`fa-report-p1-${studentId}`, `fa-report-p2-${studentId}`];
-        
-        for (let i = 0; i < pageIds.length; i++) {
-            const element = document.getElementById(pageIds[i]);
-            if (element) {
-                const canvas = await html2canvas(element, { scale: 3 });
-                const imgData = canvas.toDataURL('image/png');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                if (i > 0) pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            }
+        if (data?.student && schoolDetails) {
+            await generateFormativeAssessmentReportPdf(
+                data.student,
+                schoolDetails,
+                data.sbaData,
+                data.allMarks,
+                data.allDetailedFA,
+                data.student.photo
+            );
         }
-        pdf.save(`Formative-Report-${data.student.name}.pdf`);
     };
 
     if (isLoading) return <div>Loading Formative Assessment Report data...</div>;

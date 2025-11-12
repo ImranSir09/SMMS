@@ -5,8 +5,7 @@ import { db } from '../services/db';
 import { Student } from '../types';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { generateCoCurricularReportPdf } from '../utils/pdfGenerator';
 import CoCurricularReport from '../components/CoCurricularReport';
 
 const PrintCoCurricularReport: React.FC = () => {
@@ -31,16 +30,8 @@ const PrintCoCurricularReport: React.FC = () => {
     const handlePrint = () => window.print();
 
     const handleDownloadPdf = async () => {
-        const element = document.getElementById('fa-report');
-        if (element && student && subject) {
-            const canvas = await html2canvas(element, { scale: 3 });
-            const data = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const imgProperties = pdf.getImageProperties(data);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
-            pdf.addImage(data, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`Co-Curricular-${subject}-${student.name}.pdf`);
+        if (student && schoolDetails && subject && activeSession) {
+            generateCoCurricularReportPdf(student, schoolDetails, subject, activeSession);
         }
     };
     

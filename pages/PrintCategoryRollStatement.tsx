@@ -5,8 +5,7 @@ import { Student, StudentSessionInfo } from '../types';
 import CategoryWiseRollStatement from '../components/CategoryWiseRollStatement';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { generateCategoryRollStatementPdf } from '../utils/pdfGenerator';
 
 const PrintCategoryRollStatement: React.FC = () => {
     const [studentsByClass, setStudentsByClass] = useState<Map<string, Student[]>>(new Map());
@@ -29,7 +28,13 @@ const PrintCategoryRollStatement: React.FC = () => {
                 sessionInfos.forEach(info => {
                     const student = studentMap.get(info.studentId);
                     if (student) {
-                        const studentWithSessionInfo = { ...student, ...info };
+                        // FIX: Manually construct object to avoid spread error on `info` which might be inferred as a non-object type.
+                        const studentWithSessionInfo = {
+                            ...student,
+                            className: info.className,
+                            section: info.section,
+                            rollNo: info.rollNo,
+                        };
                         if (!groupedByClass.has(info.className)) {
                             groupedByClass.set(info.className, []);
                         }
@@ -56,18 +61,9 @@ const PrintCategoryRollStatement: React.FC = () => {
     const handlePrint = () => window.print();
 
     const handleDownloadPdf = async () => {
-        const element = document.getElementById('category-roll-statement');
-        if (element && activeClassName) {
-            const canvas = await html2canvas(element, { scale: 3 });
-            const data = canvas.toDataURL('image/jpeg');
-
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const imgProperties = pdf.getImageProperties(data);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
-
-            pdf.addImage(data, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`Category-Roll-Statement-${activeClassName}.pdf`);
+        const studentsForSelectedClass = studentsByClass.get(activeClassName) || [];
+        if (schoolDetails && studentsForSelectedClass.length > 0) {
+            await generateCategoryRollStatementPdf(studentsForSelectedClass, activeClassName, schoolDetails);
         }
     };
     
