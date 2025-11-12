@@ -47,7 +47,8 @@ const Certificates: React.FC = () => {
         if (!selectedStudent) return;
         
         const routeMap: { [key: string]: string } = {
-            dob: '/print/dob-certificate'
+            dob: '/print/dob-certificate',
+            bonafide: '/print/bonafide-certificate'
         };
 
         if (routeMap[type]) {
@@ -92,7 +93,7 @@ const Certificates: React.FC = () => {
                     
                     <div className="grid grid-cols-2 gap-3 mt-4">
                         <button onClick={() => handleGenerateCertificate('dob')} className="p-3 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2 text-xs"><CertificateIcon className="w-4 h-4"/> D.O.B Certificate</button>
-                        <button onClick={() => handleGenerateCertificate('bonafide')} className="p-3 bg-green-600 text-white rounded-lg flex items-center justify-center gap-2 text-xs opacity-50" disabled><BonafideIcon className="w-4 h-4"/> Bonafide</button>
+                        <button onClick={() => handleGenerateCertificate('bonafide')} className="p-3 bg-green-600 text-white rounded-lg flex items-center justify-center gap-2 text-xs"><BonafideIcon className="w-4 h-4"/> Bonafide</button>
                         <button onClick={() => handleGenerateCertificate('leaving')} className="p-3 bg-orange-600 text-white rounded-lg flex items-center justify-center gap-2 text-xs opacity-50" disabled><SchoolIcon className="w-4 h-4"/> School Leaving</button>
                         <button onClick={() => handleGenerateCertificate('admission')} className="p-3 bg-purple-600 text-white rounded-lg flex items-center justify-center gap-2 text-xs opacity-50" disabled><SchoolIcon className="w-4 h-4"/> Admission</button>
                     </div>

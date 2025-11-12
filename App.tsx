@@ -24,6 +24,7 @@ import PrintCoCurricularReport from './pages/PrintCoCurricularReport';
 import PrintFormativeAssessmentReport from './pages/PrintFormativeAssessmentReport';
 // FIX: Add import for the new print page component.
 import PrintDobCertificate from './pages/PrintDobCertificate';
+import PrintBonafideCertificate from './pages/PrintBonafideCertificate';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -94,6 +95,7 @@ const App: React.FC = () => {
                 <Route path="/print/hpc/:studentId" element={<PrintHPC />} />
                 {/* FIX: Add new route for DOB certificate printing. */}
                 <Route path="/print/dob-certificate" element={<PrintDobCertificate />} />
+                <Route path="/print/bonafide-certificate" element={<PrintBonafideCertificate />} />
                 <Route path="/print/co-curricular-report/:studentId/:subject" element={<PrintCoCurricularReport />} />
                 <Route path="/print/formative-assessment-report/:studentId" element={<PrintFormativeAssessmentReport />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
