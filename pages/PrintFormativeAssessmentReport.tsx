@@ -95,32 +95,37 @@ const PrintFormativeAssessmentReport: React.FC = () => {
         <ControlPanel />
       
         <div className="flex justify-center items-start">
-             <FormativeAssessmentReport 
-                {...reportData}
-                schoolDetails={schoolDetails}
-             />
+            <div className="A4-page-container">
+                 <FormativeAssessmentReport 
+                    {...reportData}
+                    schoolDetails={schoolDetails}
+                 />
+            </div>
         </div>
 
         <style>{`
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             @page { size: A4; margin: 0; }
             @media print {
+                .print\\:hidden { display: none; }
                 body * { visibility: hidden; }
                 .A4-page-container, .A4-page-container * { visibility: visible; }
                 .A4-page-container { 
-                    position: absolute; left: 0; top: 0; 
+                    position: static;
                     transform: scale(1.0);
-                    box-shadow: none;
                     margin: 0;
+                    box-shadow: none;
                 }
             }
             .A4-page-container {
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                transform: scale(0.75);
                 transform-origin: top center;
+                margin: 1rem 0;
+                transform: scale(0.85);
             }
+            @media (max-width: 900px) { .A4-page-container { transform: scale(0.7); } }
+            @media (max-width: 640px) { .A4-page-container { transform: scale(0.55); } }
+            @media (max-width: 500px) { .A4-page-container { transform: scale(0.45); } }
+            @media (max-width: 400px) { .A4-page-container { transform: scale(0.4); } }
         `}</style>
     </div>
   );

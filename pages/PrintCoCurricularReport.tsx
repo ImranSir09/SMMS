@@ -69,19 +69,17 @@ const PrintCoCurricularReport: React.FC = () => {
           body * { visibility: hidden; }
           #fa-report, #fa-report * { visibility: visible; }
           #fa-report { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+          .A4-page-container { transform: scale(1.0); }
         }
         .A4-page-container {
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          transform: scale(0.75);
-          transform-origin: top center;
+            transform-origin: top center;
+            margin: 1rem 0;
+            transform: scale(0.85);
         }
-        @media print {
-            .A4-page-container {
-                transform: scale(1);
-            }
-        }
+        @media (max-width: 900px) { .A4-page-container { transform: scale(0.7); } }
+        @media (max-width: 640px) { .A4-page-container { transform: scale(0.55); } }
+        @media (max-width: 500px) { .A4-page-container { transform: scale(0.45); } }
+        @media (max-width: 400px) { .A4-page-container { transform: scale(0.4); } }
       `}</style>
     </div>
   );

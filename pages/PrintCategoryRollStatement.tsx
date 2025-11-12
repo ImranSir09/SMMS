@@ -118,16 +118,18 @@ const PrintCategoryRollStatement: React.FC = () => {
                 body * { visibility: hidden; }
                 #printable-area, #printable-area * { visibility: visible; }
                 #printable-area { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
-                .A4-page-container {
-                    transform: scale(1.0);
-                    box-shadow: none;
-                    margin: 0;
-                }
+                .A4-page-container { transform: scale(1.0); }
             }
             .A4-page-container.landscape {
-                transform: scale(0.75) rotate(0);
                 transform-origin: top center;
+                margin: 1rem 0;
+                transform: scale(0.85);
             }
+            @media (max-width: 1280px) { .A4-page-container.landscape { transform: scale(0.75); } }
+            @media (max-width: 1024px) { .A4-page-container.landscape { transform: scale(0.6); } }
+            @media (max-width: 820px) { .A4-page-container.landscape { transform: scale(0.45); } }
+            @media (max-width: 640px) { .A4-page-container.landscape { transform: scale(0.35); } }
+            @media (max-width: 480px) { .A4-page-container.landscape { transform: scale(0.30); } }
         `}</style>
     </div>
   );
