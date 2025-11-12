@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
 import { useToast } from '../contexts/ToastContext';
 import Card from './Card';
-import { UsersIcon, AlertTriangleIcon } from './icons';
+import { UsersIcon, AlertTriangleIcon, TrashIcon } from './icons';
+import { Session } from '../types';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const buttonStyle = "py-3 px-5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60";
@@ -34,6 +36,8 @@ const SessionManager: React.FC = () => {
     const [newSessionName, setNewSessionName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+    const sessions = useLiveQuery(() => db.sessions.orderBy('name').reverse().toArray(), []);
+
     const handlePromoteStudents = async () => {
         if (!newSessionName.trim()) {
             addToast('Please enter a name for the new session.', 'error');
@@ -51,23 +55,22 @@ const SessionManager: React.FC = () => {
         addToast('Promotion process started... This may take a moment.', 'info');
 
         try {
-            // Get all student session info from the active session
             const currentSessionInfo = await db.studentSessionInfo.where({ session: activeSession }).toArray();
             
             if (currentSessionInfo.length === 0) {
                 throw new Error(`No students found in the active session '${activeSession}'.`);
             }
 
-            const newSessionRecords = [];
+            const newSessionRecords: Omit<typeof currentSessionInfo[0], 'id'>[] = [];
             let promotedCount = 0;
             let graduatedCount = 0;
 
             for (const record of currentSessionInfo) {
                 const newClassName = promoteClass(record.className);
                 if (newClassName) {
+                    const { id, ...rest } = record;
                     newSessionRecords.push({
-                        ...record,
-                        id: undefined, // Let Dexie auto-increment the ID
+                        ...rest,
                         session: newSessionName,
                         className: newClassName,
                     });
@@ -77,18 +80,15 @@ const SessionManager: React.FC = () => {
                 }
             }
 
-            // Perform DB operations in a transaction
             await db.transaction('rw', db.sessions, db.studentSessionInfo, async () => {
-                // Add the new session
                 await db.sessions.add({ name: newSessionName });
-                // Add the new student session records
                 await db.studentSessionInfo.bulkAdd(newSessionRecords);
             });
             
             addToast(`Promotion successful! ${promotedCount} students promoted, ${graduatedCount} graduated.`, 'success');
             setNewSessionName('');
-            await refreshSessions(); // Refresh the session list in context
-            setActiveSession(newSessionName); // Switch to the new session
+            await refreshSessions();
+            setActiveSession(newSessionName);
 
         } catch (error: any) {
             console.error('Promotion failed:', error);
@@ -97,6 +97,49 @@ const SessionManager: React.FC = () => {
             setIsLoading(false);
         }
     };
+
+    const handleDeleteSession = async (sessionId: number, sessionName: string) => {
+        if (sessionName === activeSession) {
+            addToast("Cannot delete the currently active session.", "error");
+            return;
+        }
+
+        if (!window.confirm(`DANGER: Are you sure you want to permanently delete the '${sessionName}' session and ALL associated data (student enrollments, exams, marks, assessments)? This action cannot be undone.`)) {
+            return;
+        }
+
+        setIsLoading(true);
+        addToast(`Deleting session '${sessionName}'...`, 'info');
+
+        try {
+            await db.transaction('rw', ...db.tables, async (tx) => {
+                const examsToDelete = await tx.table('exams').where({ session: sessionName }).toArray();
+                const examIdsToDelete = examsToDelete.map(exam => exam.id);
+
+                if (examIdsToDelete.length > 0) {
+                    await tx.table('marks').where('examId').anyOf(examIdsToDelete).delete();
+                }
+
+                await tx.table('exams').where({ session: sessionName }).delete();
+                await tx.table('studentSessionInfo').where({ session: sessionName }).delete();
+                await tx.table('sbaReports').where({ session: sessionName }).delete();
+                await tx.table('hpcReports').where({ session: sessionName }).delete();
+                await tx.table('detailedFormativeAssessments').where({ session: sessionName }).delete();
+                
+                await tx.table('sessions').delete(sessionId);
+            });
+            
+            addToast(`Session '${sessionName}' deleted successfully.`, 'success');
+            await refreshSessions();
+
+        } catch (error: any) {
+            console.error('Session deletion failed:', error);
+            addToast(`Failed to delete session: ${error.message}`, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
 
     return (
         <Card className="p-3">
@@ -135,6 +178,30 @@ const SessionManager: React.FC = () => {
                 >
                     {isLoading ? 'Promoting...' : `Promote Students from ${activeSession}`}
                 </button>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-border">
+                <h3 className="text-sm font-medium mb-2">Existing Sessions</h3>
+                <div className="max-h-48 overflow-y-auto pr-2 space-y-2">
+                    {sessions && sessions.length > 0 ? sessions.map(session => (
+                        <div key={session.id} className="flex items-center justify-between p-2 bg-background rounded-md text-sm">
+                            <span className={`font-semibold ${session.name === activeSession ? 'text-primary' : ''}`}>
+                                {session.name}
+                                {session.name === activeSession && <span className="text-xs font-normal ml-1">(Active)</span>}
+                            </span>
+                            <button
+                                onClick={() => handleDeleteSession(session.id!, session.name)}
+                                disabled={session.name === activeSession || isLoading}
+                                className="text-red-500 hover:bg-red-500/10 p-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                aria-label={`Delete session ${session.name}`}
+                            >
+                                <TrashIcon className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )) : (
+                        <p className="text-xs text-foreground/60 text-center py-4">No sessions found.</p>
+                    )}
+                </div>
             </div>
         </Card>
     );
