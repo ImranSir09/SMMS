@@ -90,3 +90,29 @@ db.version(18).stores({
         });
     }
 });
+
+db.version(19).stores({}).upgrade(async (tx) => {
+    const corrections: { [key: string]: string } = {
+        '2st': '2nd',
+        '3nd': '3rd',
+        '4rd': '4th',
+        '5rd': '5th',
+        '6rd': '6th',
+        '7rd': '7th',
+        '8rd': '8th',
+    };
+
+    const studentSessionInfoTable = tx.table('studentSessionInfo');
+    await studentSessionInfoTable.toCollection().modify((record) => {
+        if (record.className && corrections[record.className]) {
+            record.className = corrections[record.className];
+        }
+    });
+
+    const examsTable = tx.table('exams');
+    await examsTable.toCollection().modify((record) => {
+        if (record.className && corrections[record.className]) {
+            record.className = corrections[record.className];
+        }
+    });
+});
