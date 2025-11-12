@@ -129,15 +129,23 @@ const Settings: React.FC = () => {
                 if(typeof text !== 'string') throw new Error("Invalid file content");
                 
                 const data = JSON.parse(text);
+
+                if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+                    throw new Error("Backup file is not in the correct format (must be a JSON object of tables).");
+                }
                 
-                await db.transaction('rw', db.tables, async () => {
-                    for (const tableName of Object.keys(data)) {
-                        // @ts-ignore
-                        if (db[tableName]) {
-                            // @ts-ignore
-                            await db[tableName].clear();
-                            // @ts-ignore
-                            await db[tableName].bulkPut(data[tableName]);
+                const tableNames = db.tables.map(t => t.name);
+
+                await db.transaction('rw', tableNames, async () => {
+                    for (const tableName of tableNames) {
+                        if (data[tableName] && Array.isArray(data[tableName])) {
+                            const table = db.table(tableName);
+                            await table.clear();
+                            if (data[tableName].length > 0) {
+                                await table.bulkPut(data[tableName]);
+                            }
+                        } else {
+                            console.warn(`Data for table '${tableName}' not found or is in wrong format in backup file. Skipping restore for this table.`);
                         }
                     }
                 });
@@ -147,7 +155,7 @@ const Settings: React.FC = () => {
                 setTimeout(() => window.location.reload(), 2000);
             } catch (error: any) {
                 console.error("Restore failed:", error);
-                addToast(`Restore failed: ${error.message}. Make sure it's a valid backup file for this application.`, 'error');
+                addToast(`Restore failed: ${error.message}. Make sure it's a valid backup file.`, 'error');
             } finally {
                 if (event.target) event.target.value = '';
             }

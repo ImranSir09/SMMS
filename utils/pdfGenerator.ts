@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import html2canvas from 'html2canvas';
@@ -10,63 +9,32 @@ export const generatePdfFromComponent = async (
   pdfOptions: any = {}
 ): Promise<void> => {
   const container = document.createElement('div');
-  // Styling to ensure the container doesn't affect the layout but its content is measurable
   container.style.position = 'fixed';
   container.style.top = '0';
-  container.style.left = '-9999px';
+  container.style.left = '-9999px'; // Off-screen
   container.style.zIndex = '-100';
   document.body.appendChild(container);
 
   const root = createRoot(container);
 
   try {
-    // Render the component into the off-screen container
     root.render(
       React.createElement('div', { id: 'pdf-render-target' }, ComponentToRender)
     );
     
-    const elementToCapture = container.querySelector('#pdf-render-target');
-    if (!elementToCapture) {
-      throw new Error("Failed to render component for PDF generation.");
+    // Give React a moment to render everything.
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    const renderTarget = container.querySelector('#pdf-render-target');
+    if (!renderTarget) {
+      throw new Error("Failed to find render target for PDF generation.");
     }
-
-    // Wait for all images to load to prevent blank images in PDF.
-    const images = Array.from(elementToCapture.getElementsByTagName('img'));
-    const imageLoadPromises = images.map(img => {
-        if (img.complete && img.naturalHeight !== 0) {
-            return Promise.resolve();
-        }
-        return new Promise<void>((resolve) => {
-            img.onload = () => resolve();
-            img.onerror = () => {
-                console.warn(`Could not load image: ${img.src}. It might be missing in the PDF.`);
-                resolve(); // Resolve anyway to not block PDF generation for one broken image.
-            };
-        });
-    });
-
-    // A general timeout to ensure PDF generation doesn't hang forever.
-    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 8000)); // 8 seconds max wait
     
-    await Promise.race([
-        Promise.all(imageLoadPromises),
-        timeoutPromise
-    ]);
-
-    // A small final delay for any other async rendering to complete (e.g. fonts).
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const canvas = await html2canvas(elementToCapture as HTMLElement, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff', // Ensure solid background for multi-page splitting
-      windowWidth: elementToCapture.scrollWidth,
-      windowHeight: elementToCapture.scrollHeight,
-    });
-
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
+    // Prioritize elements explicitly marked as pages.
+    let pages = Array.from(renderTarget.querySelectorAll('.A4-page-container, #progress-card, #nep-progress-card'));
+    if (pages.length === 0) {
+        pages = [renderTarget.firstElementChild as HTMLElement || renderTarget as HTMLElement];
+    }
 
     const finalPdfOptions = {
         orientation: 'p',
@@ -75,32 +43,64 @@ export const generatePdfFromComponent = async (
         ...pdfOptions,
     };
     const pdf = new jsPDF(finalPdfOptions);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    const ratio = imgWidth / pdfWidth;
-    const scaledImgHeight = imgHeight / ratio;
-    
-    let heightLeft = scaledImgHeight;
-    let position = 0;
 
-    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledImgHeight);
-    heightLeft -= pdfHeight;
+    for (let i = 0; i < pages.length; i++) {
+        const pageElement = pages[i] as HTMLElement;
+        
+        // Wait for all images within the current page element to load.
+        const images = Array.from(pageElement.getElementsByTagName('img'));
+        const imageLoadPromises = images.map(img => {
+            if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
+            return new Promise<void>((resolve) => {
+                img.onload = () => resolve();
+                img.onerror = () => {
+                    console.warn(`PDF Generation: Could not load image ${img.src}.`);
+                    resolve(); // Don't block generation for a single broken image.
+                };
+            });
+        });
+        await Promise.all(imageLoadPromises);
+        
+        // A small final delay for fonts and other async rendering to complete.
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-    while (heightLeft > 0) {
-      position = heightLeft - scaledImgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, scaledImgHeight);
-      heightLeft -= pdfHeight;
+        const canvas = await html2canvas(pageElement, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            // Set dimensions explicitly to ensure consistency
+            width: pageElement.offsetWidth,
+            height: pageElement.offsetHeight,
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        
+        // Match PDF page size, considering orientation
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        
+        // Add new page if not the first one
+        if (i > 0) {
+            pdf.addPage();
+        }
+        
+        // Scale image to fit PDF page width
+        const ratio = canvas.width / pdfWidth;
+        const scaledHeight = canvas.height / ratio;
+        
+        // Avoid adding an image that's much taller than the page, which can corrupt some viewers
+        const displayHeight = Math.min(scaledHeight, pdfHeight);
+
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, displayHeight);
     }
-
+    
     pdf.save(`${fileName}.pdf`);
 
   } catch (error) {
-    console.error('Error generating PDF from component:', error);
-    alert('An error occurred while generating the PDF. See the console for details.');
+    console.error('Error generating PDF:', error);
+    alert('An error occurred while generating the PDF. Please check the console for details.');
   } finally {
-    // Cleanup the off-screen container
+    // Ensure cleanup happens
     root.unmount();
     document.body.removeChild(container);
   }
