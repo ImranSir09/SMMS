@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Student, SchoolDetails } from '../types';
 
@@ -13,7 +14,7 @@ const CoCurricularReport: React.FC<CoCurricularReportProps> = ({ student, school
 
   return (
     <div className="A4-page-container">
-      <div id="fa-report" className="w-[210mm] h-[297mm] bg-white p-4 font-sans text-black flex flex-col">
+      <div id="co-curricular-report" className="w-[210mm] h-[297mm] bg-white p-4 font-sans text-black flex flex-col">
         <div className="w-full h-full border-4 border-dashed border-black p-4 flex flex-col relative">
           
           {schoolDetails.logo && (

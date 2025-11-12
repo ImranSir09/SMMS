@@ -5,7 +5,8 @@ import { db } from '../services/db';
 import { Student } from '../types';
 import BonafideCertificate from '../components/BonafideCertificate';
 import { useAppData } from '../hooks/useAppData';
-import { PrintIcon } from '../components/icons';
+import { DownloadIcon, PrintIcon } from '../components/icons';
+import { generatePdfFromElement } from '../utils/pdfGenerator';
 
 const PrintBonafideCertificate: React.FC = () => {
     const { state } = useLocation();
@@ -28,6 +29,12 @@ const PrintBonafideCertificate: React.FC = () => {
 
     const handlePrint = () => window.print();
 
+    const handleDownloadPdf = async () => {
+        if (student) {
+            await generatePdfFromElement('bonafide-certificate', `Bonafide-Certificate-${student.name}`);
+        }
+    };
+
     if (!student || !schoolDetails) return <div>Loading...</div>;
 
     return (
@@ -36,6 +43,9 @@ const PrintBonafideCertificate: React.FC = () => {
                 <h1 className="text-2xl font-bold text-gray-800">Certificate Preview</h1>
                 <p className="text-gray-600 mb-4">Preview for {student.name}'s Bonafide Certificate.</p>
                 <div className="flex flex-wrap gap-4">
+                    <button onClick={handleDownloadPdf} className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700">
+                        <DownloadIcon className="w-5 h-5"/> Download PDF
+                    </button>
                     <button onClick={handlePrint} className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700">
                         <PrintIcon className="w-5 h-5"/> Print
                     </button>

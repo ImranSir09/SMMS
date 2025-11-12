@@ -6,7 +6,7 @@ import { Student, SbaReportData, Mark, DetailedFormativeAssessment } from '../ty
 import FormativeAssessmentReport from '../components/FormativeAssessmentReport';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { generateFormativeAssessmentReportPdf } from '../utils/pdfGenerator';
+import { generateMultiPagePdfFromElements } from '../utils/pdfGenerator';
 
 type AllData = {
     student: Student | null;
@@ -57,15 +57,12 @@ const PrintFormativeAssessmentReport: React.FC = () => {
     }, [studentId, activeSession]);
 
     const handleDownloadPdf = async () => {
-        if (data?.student && schoolDetails) {
-            await generateFormativeAssessmentReportPdf(
-                data.student,
-                schoolDetails,
-                data.sbaData,
-                data.allMarks,
-                data.allDetailedFA,
-                data.student.photo
-            );
+        if (data?.student) {
+            const elementIds = [
+                `fa-report-p1-${data.student.id}`,
+                `fa-report-p2-${data.student.id}`,
+            ];
+            await generateMultiPagePdfFromElements(elementIds, `Formative-Report-${data.student.name}`);
         }
     };
 

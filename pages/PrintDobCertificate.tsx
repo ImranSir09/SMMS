@@ -6,7 +6,7 @@ import { Student } from '../types';
 import DobCertificate from '../components/DobCertificate';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { generateDobCertificatePdf } from '../utils/pdfGenerator';
+import { generatePdfFromElement } from '../utils/pdfGenerator';
 
 const PrintDobCertificate: React.FC = () => {
     const { state } = useLocation();
@@ -30,8 +30,8 @@ const PrintDobCertificate: React.FC = () => {
     const handlePrint = () => window.print();
 
     const handleDownloadPdf = async () => {
-        if (student && schoolDetails) {
-            await generateDobCertificatePdf(student, schoolDetails, student.photo);
+        if (student) {
+            await generatePdfFromElement('dob-certificate', `DOB-Certificate-${student.name}`);
         }
     };
 

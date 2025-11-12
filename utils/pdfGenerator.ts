@@ -2,12 +2,62 @@
 import { jsPDF } from 'jspdf';
 // FIX: Use functional import for jspdf-autotable to align with recommended TypeScript usage.
 import autoTable from 'jspdf-autotable';
-import { Student, SchoolDetails, SbaReportData, HPCReportData, Mark, DetailedFormativeAssessment, StudentExamData, Exam, FormativeProficiencyLevel, SbaProficiencyLevel } from '../types';
-import { CATEGORY_OPTIONS, SUBJECTS } from '../constants';
-import { dateToWords, formatDateDDMMYYYY } from './formatters';
+import html2canvas from 'html2canvas';
+import { Student, SchoolDetails } from '../types';
+import { CATEGORY_OPTIONS } from '../constants';
 
 // FIX: Removed manual module augmentation for 'jspdf' as it caused an error. 
 // The functional import of `autoTable` provides the necessary types.
+
+// NEW: Generic function to generate single-page PDF from an HTML element using html2canvas
+export const generatePdfFromElement = async (elementId: string, filename: string) => {
+    const input = document.getElementById(elementId);
+    if (!input) {
+        console.error(`Element with id ${elementId} not found.`);
+        return;
+    }
+
+    const canvas = await html2canvas(input, {
+        scale: 2, // Higher resolution for better quality
+        useCORS: true,
+        logging: false,
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`${filename}.pdf`);
+};
+
+// NEW: Generic function to generate multi-page PDF from HTML elements using html2canvas
+export const generateMultiPagePdfFromElements = async (elementIds: string[], filename: string) => {
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    for (let i = 0; i < elementIds.length; i++) {
+        const elementId = elementIds[i];
+        const input = document.getElementById(elementId);
+        if (!input) {
+            console.error(`Element with id ${elementId} not found.`);
+            continue;
+        }
+
+        if (i > 0) {
+            pdf.addPage();
+        }
+
+        const canvas = await html2canvas(input, { scale: 2, useCORS: true, logging: false });
+        const imgData = canvas.toDataURL('image/png');
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    }
+
+    pdf.save(`${filename}.pdf`);
+};
 
 const addHeader = (doc: jsPDF, schoolDetails: SchoolDetails) => {
     doc.setFontSize(16);
@@ -70,89 +120,6 @@ export const generateRollStatementVectorPdf = async (
     doc.save(`${filename}.pdf`);
 };
 
-export const generateDobCertificatePdf = async (student: Student, schoolDetails: SchoolDetails, photo: string | null | undefined) => {
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const width = doc.internal.pageSize.getWidth();
-    
-    if (schoolDetails.logo) {
-      try {
-        doc.addImage(schoolDetails.logo, 'PNG', width / 2 - 20, 15, 40, 40, undefined, 'FAST');
-        doc.addImage(schoolDetails.logo, 'PNG', width/2 - 50, 100, 100, 100, undefined, 'FAST', 0.1); // Watermark
-      } catch (e) { console.error("Error adding logo to PDF:", e); }
-    }
-
-    doc.setFontSize(24);
-    doc.setFont('times', 'bold');
-    doc.text(schoolDetails.name, width / 2, 65, { align: 'center' });
-
-    doc.setFontSize(10);
-    doc.setFont('times', 'normal');
-    doc.text(schoolDetails.address, width / 2, 72, { align: 'center' });
-    const contactInfo = `Ph: ${schoolDetails.phone} | Email: ${schoolDetails.email} | UDISE: ${schoolDetails.udiseCode}`;
-    doc.text(contactInfo, width / 2, 77, { align: 'center' });
-
-    doc.setFontSize(18);
-    doc.setFont('times', 'bold');
-    doc.setCharSpace(1);
-    doc.text('DATE OF BIRTH CERTIFICATE', width / 2, 95, { align: 'center' });
-    doc.setLineWidth(0.5);
-    doc.line(width / 2 - 45, 96, width / 2 + 45, 96);
-    doc.setCharSpace(0);
-
-    doc.setFontSize(12);
-    doc.setFont('times', 'normal');
-    doc.text('This is to certify that:', width / 2, 110, { align: 'center' });
-
-    if (photo) {
-      try {
-        doc.addImage(photo, 'JPEG', width - 45, 120, 30, 40, undefined, 'FAST');
-      } catch (e) { console.error("Error adding student photo to PDF:", e); }
-    } else {
-        doc.rect(width - 45, 120, 30, 40);
-        doc.setFontSize(8);
-        doc.text('Affix Photo', width - 30, 140, { align: 'center' });
-    }
-
-    const details = [
-        ["Name of Student", student.name],
-        ["Admission No.", student.admissionNo],
-        ["Father’s Name", student.fathersName],
-        ["Class/Section", `${student.className} '${student.section}'`],
-        ["Mother’s Name", student.mothersName],
-        ["Date of Birth (figures)", formatDateDDMMYYYY(student.dob)],
-        ["Date of Birth (words)", dateToWords(student.dob)],
-    ];
-
-    autoTable(doc, {
-        body: details,
-        startY: 120,
-        theme: 'plain',
-        tableWidth: 140,
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45 }, 1: { fontStyle: 'normal' } },
-        styles: { font: 'times', fontSize: 11 },
-    });
-
-    doc.setFont('times', 'italic');
-    doc.text("The above particulars have been taken from the Admission Register of the school and are correct to the best of my knowledge.", width / 2, 190, { align: 'center', maxWidth: 180 });
-    
-    doc.setFontSize(8);
-    doc.setFont('times', 'bold');
-    doc.text("Certificate Note:", 15, 210);
-    doc.setFont('times', 'normal');
-    doc.text("This certificate is issued for official purposes only. It is based on the records maintained in the school admission register and is not valid for claiming age in a court of law.", 15, 215, { maxWidth: 180 });
-
-    doc.setFontSize(11);
-    doc.text(`Place: ${schoolDetails.address.split(',').pop()?.trim() || ''}`, 15, 250);
-    doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`, 15, 257);
-
-    doc.setLineWidth(0.5);
-    doc.line(width - 65, 265, width - 15, 265);
-    doc.setFont('times', 'bold');
-    doc.text('Headmaster/Principal', width - 40, 272, { align: 'center' });
-
-    doc.save(`DOB-Certificate-${student.name}.pdf`);
-};
-
 export const generateCategoryRollStatementPdf = async (students: Student[], className: string, schoolDetails: SchoolDetails) => {
     const doc = new jsPDF();
     const GENDERS = ['Male', 'Female', 'Other'];
@@ -197,280 +164,4 @@ export const generateCategoryRollStatementPdf = async (students: Student[], clas
     });
 
     doc.save(`Category-Roll-Statement-${className}.pdf`);
-};
-
-export const generateCoCurricularReportPdf = (student: Student, schoolDetails: SchoolDetails, subject: string, session: string) => {
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const width = doc.internal.pageSize.getWidth();
-    const sessionEndYear = parseInt(session.split('-')[0]) + 1;
-    
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Govt. of Jammu and Kashmir', width / 2, 20, { align: 'center' });
-    doc.setFontSize(20);
-    doc.text(schoolDetails.name, width / 2, 30, { align: 'center' });
-
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Format for recording Co-Curricular activities session: ${sessionEndYear}`, width / 2, 40, { align: 'center' });
-    doc.setLineWidth(0.5);
-    doc.line(width / 2 - 60, 41, width / 2 + 60, 41);
-    
-    doc.setFontSize(12);
-    doc.text(`Name of the Student: ${student.name}`, 15, 60);
-    doc.text(`Class: ${student.className}`, 15, 70);
-    doc.text(`Subject: ${subject}`, 15, 80);
-    doc.text(`Roll No: ${student.rollNo}`, 15, 90);
-
-    const head = [['Domain', 'Aspects Assessed', 'Max. Marks', 'Marks Obtained', 'Remarks']];
-    const body = Array.from({ length: 15 }, () => ['', '', '', '', '']);
-
-    autoTable(doc, {
-        head, body, startY: 100, theme: 'grid', headStyles: { fillColor: '#a0e9e7' }
-    });
-    
-    doc.text('Signature of Incharge Teacher', 15, 270);
-    doc.text('Principal/Headmaster', width - 60, 270);
-    doc.text(schoolDetails.name, width - 60, 275);
-    
-    doc.save(`Co-Curricular-${subject}-${student.name}.pdf`);
-};
-
-const drawChart = (doc: jsPDF, data: { label: string, value: number, color: string }[], x: number, y: number, w: number, h: number) => {
-    const maxValue = 5;
-    const barWidth = 15;
-    const barSpacing = 10;
-    
-    // Y-axis
-    doc.line(x, y, x, y + h);
-    for (let i = 0; i <= maxValue; i++) {
-        const yPos = y + h - (i / maxValue) * h;
-        doc.line(x - 2, yPos, x, yPos);
-        doc.text(String(i), x - 4, yPos + 1, { align: 'right' });
-    }
-    
-    // Bars
-    data.forEach((item, index) => {
-        const barX = x + barSpacing + index * (barWidth + barSpacing);
-        const barHeight = (item.value / maxValue) * h;
-        const barY = y + h - barHeight;
-        doc.setFillColor(item.color);
-        doc.rect(barX, barY, barWidth, barHeight, 'F');
-        doc.text(item.label, barX + barWidth / 2, y + h + 5, { align: 'center' });
-    });
-};
-
-export const generateFormativeAssessmentReportPdf = async (
-    student: Student, schoolDetails: SchoolDetails, sbaData: SbaReportData | null, 
-    allMarks: Mark[], allDetailedFA: DetailedFormativeAssessment[], photo: string | null | undefined
-) => {
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const width = doc.internal.pageSize.getWidth();
-
-    // --- Page 1 ---
-    doc.setFontSize(14).setFont('helvetica', 'bold').text('Govt. of Jammu and Kashmir', width / 2, 15, { align: 'center' });
-    doc.setFontSize(18).text(schoolDetails.name, width / 2, 23, { align: 'center' });
-
-    if (photo) doc.addImage(photo, 'JPEG', 15, 30, 40, 48); else doc.rect(15, 30, 40, 48);
-
-    const proficiencyCounts = allDetailedFA.reduce((acc, fa) => {
-        const level = fa.academicProficiency;
-        if (level && level !== 'Not-Satisfied') acc[level] = (acc[level] || 0) + 1;
-        return acc;
-    }, {} as Record<FormativeProficiencyLevel, number>);
-
-    const chartData = [
-        { label: 'Sky', value: proficiencyCounts['Sky'] || 0, color: '#3b82f6' },
-        { label: 'Mountain', value: proficiencyCounts['Mountain'] || 0, color: '#f97316' },
-        { label: 'Stream', value: proficiencyCounts['Stream'] || 0, color: '#808080' },
-    ];
-    doc.setFontSize(10).text('Student Proficiency Level', 135, 35, { align: 'center' });
-    drawChart(doc, chartData, 80, 40, 110, 38);
-
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('1. Student Profile:', 15, 85);
-    autoTable(doc, {
-        head: [['Adm No', 'Name', "Father's", "Mother's", 'D.O.B', 'Address', 'Class', 'Category', 'Aadhar', 'Contact']],
-        body: [[student.admissionNo, student.name, student.fathersName, student.mothersName, student.dob, student.address, student.className, student.category, student.aadharNo, student.contact]],
-        startY: 87, theme: 'grid', styles: { fontSize: 8 }
-    });
-
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('2. Student Physical and Mental Wellbeing:', 15, 115);
-    autoTable(doc, {
-        head: [['Physical Wellbeing', 'Mental Wellbeing', 'Disease Found']],
-        body: [[sbaData?.physicalWellbeing, sbaData?.mentalWellbeing, sbaData?.diseaseFound]],
-        startY: 117, theme: 'grid', styles: { fontSize: 8 }
-    });
-
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('3. 21st century learning skills (Proficiency Levels):', 15, 137);
-    autoTable(doc, {
-        head: [['Creativity', 'Critical Thinking', 'Communication', 'Problem Solving', 'Collaboration']],
-        body: [[sbaData?.creativity, sbaData?.criticalThinking, sbaData?.communicationSkill, sbaData?.problemSolvingAbility, sbaData?.collaboration]],
-        startY: 139, theme: 'grid', styles: { fontSize: 8 }
-    });
-    
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('4. Other Attributes:(Proficiency Levels):', 15, 159);
-     autoTable(doc, {
-        head: [['Talent', 'Participation', 'Attitude', 'Presentation', 'Writing', 'Comprehension']],
-        body: [[sbaData?.studentsTalent, sbaData?.participationInActivities, sbaData?.attitudeAndValues, sbaData?.presentationSkill, sbaData?.writingSkill, sbaData?.comprehensionSkill]],
-        startY: 161, theme: 'grid', styles: { fontSize: 8 }
-    });
-
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('5. Formative Assessment:', 15, 181);
-
-    // --- Page 2 ---
-    doc.addPage();
-    const academicMarksBySubject = new Map<string, Mark>();
-    allMarks.forEach(mark => { if (!academicMarksBySubject.has(mark.subject)) academicMarksBySubject.set(mark.subject, mark); });
-    
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('A. Academic Performance:', 15, 20);
-    const academicBody = SUBJECTS.map(subject => {
-        const mark = academicMarksBySubject.get(subject);
-        const total = (mark?.fa1||0)+(mark?.fa2||0)+(mark?.fa3||0)+(mark?.fa4||0)+(mark?.fa5||0)+(mark?.fa6||0);
-        return [subject, mark?.fa1||'-', mark?.fa2||'-', mark?.fa3||'-', mark?.fa4||'-', mark?.fa5||'-', mark?.fa6||'-', total||'-'];
-    });
-    autoTable(doc, {
-        head: [['Subject', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'Total @ 30']],
-        body: academicBody, startY: 22, theme: 'grid', styles: { fontSize: 8 }
-    });
-
-    const proficiencyToScore = (level: FormativeProficiencyLevel | undefined, maxScore: number): number => {
-        if (!level) return 0;
-        const baseScore = { 'Sky': 4, 'Mountain': 3, 'Stream': 2, 'Not-Satisfied': 1 }[level] || 0;
-        if (maxScore === 4) return baseScore;
-        if (maxScore === 2) return baseScore / 2;
-        return 0;
-    };
-    const coCurricularScores: { [key: string]: number } = {};
-    const coCurricularFields = [
-        { key: 'physicalActivity', max: 4 }, { key: 'participationInSchoolActivities', max: 4 },
-        { key: 'culturalAndCreativeActivities', max: 4 }, { key: 'healthAndHygiene', max: 2 },
-        { key: 'environmentAndITAwareness', max: 2 }, { key: 'discipline', max: 2 }, { key: 'attendance', max: 2 },
-    ];
-    if (allDetailedFA.length > 0) {
-        coCurricularFields.forEach(fieldInfo => {
-            let totalScore = 0;
-            allDetailedFA.forEach(fa => {
-                if (fa.cocurricularRatings) {
-                    const level = fa.cocurricularRatings[fieldInfo.key as keyof typeof fa.cocurricularRatings];
-                    totalScore += proficiencyToScore(level, fieldInfo.max);
-                }
-            });
-            coCurricularScores[fieldInfo.key] = Math.round(totalScore / allDetailedFA.length);
-        });
-    }
-    const totalCoCurricularScore = Object.values(coCurricularScores).reduce((sum, score) => sum + score, 0);
-
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('B. Co-Curricular Activities:', 15, (doc as any).lastAutoTable.finalY + 10);
-    autoTable(doc, {
-        head: [['FA', 'Physical Act.', 'Participation', 'Culture', 'Health', 'Env/IT', 'Discipline', 'Attendance', 'Total @20']],
-        body: [['-', coCurricularScores['physicalActivity'] || '-', coCurricularScores['participationInSchoolActivities'] || '-', coCurricularScores['culturalAndCreativeActivities'] || '-', coCurricularScores['healthAndHygiene'] || '-', coCurricularScores['environmentAndITAwareness'] || '-', coCurricularScores['discipline'] || '-', coCurricularScores['attendance'] || '-', totalCoCurricularScore]],
-        startY: (doc as any).lastAutoTable.finalY + 12, theme: 'grid', styles: { fontSize: 7 }
-    });
-
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('6. Anecdotal Record:', 15, (doc as any).lastAutoTable.finalY + 10);
-    autoTable(doc, {
-        head: [['Dated', 'Teachers Observation']],
-        body: allDetailedFA.slice(0, 5).map(fa => [fa.anecdotalRecord?.date, fa.anecdotalRecord?.observation]),
-        startY: (doc as any).lastAutoTable.finalY + 12, theme: 'grid', styles: { fontSize: 8 }
-    });
-    
-    doc.text('Principal/Headmaster', width - 50, doc.internal.pageSize.getHeight() - 20);
-
-    doc.save(`Formative-Report-${student.name}.pdf`);
-};
-
-const drawThermometer = (doc: jsPDF, x: number, y: number, w: number, h: number, label: string, value: number) => {
-    const fillHeight = Math.min(100, Math.max(0, value));
-    let fillColor = '#ef4444'; // red-500
-    if (fillHeight > 66) fillColor = '#22c55e'; // green-500
-    else if (fillHeight > 33) fillColor = '#eab308'; // yellow-500
-
-    doc.setFontSize(7).setFont('helvetica', 'bold');
-    doc.setFillColor(207, 250, 254).rect(x, y, w, 8, 'F'); // Header bg
-    doc.rect(x, y, w, 8).text(label, x + w / 2, y + 5, { align: 'center' });
-    
-    doc.setFillColor(229, 231, 235).rect(x, y + 8, w, h, 'F'); // Main body
-    doc.rect(x, y + 8, w, h);
-
-    const tubeX = x + w / 2 - 5;
-    const tubeY = y + 12;
-    const tubeH = h - 20;
-    doc.setFillColor(255, 255, 255).rect(tubeX, tubeY, 10, tubeH, 'F');
-    doc.rect(tubeX, tubeY, 10, tubeH);
-    
-    doc.setFillColor(fillColor).rect(tubeX, tubeY + tubeH * (1 - fillHeight / 100), 10, tubeH * (fillHeight / 100), 'F');
-
-    doc.setFillColor(fillColor).circle(x + w / 2, y + h, 7, 'F');
-};
-
-
-export const generateHpcPdf = async (
-    student: Student, schoolDetails: SchoolDetails, sbaData: SbaReportData | null, hpcData: HPCReportData | null,
-    allMarks: Mark[], allDetailedFA: DetailedFormativeAssessment[], photo: string | null | undefined
-) => {
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const width = doc.internal.pageSize.getWidth();
-
-    // --- Page 1 ---
-    doc.setFontSize(12).setFont('helvetica', 'bold').text('Govt. of Jammu and Kashmir', width/2, 20, {align: 'center'});
-    doc.setFontSize(16).text('GOVERNMENT MIDDLE SCHOOL SENZI', width/2, 28, {align: 'center'});
-    doc.setFontSize(14).setTextColor('#0891b2').text('Holistic Progress Card', width/2, 40, {align: 'center'});
-    doc.setFontSize(12).setTextColor(0,0,0).setFont('helvetica', 'normal').text('Student Profile', width/2, 50, {align: 'center'});
-    doc.setLineWidth(0.5).line(width/2 - 20, 51, width/2 + 20, 51);
-
-    if (photo) doc.addImage(photo, 'JPEG', width/2-20, 55, 40, 48); else doc.rect(width/2-20, 55, 40, 48);
-    
-    const profileData = [
-        ["Admission No", student.admissionNo], ["Name", student.name], ["Father's Name", student.fathersName],
-        ["Mother's Name", student.mothersName], ["Father's Occupation", hpcData?.foundationalData?.partA1?.fatherOccupation || 'N/A'],
-        ["Date of Birth", student.dob], ["Address", student.address], ["Gender", student.gender],
-        ["Class", student.className], ["Category", student.category], ["Aadhar No", student.aadharNo],
-        ["Bank Account", student.accountNo], ["Bank Name", schoolDetails.name], ["IFSC Code", student.ifscCode],
-        ["Contact No", student.contact],
-    ];
-    autoTable(doc, {
-        body: profileData, startY: 110, theme: 'plain', styles: {fontSize: 8},
-        columnStyles: { 0: { fontStyle: 'bold' } }
-    });
-    doc.text('Principal/Headmaster', width - 45, 270);
-    doc.text(schoolDetails.name, width - 45, 275);
-    
-    // --- Page 2 ---
-    doc.addPage();
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('1. Student Physical and Mental Wellbeing:', 15, 20);
-    autoTable(doc, {
-        head: [['Physical Wellbeing', 'Mental Wellbeing', 'Disease Found']],
-        body: [[sbaData?.physicalWellbeing, sbaData?.mentalWellbeing, sbaData?.diseaseFound]],
-        startY: 22, theme: 'grid', styles: { fontSize: 7 }
-    });
-
-    const lastY = (doc as any).lastAutoTable.finalY;
-    doc.setFontSize(10).text('2. 21st century learning skills (Proficiency Levels):', 15, lastY + 10);
-    autoTable(doc, {
-        head: [['Creativity', 'Critical Thinking', 'Communication', 'Problem Solving', 'Collaboration']],
-        body: [[sbaData?.creativity, sbaData?.criticalThinking, sbaData?.communicationSkill, sbaData?.problemSolvingAbility, sbaData?.collaboration]],
-        startY: lastY + 12, theme: 'grid', styles: { fontSize: 7 }
-    });
-
-    // ... continue for all tables on page 2
-    // For brevity, only showing a few tables. A full implementation would add all of them.
-
-    // --- Page 3 ---
-    doc.addPage();
-    const proficiencyToPercent = (level: SbaProficiencyLevel | undefined) => ({ 'High': 90, 'Medium': 65, 'Low': 30 }[level || 'Low']);
-    const healthValue = (((sbaData?.physicalWellbeing === 'Normal and Healthy' ? 100 : 40) + (sbaData?.mentalWellbeing === 'Normal and Healthy' ? 100 : 40)) / 2);
-    const skillsValue = sbaData ? (proficiencyToPercent(sbaData.creativity) + proficiencyToPercent(sbaData.criticalThinking)) / 2 : 0; // Simplified for brevity
-
-    drawThermometer(doc, 20, 20, 40, 80, '1. Student Health', healthValue);
-    drawThermometer(doc, 85, 20, 40, 80, '2. 21st Century Skills', skillsValue);
-    drawThermometer(doc, 150, 20, 40, 80, '3. Participation', proficiencyToPercent(sbaData?.participationInActivities));
-
-    doc.setFontSize(10).setFont('helvetica', 'bold').text('Impression:', 15, 130);
-    doc.setFontSize(8).setFont('helvetica', 'normal');
-    doc.text( healthValue < 75 ? 'Your child has a health issue...' : 'Health is good.', 15, 136, {maxWidth: 180});
-
-    // ... continue for other pages
-
-    addFooter(doc, student.name);
-    doc.save(`HPC-${student.name}.pdf`);
 };

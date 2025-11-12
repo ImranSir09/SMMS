@@ -6,7 +6,7 @@ import { Student, SbaReportData, HPCReportData, Mark, DetailedFormativeAssessmen
 import HolisticProgressCard from '../components/HolisticProgressCard';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { generateHpcPdf } from '../utils/pdfGenerator';
+import { generateMultiPagePdfFromElements } from '../utils/pdfGenerator';
 
 type AllData = {
     student: Student | null;
@@ -66,16 +66,14 @@ const PrintHPC: React.FC = () => {
     }, [studentId, activeSession]);
 
     const handleDownloadPdf = async () => {
-        if (data?.student && schoolDetails) {
-            await generateHpcPdf(
-                data.student,
-                schoolDetails,
-                data.sbaData,
-                data.hpcData,
-                data.allMarks,
-                data.allDetailedFA,
-                data.student.photo
-            );
+        if (data?.student) {
+            const elementIds = [
+                `hpc-page1-${data.student.id}`,
+                `hpc-page2-${data.student.id}`,
+                `hpc-page3-${data.student.id}`,
+                `hpc-page4-${data.student.id}`,
+            ];
+            await generateMultiPagePdfFromElements(elementIds, `HPC-${data.student.name}`);
         }
     };
 

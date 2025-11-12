@@ -5,7 +5,7 @@ import { db } from '../services/db';
 import { Student } from '../types';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { generateCoCurricularReportPdf } from '../utils/pdfGenerator';
+import { generatePdfFromElement } from '../utils/pdfGenerator';
 import CoCurricularReport from '../components/CoCurricularReport';
 
 const PrintCoCurricularReport: React.FC = () => {
@@ -30,8 +30,8 @@ const PrintCoCurricularReport: React.FC = () => {
     const handlePrint = () => window.print();
 
     const handleDownloadPdf = async () => {
-        if (student && schoolDetails && subject && activeSession) {
-            generateCoCurricularReportPdf(student, schoolDetails, subject, activeSession);
+        if (student && subject) {
+            await generatePdfFromElement('co-curricular-report', `Co-Curricular-${subject}-${student.name}`);
         }
     };
     
@@ -57,8 +57,8 @@ const PrintCoCurricularReport: React.FC = () => {
              <style>{`
                 @media print {
                     body * { visibility: hidden; }
-                    #fa-report, #fa-report * { visibility: visible; }
-                    #fa-report { position: absolute; left: 0; top: 0; width: 100%; }
+                    #co-curricular-report, #co-curricular-report * { visibility: visible; }
+                    #co-curricular-report { position: absolute; left: 0; top: 0; width: 100%; }
                 }
             `}</style>
         </div>
