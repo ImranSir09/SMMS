@@ -196,111 +196,113 @@ const Settings: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col gap-4 animate-fade-in">
-            <Card className="p-3">
-                <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">
-                    <BuildingIcon className="w-5 h-5" />
-                    <h2>School Details</h2>
-                </div>
-                <div className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in">
+            {/* Left Column */}
+            <div className="flex flex-col gap-4">
+                <Card className="p-3">
+                    <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">
+                        <BuildingIcon className="w-5 h-5" />
+                        <h2>School Details</h2>
+                    </div>
+                    <div className="space-y-3">
+                        <div>
+                            <label className="block text-xs font-medium text-foreground/80 mb-1">School Name</label>
+                            <div className="relative">
+                                <BuildingIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                                <input name="name" value={details.name || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
+                            </div>
+                            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-foreground/80 mb-1">Official Email</label>
+                            <div className="relative">
+                                <MailIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                                <input name="email" type="email" value={details.email || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
+                            </div>
+                            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-foreground/80 mb-1">Phone Number</label>
+                            <div className="relative">
+                                <PhoneIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                                <input name="phone" type="tel" value={details.phone || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
+                            </div>
+                            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-foreground/80 mb-1">UDISE Code</label>
+                            <div className="relative">
+                                <HashIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                                <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
+                            </div>
+                            {errors.udiseCode && <p className="text-red-500 text-xs mt-1">{errors.udiseCode}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-foreground/80 mb-1">Address</label>
+                            <div className="relative">
+                                <MapPinIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+                                <input name="address" value={details.address || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
+                            </div>
+                            {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-foreground/80 mb-1">School Logo</label>
+                            <div className="flex items-center gap-3">
+                                {logoPreview ? (
+                                    <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 object-contain rounded-md border border-border p-1" />
+                                ) : (
+                                    <div className="w-16 h-16 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Logo</div>
+                                )}
+                                <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-3 rounded-lg bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5">
+                                    <UploadIcon className="w-4 h-4 text-foreground/60" />
+                                    <span className="text-xs text-foreground/80">Upload Logo</span>
+                                    <input type="file" accept="image/png, image/jpeg" onChange={handleLogoChange} className="hidden" />
+                                </label>
+                            </div>
+                        </div>
+                        <button onClick={handleSaveDetails} className={`${primaryButtonStyle} w-full flex items-center justify-center gap-2`}><SaveIcon className="w-4 h-4"/> Save Details</button>
+                    </div>
+                </Card>
+            </div>
+            {/* Right Column */}
+            <div className="flex flex-col gap-4">
+                <SessionManager />
+                <Card className="p-3">
+                    <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">
+                        <DatabaseIcon className="w-5 h-5" />
+                        <h2>Data Management</h2>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button onClick={handleBackup} className={`${buttonStyle} bg-blue-600 text-white flex items-center justify-center gap-2`}><DownloadIcon className="w-4 h-4" /> Backup Data</button>
+                        <label className={`${buttonStyle} bg-green-600 text-white text-center cursor-pointer flex items-center justify-center gap-2`}>
+                            <UploadIcon className="w-4 h-4" />
+                            Restore Data
+                            <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
+                        </label>
+                    </div>
+                </Card>
+                <Card className="p-3 border-red-500/50 bg-red-500/5">
+                    <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-red-500/20 pb-1 text-red-600 dark:text-red-400">
+                        <AlertTriangleIcon className="w-5 h-5" />
+                        <h2>Danger Zone</h2>
+                    </div>
                     <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">School Name</label>
-                        <div className="relative">
-                            <BuildingIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
-                            <input name="name" value={details.name || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
-                        </div>
-                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                        <p className="font-semibold text-sm">Reset All Application Data</p>
+                        <p className="text-xs text-foreground/80 mt-1 mb-3">
+                            This action will permanently delete all data, including students, staff, exams, and settings. This action is irreversible.
+                        </p>
+                        <button
+                            onClick={handleResetData}
+                            className="w-full py-2 px-4 rounded-lg text-sm font-semibold transition-colors bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                            Reset All Data
+                        </button>
                     </div>
-                     <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">Official Email</label>
-                        <div className="relative">
-                            <MailIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
-                            <input name="email" type="email" value={details.email || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
-                        </div>
-                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">Phone Number</label>
-                        <div className="relative">
-                             <PhoneIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
-                             <input name="phone" type="tel" value={details.phone || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
-                        </div>
-                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">UDISE Code</label>
-                        <div className="relative">
-                            <HashIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
-                            <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
-                        </div>
-                        {errors.udiseCode && <p className="text-red-500 text-xs mt-1">{errors.udiseCode}</p>}
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">Address</label>
-                        <div className="relative">
-                            <MapPinIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
-                            <input name="address" value={details.address || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
-                        </div>
-                        {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-foreground/80 mb-1">School Logo</label>
-                        <div className="flex items-center gap-3">
-                            {logoPreview ? (
-                                <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 object-contain rounded-md border border-border p-1" />
-                            ) : (
-                                <div className="w-16 h-16 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Logo</div>
-                            )}
-                            <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-3 rounded-lg bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5">
-                                <UploadIcon className="w-4 h-4 text-foreground/60" />
-                                <span className="text-xs text-foreground/80">Upload Logo</span>
-                                <input type="file" accept="image/png, image/jpeg" onChange={handleLogoChange} className="hidden" />
-                            </label>
-                        </div>
-                    </div>
-                    <button onClick={handleSaveDetails} className={`${primaryButtonStyle} w-full flex items-center justify-center gap-2`}><SaveIcon className="w-4 h-4"/> Save Details</button>
-                </div>
-            </Card>
-
-            <SessionManager />
-
-            <Card className="p-3">
-                <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">
-                    <DatabaseIcon className="w-5 h-5" />
-                    <h2>Data Management</h2>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                    <button onClick={handleBackup} className={`${buttonStyle} bg-blue-600 text-white flex items-center justify-center gap-2`}><DownloadIcon className="w-4 h-4" /> Backup Data</button>
-                     <label className={`${buttonStyle} bg-green-600 text-white text-center cursor-pointer flex items-center justify-center gap-2`}>
-                        <UploadIcon className="w-4 h-4" />
-                        Restore Data
-                        <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
-                    </label>
-                </div>
-            </Card>
-
-            <Card className="p-3 border-red-500/50 bg-red-500/5">
-                <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-red-500/20 pb-1 text-red-600 dark:text-red-400">
-                    <AlertTriangleIcon className="w-5 h-5" />
-                    <h2>Danger Zone</h2>
-                </div>
-                <div>
-                    <p className="font-semibold text-sm">Reset All Application Data</p>
-                    <p className="text-xs text-foreground/80 mt-1 mb-3">
-                        This action will permanently delete all data, including students, staff, exams, and settings. This action is irreversible.
-                    </p>
-                    <button
-                        onClick={handleResetData}
-                        className="w-full py-2 px-4 rounded-lg text-sm font-semibold transition-colors bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    >
-                        Reset All Data
-                    </button>
-                </div>
-            </Card>
-
-             <Card className="p-3 text-center">
-                <p className="text-xs text-foreground/60">App Version: {getAutoVersion()}</p>
-             </Card>
+                </Card>
+                 <Card className="p-3 text-center">
+                    <p className="text-xs text-foreground/60">App Version: {getAutoVersion()}</p>
+                 </Card>
+            </div>
         </div>
     );
 };
