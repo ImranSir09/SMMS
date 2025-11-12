@@ -6,9 +6,7 @@ import Card from '../components/Card';
 import { ExamsIcon, CalendarIcon, CertificateIcon, BonafideIcon, SearchIcon, UploadIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
-import DobCertificate from '../components/DobCertificate';
-import BonafideCertificate from '../components/BonafideCertificate';
+import { generatePdfFromComponentAsImage, generateDobCertificateVectorPdf, generateBonafideCertificateVectorPdf } from '../utils/pdfGenerator';
 import NepProgressCard from '../components/NepProgressCard';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
@@ -76,13 +74,6 @@ const Certificates: React.FC = () => {
               });
       }
   }, [isNepCardModalOpen, foundStudent, activeSession]);
-
-  const generateDoc = async (component: React.ReactElement, fileName: string) => {
-      if (!schoolDetails) return;
-      setIsGeneratingPdf(true);
-      await generatePdfFromComponent(component, fileName);
-      setIsGeneratingPdf(false);
-  };
   
   const handleOpenCertModal = (type: 'dob' | 'bonafide') => {
     setCertType(type);
@@ -114,21 +105,22 @@ const Certificates: React.FC = () => {
         alert("Required data is missing to generate the certificate.");
         return;
     }
-
-    let componentToRender;
+    setIsGeneratingPdf(true);
     const fileName = `${certType === 'dob' ? 'DOB' : 'Bonafide'}-Cert-${foundStudent.admissionNo}`;
 
-    if (certType === 'dob') {
-        componentToRender = <DobCertificate student={foundStudent} schoolDetails={schoolDetails} photo={certPhoto} />;
-    } else if (certType === 'bonafide') {
-        componentToRender = <BonafideCertificate student={foundStudent} schoolDetails={schoolDetails} photo={certPhoto} />;
+    try {
+        if (certType === 'dob') {
+            await generateDobCertificateVectorPdf(foundStudent, schoolDetails, certPhoto, fileName);
+        } else if (certType === 'bonafide') {
+            await generateBonafideCertificateVectorPdf(foundStudent, schoolDetails, certPhoto, fileName);
+        }
+    } catch (e) {
+        console.error("PDF generation failed", e);
+        alert("An error occurred while generating the PDF.");
+    } finally {
+        setIsGeneratingPdf(false);
+        setIsCertModalOpen(false);
     }
-    
-    if (componentToRender) {
-        await generateDoc(componentToRender, fileName);
-    }
-    
-    setIsCertModalOpen(false);
   };
 
   const handleGenerateNepCard = async () => {
@@ -151,7 +143,7 @@ const Certificates: React.FC = () => {
             return;
         }
 
-        await generateDoc(
+        await generatePdfFromComponentAsImage(
             <NepProgressCard 
                 student={foundStudent}
                 marks={studentMarks}

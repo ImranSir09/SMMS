@@ -4,7 +4,8 @@ import { db } from '../services/db';
 import { Student } from '../types';
 import CoCurricularReport from '../components/CoCurricularReport';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
+// FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+import { generatePdfFromComponentAsImage } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 
 const PrintCoCurricularReport: React.FC = () => {
@@ -24,7 +25,8 @@ const PrintCoCurricularReport: React.FC = () => {
 
   const handleDownloadPdf = async () => {
     if (student && schoolDetails && subject) {
-      await generatePdfFromComponent(
+      // FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+      await generatePdfFromComponentAsImage(
         <CoCurricularReport student={student} schoolDetails={schoolDetails} subject={subject} session={activeSession} />,
         `CoCurricular-Report-${student.admissionNo}-${subject}`
       );

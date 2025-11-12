@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student, SbaReportData, HPCReportData, Mark, DetailedFormativeAssessment, StudentExamData, Exam } from '../types';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
+// FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+import { generatePdfFromComponentAsImage } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 import HolisticProgressCard from '../components/HolisticProgressCard';
 
@@ -60,7 +61,8 @@ const PrintHPC: React.FC = () => {
 
   const handleDownloadPdf = async () => {
     if (reportData && schoolDetails && allExams) {
-        await generatePdfFromComponent(
+        // FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+        await generatePdfFromComponentAsImage(
             <HolisticProgressCard
                 {...reportData}
                 schoolDetails={schoolDetails}

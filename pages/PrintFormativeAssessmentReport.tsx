@@ -1,10 +1,12 @@
 
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student, SbaReportData, Mark, DetailedFormativeAssessment } from '../types';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
+// FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+import { generatePdfFromComponentAsImage } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 import FormativeAssessmentReport from '../components/FormativeAssessmentReport';
 
@@ -53,7 +55,8 @@ const PrintFormativeAssessmentReport: React.FC = () => {
 
   const handleDownloadPdf = async () => {
     if (reportData && schoolDetails) {
-        await generatePdfFromComponent(
+        // FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+        await generatePdfFromComponentAsImage(
             <FormativeAssessmentReport
                 {...reportData}
                 schoolDetails={schoolDetails}

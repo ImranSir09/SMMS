@@ -1,12 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../services/db';
-// FIX: Import StudentSessionInfo to explicitly type Dexie query results.
 import { Student, StudentSessionInfo } from '../types';
 import RollStatement from '../components/RollStatement';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
+import { generateRollStatementVectorPdf } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 
 const PrintRollStatement: React.FC = () => {
@@ -17,7 +15,6 @@ const PrintRollStatement: React.FC = () => {
   useEffect(() => {
     const fetchStudents = async () => {
         if (className && activeSession) {
-            // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
             const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo
                 .where({ className, session: activeSession })
                 .toArray();
@@ -35,7 +32,6 @@ const PrintRollStatement: React.FC = () => {
                 const sessionInfo = sessionInfoMap.get(student.id!);
                 return {
                     ...student,
-                    // FIX: Errors on these lines are resolved by typing `sessionInfos` above.
                     className: sessionInfo?.className,
                     section: sessionInfo?.section,
                     rollNo: sessionInfo?.rollNo,
@@ -53,9 +49,11 @@ const PrintRollStatement: React.FC = () => {
   };
 
   const handleDownloadPdf = async () => {
-    if (className) {
-        await generatePdfFromComponent(
-            <RollStatement students={students} className={className} schoolDetails={schoolDetails} />,
+    if (className && schoolDetails) {
+        await generateRollStatementVectorPdf(
+            students,
+            className,
+            schoolDetails,
             `Roll-Statement-Class-${className}`
         );
     }

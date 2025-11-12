@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../services/db';
 import { Student, StudentSessionInfo } from '../types';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
+// FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+import { generatePdfFromComponentAsImage } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 import ConsolidatedRollStatement from '../components/Wizard'; // Renamed from CategoryWiseRollStatement
 
@@ -62,7 +63,8 @@ const PrintCategoryRollStatement: React.FC = () => {
 
   const handleDownloadPdf = async () => {
     if (studentsByClass.size > 0 && schoolDetails) {
-        await generatePdfFromComponent(
+        // FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+        await generatePdfFromComponentAsImage(
             <ConsolidatedRollStatement
                 studentsByClass={studentsByClass}
                 schoolDetails={schoolDetails}

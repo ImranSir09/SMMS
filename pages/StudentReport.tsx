@@ -1,11 +1,13 @@
 
+
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 // FIX: Import StudentSessionInfo to explicitly type Dexie query results.
 import { Student, StudentSessionInfo } from '../types';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
+// FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+import { generatePdfFromComponentAsImage } from '../utils/pdfGenerator';
 import HolisticProgressCard from '../components/HolisticProgressCard';
 import { DownloadIcon, UploadIcon } from '../components/icons';
 import Card from '../components/Card';
@@ -101,7 +103,8 @@ const StudentReport: React.FC = () => {
 
                 const photoOverride = tempPhotos.has(studentId) ? tempPhotos.get(studentId) : undefined;
 
-                await generatePdfFromComponent(
+                // FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+                await generatePdfFromComponentAsImage(
                     <HolisticProgressCard
                         student={student}
                         schoolDetails={schoolDetails}

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -6,7 +7,8 @@ import { db } from '../services/db';
 // FIX: Import StudentSessionInfo to explicitly type Dexie query results.
 import { Exam, Student, Mark, StudentExamData, StudentSessionInfo } from '../types';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
+// FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+import { generatePdfFromComponentAsImage } from '../utils/pdfGenerator';
 import ProgressCard from '../components/ProgressCard';
 import { PrintIcon } from '../components/icons';
 import { SUBJECTS } from '../constants';
@@ -198,7 +200,8 @@ const ExamMarks: React.FC = () => {
                 return;
             }
             
-            await generatePdfFromComponent(
+            // FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+            await generatePdfFromComponentAsImage(
                 <ProgressCard
                     student={student}
                     marks={studentMarks}

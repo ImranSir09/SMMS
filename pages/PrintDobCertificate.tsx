@@ -4,8 +4,8 @@ import { db } from '../services/db';
 import { Student } from '../types';
 import DobCertificate from '../components/DobCertificate';
 import { useAppData } from '../hooks/useAppData';
-// FIX: Changed import from 'generatePdf' to 'generatePdfFromComponent' and updated the function call to pass the component directly.
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
+// FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+import { generatePdfFromComponentAsImage } from '../utils/pdfGenerator';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 
 const PrintDobCertificate: React.FC = () => {
@@ -25,7 +25,8 @@ const PrintDobCertificate: React.FC = () => {
 
   const handleDownloadPdf = async () => {
     if (student && schoolDetails) {
-        await generatePdfFromComponent(
+        // FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+        await generatePdfFromComponentAsImage(
             <DobCertificate student={student} schoolDetails={schoolDetails} />,
             `DOB-Certificate-${student.admissionNo}-${student.name}`
         );

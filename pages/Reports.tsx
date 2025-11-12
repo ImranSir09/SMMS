@@ -1,11 +1,13 @@
 
+
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
-import { generatePdfFromComponent } from '../utils/pdfGenerator';
+// FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+import { generatePdfFromComponentAsImage } from '../utils/pdfGenerator';
 import { BookmarkIcon, UserListIcon } from '../components/icons';
 import SubjectTopperList from '../components/SubjectTopperList';
 import { Student } from '../types';
@@ -73,7 +75,8 @@ const Reports: React.FC = () => {
             .sort((a, b) => b.totalScore - a.totalScore)
             .slice(0, 5); // Get top 5
 
-            await generatePdfFromComponent(
+            // FIX: Renamed function to generatePdfFromComponentAsImage to match the exported member from pdfGenerator.
+            await generatePdfFromComponentAsImage(
                 <SubjectTopperList
                     toppers={rankedStudents as { student: Student; totalScore: number }[]}
                     examName={exam.name}
