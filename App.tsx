@@ -1,4 +1,5 @@
 
+
 import React, { useContext, useEffect } from 'react';
 // FIX: Update react-router-dom imports for v6
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -101,6 +102,10 @@ const App: React.FC = () => {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
+            <footer className="text-center text-xs text-foreground/50 py-4 mt-4 border-t border-border">
+                <p>&copy; {new Date().getFullYear()} School Management Pro V2</p>
+                <p className="text-[10px]">by Imran Gani Mugloo Teacher Zone Vailoo</p>
+            </footer>
         </main>
         <BottomNav />
       </div>

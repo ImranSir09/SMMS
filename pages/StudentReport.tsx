@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -66,9 +67,6 @@ const StudentReport: React.FC = () => {
 
     return (
         <div className="flex flex-col gap-4 animate-fade-in p-4">
-            <header className="p-3 bg-card rounded-lg shadow-sm text-center">
-                <h1 className="text-xl font-bold">Generate Holistic Progress Card</h1>
-            </header>
             <div className="bg-card p-4 rounded-lg shadow-sm space-y-4">
                 <div>
                     <label className="block text-xs font-medium text-foreground/80 mb-1">Select Class</label>

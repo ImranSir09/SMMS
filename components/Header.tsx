@@ -14,17 +14,24 @@ const Header: React.FC = () => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
     const mainPath = pathSegments[0];
     
+    // Specific dynamic routes
     if (mainPath === 'student' && pathSegments[1]) return 'Student Profile';
-    if (mainPath === 'staff' && pathSegments[1]) return 'Staff Profile';
     if (mainPath === 'exams' && pathSegments[1]) return 'Exam Marks';
-    if (mainPath === 'print' && pathSegments[1]) return 'Print Preview';
+    if (mainPath === 'print') return 'Print Preview';
+
+    // Specific static routes
     if (!mainPath || mainPath === 'dashboard') return 'Dashboard';
+    if (mainPath === 'sba') return 'SBA';
+    if (mainPath === 'sba-entry') return 'SBA Entry';
+    if (mainPath === 'formative-entry') return 'Formative Assessment Entry';
+    if (mainPath === 'student-report') return 'Generate HPC';
     
-    return mainPath.charAt(0).toUpperCase() + mainPath.slice(1);
+    // Generic formatter
+    return mainPath.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   return (
-    <header className="flex-shrink-0 flex items-center justify-between p-2 bg-card border-b border-border h-16 z-20">
+    <header className="flex-shrink-0 flex items-center justify-between p-2 bg-card border-b border-border h-16 z-20 print:hidden">
       <div className="flex items-center gap-3">
         {isDashboard ? (
           <>
@@ -39,7 +46,6 @@ const Header: React.FC = () => {
               <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground from-50% to-foreground/60">
                   {schoolDetails?.name || 'School Management Pro V2'}
               </h1>
-              <p className="text-[10px] text-foreground/70 -mt-1">by Imran Gani Mugloo Teacher Zone Vailoo</p>
             </div>
           </>
         ) : (

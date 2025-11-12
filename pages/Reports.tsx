@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
@@ -40,9 +41,6 @@ const Reports: React.FC = () => {
 
     return (
         <div className="flex flex-col gap-4 animate-fade-in">
-            <header className="p-3 bg-card rounded-lg shadow-sm text-center">
-                <h1 className="text-xl font-bold">Reports & Statements</h1>
-            </header>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Card onClick={handlePrintRollStatement} className="p-4 flex items-center gap-3 cursor-pointer hover-lift">
                     <UserListIcon className="w-8 h-8 text-primary" />

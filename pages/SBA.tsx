@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -129,9 +130,6 @@ const SBA: React.FC = () => {
     return (
         <>
             <div className="flex flex-col gap-4 animate-fade-in">
-                <header className="p-3 bg-card rounded-lg shadow-sm text-center">
-                    <h1 className="text-xl font-bold">School Based Assessment</h1>
-                </header>
                 <div className="flex flex-col gap-3">
                     {menuItems.map(item => (
                         <SbaButton
