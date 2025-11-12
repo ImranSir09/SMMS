@@ -5,7 +5,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { BarChart3Icon, ClipboardListIcon, EditIcon, ExamsIcon, HolisticIcon } from '../components/icons';
 import Modal from '../components/Modal';
 import { db } from '../services/db';
-import { SUBJECTS } from '../constants';
+import { CLASS_OPTIONS, SUBJECTS } from '../constants';
 import { useAppData } from '../hooks/useAppData';
 import { StudentSessionInfo } from '../types';
 
@@ -35,7 +35,14 @@ const SBA: React.FC = () => {
         if (!activeSession) return [];
         const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
         const classNames = [...new Set(sessionInfos.map(info => info.className))];
-        return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+        return classNames.sort((a: string, b: string) => {
+            const indexA = CLASS_OPTIONS.indexOf(a);
+            const indexB = CLASS_OPTIONS.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        });
     }, [activeSession]);
     
     const studentsInClass = useLiveQuery(async () => {
