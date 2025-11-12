@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import html2canvas from 'html2canvas';
@@ -24,13 +25,36 @@ export const generatePdfFromComponent = async (
       React.createElement('div', { id: 'pdf-render-target' }, ComponentToRender)
     );
     
-    // Wait for rendering and resource loading (e.g., images).
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
     const elementToCapture = container.querySelector('#pdf-render-target');
     if (!elementToCapture) {
       throw new Error("Failed to render component for PDF generation.");
     }
+
+    // Wait for all images to load to prevent blank images in PDF.
+    const images = Array.from(elementToCapture.getElementsByTagName('img'));
+    const imageLoadPromises = images.map(img => {
+        if (img.complete && img.naturalHeight !== 0) {
+            return Promise.resolve();
+        }
+        return new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => {
+                console.warn(`Could not load image: ${img.src}. It might be missing in the PDF.`);
+                resolve(); // Resolve anyway to not block PDF generation for one broken image.
+            };
+        });
+    });
+
+    // A general timeout to ensure PDF generation doesn't hang forever.
+    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 8000)); // 8 seconds max wait
+    
+    await Promise.race([
+        Promise.all(imageLoadPromises),
+        timeoutPromise
+    ]);
+
+    // A small final delay for any other async rendering to complete (e.g. fonts).
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     const canvas = await html2canvas(elementToCapture as HTMLElement, {
       scale: 2,

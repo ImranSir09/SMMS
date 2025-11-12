@@ -65,7 +65,7 @@ const ExamMarks: React.FC = () => {
     }, [exam]);
 
     const displayedMarkFields = useMemo(() => {
-        return ALL_MARK_FIELDS.filter(f => f.key === 'summative');
+        return ALL_MARK_FIELDS;
     }, []);
 
     useEffect(() => {
@@ -247,54 +247,56 @@ const ExamMarks: React.FC = () => {
             </div>
 
             <main className="flex-1 overflow-y-auto">
-                <table className="w-full text-xs border-collapse">
-                    <thead className="sticky top-0 bg-card z-10">
-                        <tr>
-                            <th className="p-2 border-b border-border text-left">Roll</th>
-                            <th className="p-2 border-b border-border text-left">Name</th>
-                            {displayedMarkFields.map(field => (
-                                <th key={String(field.key)} className="p-2 border-b border-border">{field.label}</th>
-                            ))}
-                            <th className="p-2 border-b border-border">Print</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {students.map(student => {
-                            const key = `${student.id!}-${activeSubject}`;
-                            const studentMark = marksData.get(key) || {};
-                            return (
-                                <tr key={student.id} className="odd:bg-background/50">
-                                    <td className="p-2 border-b border-border text-center">{student.rollNo}</td>
-                                    <td className="p-2 border-b border-border font-semibold">{student.name}</td>
-                                    {displayedMarkFields.map(field => {
-                                        const inputKey = `${key}-${String(field.key)}`;
-                                        const error = validationErrors.get(inputKey);
-                                        return (
-                                            <td key={String(field.key)} className="p-1 border-b border-border">
-                                                <input
-                                                    type="number"
-                                                    value={studentMark[field.key] ?? ''}
-                                                    onChange={e => handleMarkChange(student.id!, activeSubject!, field.key, e.target.value)}
-                                                    className={`w-full p-2 text-center bg-transparent border rounded-md ${error ? 'border-red-500' : 'border-input'}`}
-                                                    placeholder={`/${field.max}`}
-                                                />
-                                            </td>
-                                        );
-                                    })}
-                                    <td className="p-1 border-b border-border text-center">
-                                        <button 
-                                            onClick={() => handleGeneratePdf(student)}
-                                            disabled={isGeneratingPdf === student.id}
-                                            className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
-                                        >
-                                            {isGeneratingPdf === student.id ? '...' : <PrintIcon className="w-3 h-3" />}
-                                        </button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[900px] text-xs border-collapse">
+                        <thead className="sticky top-0 bg-card z-10">
+                            <tr>
+                                <th className="p-2 border-b border-border text-left">Roll</th>
+                                <th className="p-2 border-b border-border text-left">Name</th>
+                                {displayedMarkFields.map(field => (
+                                    <th key={String(field.key)} className="p-2 border-b border-border">{field.label}</th>
+                                ))}
+                                <th className="p-2 border-b border-border">Print</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {students.map(student => {
+                                const key = `${student.id!}-${activeSubject}`;
+                                const studentMark = marksData.get(key) || {};
+                                return (
+                                    <tr key={student.id} className="odd:bg-background/50">
+                                        <td className="p-2 border-b border-border text-center">{student.rollNo}</td>
+                                        <td className="p-2 border-b border-border font-semibold">{student.name}</td>
+                                        {displayedMarkFields.map(field => {
+                                            const inputKey = `${key}-${String(field.key)}`;
+                                            const error = validationErrors.get(inputKey);
+                                            return (
+                                                <td key={String(field.key)} className="p-1 border-b border-border">
+                                                    <input
+                                                        type="number"
+                                                        value={studentMark[field.key] ?? ''}
+                                                        onChange={e => handleMarkChange(student.id!, activeSubject!, field.key, e.target.value)}
+                                                        className={`w-full p-2 text-center bg-transparent border rounded-md ${error ? 'border-red-500' : 'border-input'}`}
+                                                        placeholder={`/${field.max}`}
+                                                    />
+                                                </td>
+                                            );
+                                        })}
+                                        <td className="p-1 border-b border-border text-center">
+                                            <button 
+                                                onClick={() => handleGeneratePdf(student)}
+                                                disabled={isGeneratingPdf === student.id}
+                                                className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                            >
+                                                {isGeneratingPdf === student.id ? '...' : <PrintIcon className="w-3 h-3" />}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
                  <div className="p-3 bg-card mt-auto border-t border-border">
                     <h3 className="font-semibold text-sm mb-2">Student Remarks & Proficiency</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
