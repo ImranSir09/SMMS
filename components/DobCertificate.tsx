@@ -15,13 +15,6 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails,
     const dateOfIssue = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
     const place = schoolDetails?.address.split(',').pop()?.trim() || '';
 
-    const DetailItem: React.FC<{ label: string; value: string | undefined | null; colSpan?: number }> = ({ label, value, colSpan }) => (
-        <div className={`flex items-baseline ${colSpan === 2 ? 'col-span-2' : ''}`}>
-            <span className="font-semibold w-1/3 flex-shrink-0 text-gray-700">{label}:</span>
-            <span className="flex-1 font-bold border-b border-dotted border-gray-600 pl-2">{value || '________________'}</span>
-        </div>
-    );
-
     return (
         <div className="A4-page-container">
             <div id="dob-certificate" className="w-[210mm] h-[297mm] bg-white p-8 flex flex-col font-serif text-black relative">
@@ -72,15 +65,32 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails,
                             This is to certify that:
                         </p>
                         
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-base my-4">
-                            <DetailItem label="Name of Student" value={student.name} />
-                            <DetailItem label="Admission No." value={student.admissionNo} />
-                            <DetailItem label="Father’s Name" value={student.fathersName} />
-                            <DetailItem label="Class/Section" value={`${student.className} '${student.section}'`} />
-                            <DetailItem label="Mother’s Name" value={student.mothersName} />
-                            <DetailItem label="Date of Birth (figures)" value={dobDdMmYyyy} />
-                            <DetailItem label="Date of Birth (words)" value={dobInWords} colSpan={2} />
-                        </div>
+                        <table className="w-full border-separate text-base my-4" style={{ borderSpacing: '1rem 0.5rem' }}>
+                            <tbody>
+                                <tr>
+                                    <td className="font-semibold text-gray-700 whitespace-nowrap pr-2 w-[25%]">Name of Student:</td>
+                                    <td className="font-bold border-b border-dotted border-gray-600">{student.name}</td>
+                                    <td className="font-semibold text-gray-700 whitespace-nowrap pl-8 pr-2 w-[25%]">Admission No.:</td>
+                                    <td className="font-bold border-b border-dotted border-gray-600">{student.admissionNo}</td>
+                                </tr>
+                                <tr>
+                                    <td className="font-semibold text-gray-700 whitespace-nowrap pr-2">Father’s Name:</td>
+                                    <td className="font-bold border-b border-dotted border-gray-600">{student.fathersName}</td>
+                                    <td className="font-semibold text-gray-700 whitespace-nowrap pl-8 pr-2">Class/Section:</td>
+                                    <td className="font-bold border-b border-dotted border-gray-600">{`${student.className} '${student.section}'`}</td>
+                                </tr>
+                                <tr>
+                                    <td className="font-semibold text-gray-700 whitespace-nowrap pr-2">Mother’s Name:</td>
+                                    <td className="font-bold border-b border-dotted border-gray-600">{student.mothersName}</td>
+                                    <td className="font-semibold text-gray-700 whitespace-nowrap pl-8 pr-2">Date of Birth (figures):</td>
+                                    <td className="font-bold border-b border-dotted border-gray-600">{dobDdMmYyyy}</td>
+                                </tr>
+                                <tr>
+                                    <td className="font-semibold text-gray-700 whitespace-nowrap pr-2 align-baseline">Date of Birth (words):</td>
+                                    <td className="font-bold border-b border-dotted border-gray-600" colSpan={3}>{dobInWords}</td>
+                                </tr>
+                            </tbody>
+                        </table>
 
                         <p className="mt-8 text-center text-base italic">
                             The above particulars have been taken from the Admission Register of the school and are correct to the best of my knowledge.
