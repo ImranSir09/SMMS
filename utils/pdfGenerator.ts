@@ -65,7 +65,7 @@ export const generatePdfFromComponent = async (
         await new Promise(resolve => setTimeout(resolve, 100));
 
         const canvas = await html2canvas(pageElement, {
-            scale: 2,
+            scale: 3, // Increased scale for higher resolution
             useCORS: true,
             backgroundColor: '#ffffff',
             // Set dimensions explicitly to ensure consistency
@@ -73,7 +73,7 @@ export const generatePdfFromComponent = async (
             height: pageElement.offsetHeight,
         });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const imgData = canvas.toDataURL('image/png'); // Use lossless PNG format
         
         // Match PDF page size, considering orientation
         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -91,7 +91,7 @@ export const generatePdfFromComponent = async (
         // Avoid adding an image that's much taller than the page, which can corrupt some viewers
         const displayHeight = Math.min(scaledHeight, pdfHeight);
 
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, displayHeight);
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, displayHeight);
     }
     
     pdf.save(`${fileName}.pdf`);
