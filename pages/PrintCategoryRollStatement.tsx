@@ -21,7 +21,8 @@ const PrintCategoryRollStatement: React.FC = () => {
                     return;
                 }
                 const studentIds = sessionInfos.map(info => info.studentId);
-                const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
+                // FIX: Explicitly type studentDetails to ensure `student` is inferred as an object, resolving the spread operator error.
+                const studentDetails: Student[] = await db.students.where('id').anyOf(studentIds).toArray();
                 const studentMap = new Map(studentDetails.map(s => [s.id!, s]));
 
                 const groupedByClass = new Map<string, Student[]>();

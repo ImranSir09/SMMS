@@ -103,9 +103,14 @@ const Settings: React.FC = () => {
             
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            addToast('Backup downloaded successfully!', 'success');
+            
+            // FIX: Delay cleanup to ensure download starts in all environments.
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+
+            addToast('Backup download initiated!', 'success');
 
         } catch (error) {
             console.error("Backup failed:", error);
