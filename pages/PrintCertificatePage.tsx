@@ -33,31 +33,33 @@ const PrintCertificatePage: React.FC = () => {
 
     const handleDownloadPdf = async () => {
         if (student && type) {
-            const elementId = `${type}-certificate`;
-            const filename = `${type.charAt(0).toUpperCase() + type.slice(1)}-Certificate-${student.name}`;
-            await generatePdfFromElement(elementId, filename);
+            const orientation = (type === 'dob' || type === 'bonafide') ? 'l' : 'p';
+            await generatePdfFromElement(`${type}-certificate`, `${type.toUpperCase()}-Certificate-${student.name}`, orientation);
         }
     };
+    
+    if (!student || !schoolDetails || !type) {
+        return <div className="p-4 text-center">Loading certificate data...</div>;
+    }
 
-    if (!student || !schoolDetails || !type) return <div>Loading...</div>;
-    
-    const certificateMap: { [key: string]: React.FC<any> } = {
-        'dob': DobCertificate,
-        'bonafide': BonafideCertificate
-    };
-    
-    const CertificateComponent = certificateMap[type];
-    const elementId = `${type}-certificate`;
+    const CertificateComponent = {
+        dob: DobCertificate,
+        bonafide: BonafideCertificate,
+    }[type];
 
-    if (!CertificateComponent) return <div>Invalid certificate type specified.</div>;
+    if (!CertificateComponent) {
+        return <div className="p-4 text-center">Invalid certificate type requested.</div>;
+    }
     
-    const pageTitle = type === 'dob' ? "Date of Birth Certificate" : "Bonafide Certificate";
+    const certificateId = `${type}-certificate`;
+    const isLandscape = type === 'dob' || type === 'bonafide';
+    const containerClass = isLandscape ? 'A4-landscape-container' : 'A4-page-container';
 
     return (
         <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
             <div className="max-w-4xl mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
                 <h1 className="text-2xl font-bold text-gray-800">Certificate Preview</h1>
-                <p className="text-gray-600 mb-4">Preview for {student.name}'s {pageTitle}.</p>
+                <p className="text-gray-600 mb-4">Preview for {student.name}'s {type.toUpperCase()} Certificate.</p>
                 <div className="flex flex-wrap gap-4">
                     <button onClick={handleDownloadPdf} className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700">
                         <DownloadIcon className="w-5 h-5"/> Download PDF
@@ -67,27 +69,35 @@ const PrintCertificatePage: React.FC = () => {
                     </button>
                 </div>
             </div>
+
             <div className="flex justify-center items-start">
                 <CertificateComponent student={student} schoolDetails={schoolDetails} photo={student.photo} />
             </div>
-             <style>{`
+
+            <style>{`
                 body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                @page { size: A4; margin: 0; }
+                @page { 
+                    size: ${isLandscape ? 'A4 landscape' : 'A4 portrait'}; 
+                    margin: 0; 
+                }
                 @media print {
                     body * { visibility: hidden; }
-                    #${elementId}, #${elementId} * { visibility: visible; }
-                    #${elementId} { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
-                    .A4-page-container { transform: scale(1.0) !important; margin: 0 !important; }
+                    #${certificateId}, #${certificateId} * { visibility: visible; }
+                    #${certificateId} { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
+                    .${containerClass} { transform: scale(1.0) !important; margin: 0 !important; }
                 }
-                .A4-page-container {
+                .A4-page-container, .A4-landscape-container {
                     transform-origin: top center;
                     margin: 1rem 0;
-                    transform: scale(0.85);
                 }
-                @media (max-width: 900px) { .A4-page-container { transform: scale(0.7); } }
-                @media (max-width: 640px) { .A4-page-container { transform: scale(0.55); } }
-                @media (max-width: 500px) { .A4-page-container { transform: scale(0.45); } }
-                @media (max-width: 400px) { .A4-page-container { transform: scale(0.4); } }
+                .A4-page-container { transform: scale(0.85); }
+                .A4-landscape-container { transform: scale(0.85); }
+                
+                 @media (max-width: 1200px) { .A4-landscape-container { transform: scale(0.7); } }
+                 @media (max-width: 900px) { .A4-landscape-container { transform: scale(0.5); } .A4-page-container { transform: scale(0.7); } }
+                 @media (max-width: 640px) { .A4-landscape-container { transform: scale(0.35); } .A4-page-container { transform: scale(0.55); } }
+                 @media (max-width: 500px) { .A4-landscape-container { transform: scale(0.28); } .A4-page-container { transform: scale(0.45); } }
+                 @media (max-width: 400px) { .A4-landscape-container { transform: scale(0.22); } .A4-page-container { transform: scale(0.4); } }
             `}</style>
         </div>
     );
