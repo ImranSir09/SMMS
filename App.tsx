@@ -23,6 +23,7 @@ import PrintCoCurricularReport from './pages/PrintCoCurricularReport';
 import PrintFormativeAssessmentReport from './pages/PrintFormativeAssessmentReport';
 import PrintCertificatePage from './pages/PrintCertificatePage';
 import PrintSbaResultSheet from './pages/PrintSbaResultSheet';
+import ExtractInfo from './pages/ExtractInfo';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -82,6 +83,7 @@ const App: React.FC = () => {
                 <Route path="/exams/:examId" element={<ExamMarks />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/reports/generate-certificate" element={<Certificates />} />
+                <Route path="/extract-info" element={<ExtractInfo />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/sba" element={<SBA />} />
                 <Route path="/sba-entry" element={<SbaDataEntry />} />

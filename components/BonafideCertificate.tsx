@@ -17,7 +17,7 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
 
     return (
         <div className="A4-page-container">
-            <div id="bonafide-certificate" className="w-[297mm] h-[210mm] bg-white p-4 flex flex-col font-serif text-black relative">
+            <div id="bonafide-certificate" className="w-[297mm] h-[210mm] bg-white p-4 flex flex-col text-black relative" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
                  {/* Ornate Border */}
                  <div className="absolute inset-0 border-2 border-gray-700 m-2">
                     <div className="w-full h-full border-4 border-gray-400"></div>
@@ -61,7 +61,7 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
                         BONAFIDE CERTIFICATE
                     </h2>
 
-                    <main className="flex-1 text-xl leading-10 pr-48">
+                    <main className="flex-1 pr-48" style={{ fontSize: '15pt', lineHeight: 1.8 }}>
                         <p className="indent-12">
                             This is to certify that <strong className="font-bold">{student.name}</strong>, 
                             {relationPronoun} of Mr. <strong className="font-bold">{student.fathersName}</strong>, is a bonafide student

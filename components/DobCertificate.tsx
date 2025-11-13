@@ -17,7 +17,7 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails,
 
     return (
         <div className="A4-page-container">
-            <div id="dob-certificate" className="w-[297mm] h-[210mm] bg-white p-4 flex flex-col font-serif text-black relative">
+            <div id="dob-certificate" className="w-[297mm] h-[210mm] bg-white p-4 flex flex-col text-black relative" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
                 {/* Ornate Border */}
                 <div className="absolute inset-0 border-8 border-double border-gray-800 m-2"></div>
                 <div className="absolute inset-2 border-2 border-gray-500 m-2"></div>
@@ -47,13 +47,13 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails,
                     </h2>
 
                     {/* Main Content */}
-                    <main className="flex-1 grid grid-cols-3 gap-6 text-base leading-relaxed">
+                    <main className="flex-1 grid grid-cols-3 gap-6" style={{ fontSize: '12pt', lineHeight: 1.6 }}>
                         <div className="col-span-2">
                              <p className="indent-8">
                                 This is to certify that according to the school Admission Register, the date of birth of the under mentioned student is as follows:
                             </p>
                             
-                            <table className="w-full border-separate my-4 text-sm" style={{ borderSpacing: '0 0.75rem' }}>
+                            <table className="w-full border-separate my-4" style={{ borderSpacing: '0 0.75rem', fontSize: '11pt' }}>
                                 <tbody>
                                     <tr>
                                         <td className="font-semibold text-gray-700 w-[30%]">Name of Student</td>

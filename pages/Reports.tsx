@@ -1,8 +1,9 @@
 
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
-import { PieChartIcon, UserListIcon, BarChart3Icon, CertificateIcon, ClipboardCheckIcon } from '../components/icons';
+import { PieChartIcon, UserListIcon, BarChart3Icon, CertificateIcon, ClipboardCheckIcon, CameraIcon } from '../components/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
@@ -92,6 +93,13 @@ const Reports: React.FC = () => {
                         <div>
                             <h3 className="font-semibold">Generate Certificates</h3>
                             <p className="text-xs text-foreground/70">Create Bonafide, D.O.B., etc.</p>
+                        </div>
+                    </Card>
+                    <Card onClick={() => navigate('/extract-info')} className="p-4 flex items-center gap-3 cursor-pointer hover-lift">
+                        <CameraIcon className="w-8 h-8 text-primary" />
+                        <div>
+                            <h3 className="font-semibold">Extract from Image</h3>
+                            <p className="text-xs text-foreground/70">Use AI to add students from images.</p>
                         </div>
                     </Card>
                      <Card className="p-4 flex items-center gap-3 opacity-50">
