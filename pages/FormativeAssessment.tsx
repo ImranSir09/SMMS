@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -60,7 +61,6 @@ const FormativeAssessment: React.FC = () => {
         if (!activeSession) return [];
         const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
         const classNames = [...new Set(sessionInfos.map(info => info.className))];
-        // FIX: Use CLASS_OPTIONS to ensure correct sorting order.
         return classNames.sort((a: string, b: string) => {
             const indexA = CLASS_OPTIONS.indexOf(a);
             const indexB = CLASS_OPTIONS.indexOf(b);
@@ -73,14 +73,12 @@ const FormativeAssessment: React.FC = () => {
     
     const studentsInClass = useLiveQuery(async () => {
         if (!selectedClass || !activeSession) return [];
-        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
         const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ className: selectedClass, session: activeSession }).toArray();
         if (sessionInfos.length === 0) return [];
         const studentIds = sessionInfos.map(info => info.studentId);
         const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
         const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
         
-        // FIX: Error on this line is resolved by typing `sessionInfos` above.
         const mergedStudents = studentDetails.map(student => ({ ...student, rollNo: sessionInfoMap.get(student.id!)?.rollNo || '' }));
         return mergedStudents.sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' }));
     }, [selectedClass, activeSession]);

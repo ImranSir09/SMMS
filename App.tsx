@@ -1,7 +1,6 @@
 
 
 import React, { useContext, useEffect } from 'react';
-// FIX: Update react-router-dom imports for v6
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppContext } from './contexts/AppContext';
 import Header from './components/Header';
@@ -23,8 +22,7 @@ import FormativeAssessment from './pages/FormativeAssessment';
 import StudentReport from './pages/StudentReport';
 import PrintCoCurricularReport from './pages/PrintCoCurricularReport';
 import PrintFormativeAssessmentReport from './pages/PrintFormativeAssessmentReport';
-// FIX: Add import for the new print page component.
-import PrintDobCertificate from './pages/PrintDobCertificate';
+import PrintCertificatePage from './pages/PrintDobCertificate';
 import PrintBonafideCertificate from './pages/PrintBonafideCertificate';
 
 const App: React.FC = () => {
@@ -70,14 +68,13 @@ const App: React.FC = () => {
           <img 
             src={schoolDetails.logo} 
             alt="School Watermark" 
-            className="w-2/3 h-auto object-contain opacity-[0.02]"
+            className="w-2/3 h-auto object-contain opacity-[0.04] dark:opacity-[0.06]"
           />
         </div>
       )}
       <div className={`relative z-10 h-screen flex flex-col ${backgroundStyle}`}>
         <Header />
-        <main className="flex-1 p-3 pb-28 overflow-y-auto">
-            {/* FIX: Replaced Switch with Routes and component prop with element prop for react-router-dom v6 */}
+        <main className="flex-1 p-3 pb-24 overflow-y-auto">
             <Routes>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/students" element={<Students />} />
@@ -85,8 +82,8 @@ const App: React.FC = () => {
                 <Route path="/exams" element={<Exams />} />
                 <Route path="/exams/:examId" element={<ExamMarks />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/reports/generate-certificate" element={<Certificates />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/certificates" element={<Certificates />} />
                 <Route path="/sba" element={<SBA />} />
                 <Route path="/sba-entry" element={<SbaDataEntry />} />
                 <Route path="/formative-entry" element={<FormativeAssessment />} />
@@ -94,9 +91,7 @@ const App: React.FC = () => {
                 <Route path="/print/roll-statement/:className" element={<PrintRollStatement />} />
                 <Route path="/print/category-roll-statement" element={<PrintCategoryRollStatement />} />
                 <Route path="/print/hpc/:studentId" element={<PrintHPC />} />
-                {/* FIX: Add new route for DOB certificate printing. */}
-                <Route path="/print/dob-certificate" element={<PrintDobCertificate />} />
-                <Route path="/print/bonafide-certificate" element={<PrintBonafideCertificate />} />
+                <Route path="/print/certificate/:type" element={<PrintCertificatePage />} />
                 <Route path="/print/co-curricular-report/:studentId/:subject" element={<PrintCoCurricularReport />} />
                 <Route path="/print/formative-assessment-report/:studentId" element={<PrintFormativeAssessmentReport />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />

@@ -12,6 +12,12 @@ const Header: React.FC = () => {
 
   const getPageTitle = () => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
+    
+    // Specific handling for nested routes
+    if (pathSegments[0] === 'reports' && pathSegments[1] === 'generate-certificate') {
+        return 'Generate Certificates';
+    }
+    
     const mainPath = pathSegments[0];
     
     // Specific dynamic routes
@@ -31,15 +37,15 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="flex-shrink-0 flex items-center justify-between p-2 bg-card border-b border-border h-16 z-20 print:hidden">
+    <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 bg-card border-b border-border z-20 print:hidden">
       <div className="flex items-center gap-3">
         {isDashboard ? (
           <>
             {schoolDetails?.logo ? (
-              <img src={schoolDetails.logo} alt="School Logo" className="h-12 w-auto object-contain rounded-md" />
+              <img src={schoolDetails.logo} alt="School Logo" className="h-10 w-auto object-contain rounded-md" />
             ) : (
-              <div className="h-12 w-12 flex items-center justify-center bg-primary/10 rounded-md">
-                <SchoolIcon className="w-7 h-7 text-primary" />
+              <div className="h-10 w-10 flex items-center justify-center bg-primary/10 rounded-lg">
+                <SchoolIcon className="w-6 h-6 text-primary" />
               </div>
             )}
             <div>

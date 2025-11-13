@@ -1,8 +1,8 @@
 
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
-// FIX: Import StudentSessionInfo to explicitly type Dexie query results.
 import { Student, StudentSessionInfo } from '../types';
 import { StudentsIcon, UploadIcon, PlusIcon, SearchIcon, ArrowLeftIcon, ArrowRightIcon } from '../components/icons';
 import BulkAddStudentsModal from '../components/BulkAddStudentsModal';
@@ -14,7 +14,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useAppData } from '../hooks/useAppData';
 import { CLASS_OPTIONS } from '../constants';
 
-const buttonStyle = "py-3 px-4 rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5";
+const buttonStyle = "py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 disabled:opacity-60 flex items-center justify-center gap-1.5";
 const accentButtonStyle = `${buttonStyle} bg-accent text-accent-foreground hover:bg-accent-hover`;
 const secondaryButtonStyle = `${buttonStyle} bg-slate-200 text-slate-800 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600`;
 
@@ -40,7 +40,6 @@ const Students: React.FC = () => {
             if (!activeSession) return [];
             const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
             const classNames = [...new Set(sessionInfos.map(info => info.className))];
-            // FIX: Use CLASS_OPTIONS to ensure correct sorting order.
             return classNames.sort((a: string, b: string) => {
                 const indexA = CLASS_OPTIONS.indexOf(a);
                 const indexB = CLASS_OPTIONS.indexOf(b);
@@ -58,7 +57,6 @@ const Students: React.FC = () => {
         async () => {
             if (!activeClass || !activeSession) return [];
             
-            // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
             const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo
                 .where({ className: activeClass, session: activeSession })
                 .toArray();
@@ -74,7 +72,6 @@ const Students: React.FC = () => {
                 const sessionInfo = sessionInfoMap.get(student.id!);
                 return {
                     ...student,
-                    // FIX: Errors on these lines are resolved by typing `sessionInfos` above.
                     className: sessionInfo?.className,
                     section: sessionInfo?.section,
                     rollNo: sessionInfo?.rollNo,
@@ -191,7 +188,7 @@ const Students: React.FC = () => {
                 <select 
                     value={activeClass || ''} 
                     onChange={e => setActiveClass(e.target.value)}
-                    className="p-3 text-sm bg-background border border-input rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="p-3 text-sm bg-background border border-input rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                     <option value="" disabled>-- Select a Class --</option>
                     {classTabs?.map(c => <option key={c} value={c}>Class {c}</option>)}
@@ -208,7 +205,7 @@ const Students: React.FC = () => {
                     placeholder={`Search in Class ${activeClass}...`}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="p-3 pl-10 text-sm bg-background border border-input rounded-md w-full"
+                    className="p-3 pl-10 text-sm bg-background border border-input rounded-xl w-full"
                 />
             </div>
 
@@ -229,7 +226,7 @@ const Students: React.FC = () => {
             )}
             
             {(totalStudentCount === 0) && (
-                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-border rounded-lg">
+                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-border rounded-xl">
                     <StudentsIcon className="w-10 h-10 text-foreground/20" />
                     <h3 className="text-md font-semibold mt-2">No Students Added</h3>
                     <p className="mt-1 text-xs text-foreground/60">

@@ -1,15 +1,11 @@
 
+
 import { jsPDF } from 'jspdf';
-// FIX: Use functional import for jspdf-autotable to align with recommended TypeScript usage.
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { Student, SchoolDetails } from '../types';
 import { CATEGORY_OPTIONS } from '../constants';
 
-// FIX: Removed manual module augmentation for 'jspdf' as it caused an error. 
-// The functional import of `autoTable` provides the necessary types.
-
-// NEW: Generic function to generate single-page PDF from an HTML element using html2canvas
 export const generatePdfFromElement = async (elementId: string, filename: string) => {
     const input = document.getElementById(elementId);
     if (!input) {
@@ -32,7 +28,6 @@ export const generatePdfFromElement = async (elementId: string, filename: string
     pdf.save(`${filename}.pdf`);
 };
 
-// NEW: Generic function to generate multi-page PDF from HTML elements using html2canvas
 export const generateMultiPagePdfFromElements = async (elementIds: string[], filename: string) => {
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -120,10 +115,20 @@ export const generateRollStatementVectorPdf = async (
     doc.save(`${filename}.pdf`);
 };
 
-export const generateCategoryRollStatementPdf = async (students: Student[], className: string, schoolDetails: SchoolDetails) => {
+export const generateCategoryRollStatementVectorPdf = async (
+    students: Student[],
+    className: string,
+    schoolDetails: SchoolDetails,
+    filename: string
+) => {
     const doc = new jsPDF();
-    const GENDERS = ['Male', 'Female', 'Other'];
+    addHeader(doc, schoolDetails);
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Gender & Category Wise Roll Statement - Class ${className}`, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
 
+    const GENDERS: ('Male' | 'Female' | 'Other')[] = ['Male', 'Female', 'Other'];
     const summary: { [category: string]: { [gender: string]: number } } = {};
     CATEGORY_OPTIONS.forEach(cat => {
         summary[cat] = { Male: 0, Female: 0, Other: 0 };
@@ -131,17 +136,12 @@ export const generateCategoryRollStatementPdf = async (students: Student[], clas
 
     students.forEach(student => {
         const category = student.category && CATEGORY_OPTIONS.includes(student.category) ? student.category : 'General';
-        const gender = student.gender && GENDERS.includes(student.gender) ? student.gender : 'Other';
-        if (summary[category]) {
+        const gender = student.gender;
+        if (summary[category] && GENDERS.includes(gender)) {
             summary[category][gender]++;
         }
     });
-
-    addHeader(doc, schoolDetails);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Gender & Category Wise Roll Statement - Class ${className}`, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
-
+    
     const head = [['Category', ...GENDERS, 'Total']];
     const body = CATEGORY_OPTIONS.map(category => {
         const counts = summary[category];
@@ -149,7 +149,7 @@ export const generateCategoryRollStatementPdf = async (students: Student[], clas
         return [category, counts.Male, counts.Female, counts.Other, total];
     });
 
-    const genderTotals = GENDERS.map(gender => CATEGORY_OPTIONS.reduce((acc, cat) => acc + summary[cat][gender], 0));
+    const genderTotals = GENDERS.map(gender => CATEGORY_OPTIONS.reduce((acc, cat) => acc + (summary[cat]?.[gender] || 0), 0));
     const grandTotal = students.length;
     const foot = [['Total', ...genderTotals, grandTotal]];
 
@@ -159,9 +159,10 @@ export const generateCategoryRollStatementPdf = async (students: Student[], clas
         foot,
         startY: 35,
         theme: 'grid',
-        headStyles: { fillColor: '#c7ecee' },
-        footStyles: { fillColor: '#c7ecee', fontStyle: 'bold' }
+        headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255] },
+        footStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontStyle: 'bold' }
     });
-
-    doc.save(`Category-Roll-Statement-${className}.pdf`);
+    
+    addFooter(doc, `Class ${className}`);
+    doc.save(`${filename}.pdf`);
 };

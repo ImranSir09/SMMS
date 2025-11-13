@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Modal from './Modal';
 import { db } from '../services/db';
-import { Student, StudentSessionInfo } from '../types';
-import { DownloadIcon, UploadIcon } from './icons';
-import { useToast } from '../contexts/ToastContext';
 import { useAppData } from '../hooks/useAppData';
+import { useToast } from '../contexts/ToastContext';
+import { Student, StudentSessionInfo } from '../types';
+import { UploadIcon, DownloadIcon, InfoIcon, ArrowRightIcon, CheckCircleIcon, AlertTriangleIcon } from './icons';
 
 const STUDENT_FIELDS: { key: keyof Student; label: string; required: boolean }[] = [
     { key: 'name', label: 'Full Name', required: true },
@@ -26,62 +27,46 @@ const STUDENT_FIELDS: { key: keyof Student; label: string; required: boolean }[]
     { key: 'ifscCode', label: 'IFSC Code', required: false },
 ];
 
-type Step = 'upload' | 'map' | 'preview' | 'result';
-type Mapping = { [K in keyof Student]?: string };
+const parseCSV = (csvText: string): { headers: string[], data: Record<string, string>[] } => {
+    const lines = csvText.trim().split(/\r\n|\n/);
+    if (lines.length < 1) return { headers: [], data: [] };
+    const headerLine = lines.shift()!;
+    const headers = headerLine.split(',').map(h => h.trim().replace(/"/g, ''));
+    const data = lines.filter(line => line.trim()).map(line => {
+        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+        return headers.reduce((obj, header, index) => {
+            obj[header] = values[index] || '';
+            return obj;
+        }, {} as Record<string, string>);
+    });
+    return { headers, data };
+};
 
 const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-    const [step, setStep] = useState<Step>('upload');
+    const [step, setStep] = useState(1);
     const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
-    const [csvData, setCsvData] = useState<string[][]>([]);
-    const [mapping, setMapping] = useState<Mapping>({});
-    const [error, setError] = useState<string>('');
+    const [csvData, setCsvData] = useState<Record<string, string>[]>([]);
+    const [columnMap, setColumnMap] = useState<Record<string, string>>({});
+    const [processedData, setProcessedData] = useState<{ valid: Student[], errors: string[] }>({ valid: [], errors: [] });
+    const [importSummary, setImportSummary] = useState<{ success: number; errors: string[] } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [importResult, setImportResult] = useState<{ success: number; failed: number, errors: string[] } | null>(null);
-    const { addToast } = useToast();
     const { activeSession } = useAppData();
+    const { addToast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const resetState = useCallback(() => {
-        setStep('upload');
+    const reset = useCallback(() => {
+        setStep(1);
         setCsvHeaders([]);
         setCsvData([]);
-        setMapping({});
-        setError('');
+        setColumnMap({});
+        setProcessedData({ valid: [], errors: [] });
+        setImportSummary(null);
         setIsLoading(false);
-        setImportResult(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     }, []);
 
-    const handleClose = () => {
-        resetState();
-        onClose();
-    };
-
-    const parseCSV = (text: string) => {
-        const lines = text.trim().replace(/\r\n/g, '\n').split('\n');
-        if (lines.length < 2) {
-            throw new Error("CSV must have a header row and at least one data row.");
-        }
-        const headers = lines[0].split(',').map(h => h.trim());
-        const data = lines.slice(1).map(line => line.split(',').map(cell => cell.trim()));
-        return { headers, data };
-    };
-
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        setError('');
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        try {
-            const text = await file.text();
-            const { headers, data } = parseCSV(text);
-            setCsvHeaders(headers);
-            setCsvData(data);
-            setStep('map');
-        } catch (err: any) {
-            const errorMessage = err.message || 'Failed to parse CSV file.';
-            setError(errorMessage);
-            addToast(errorMessage, 'error');
-        }
-    };
+    useEffect(() => { if (isOpen) reset(); }, [isOpen, reset]);
+    const handleClose = () => { reset(); onClose(); };
     
     const handleDownloadTemplate = () => {
         const headers = STUDENT_FIELDS.map(field => `"${field.label.replace(/"/g, '""')}"`).join(',');
@@ -93,227 +78,212 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(url);
     };
 
-    const handleMappingChange = (fieldKey: keyof Student, csvHeader: string) => {
-        setMapping(prev => ({ ...prev, [fieldKey]: csvHeader }));
-    };
-
-    const validateMapping = () => {
-        for (const field of STUDENT_FIELDS) {
-            if (field.required && !mapping[field.key]) {
-                setError(`'${field.label}' is a required field but has not been mapped.`);
-                return false;
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const text = event.target?.result as string;
+            const { headers, data } = parseCSV(text);
+            if (headers.length === 0 || data.length === 0) {
+                addToast('Could not parse CSV file or file is empty.', 'error');
+                return;
             }
-        }
-        setError('');
-        return true;
+            setCsvHeaders(headers);
+            setCsvData(data);
+            autoMapColumns(headers);
+            setStep(2);
+        };
+        reader.readAsText(file);
     };
 
-    const getMappedStudents = (): Student[] => {
-        const headerIndexMap: { [key: string]: number } = {};
-        csvHeaders.forEach((h, i) => { headerIndexMap[h] = i; });
-
-        return csvData.map(row => {
-            const student: Partial<Student> = { photo: null };
-            for (const field of STUDENT_FIELDS) {
-                const csvHeader = mapping[field.key];
-                if (csvHeader) {
-                    const value = row[headerIndexMap[csvHeader]] || '';
-                    if (field.key === 'gender') {
-                        const genderValue = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
-                        student.gender = ['Male', 'Female', 'Other'].includes(genderValue) ? (genderValue as 'Male' | 'Female' | 'Other') : 'Other';
-                    } else {
-                        // @ts-ignore
-                        student[field.key] = value;
-                    }
-                }
-            }
-            return student as Student;
+    const autoMapColumns = (headers: string[]) => {
+        const newMap: Record<string, string> = {};
+        const normalizedHeaders = headers.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+        STUDENT_FIELDS.forEach(field => {
+            const normalizedLabel = field.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const headerIndex = normalizedHeaders.findIndex(h => h.includes(normalizedLabel) || normalizedLabel.includes(h));
+            if (headerIndex !== -1) newMap[field.key] = headers[headerIndex];
         });
+        setColumnMap(newMap);
+    };
+
+    const handleProceedToReview = async () => {
+        setIsLoading(true);
+        const requiredFields = STUDENT_FIELDS.filter(f => f.required);
+        const missingMappings = requiredFields.filter(f => !columnMap[f.key]);
+        if (missingMappings.length > 0) {
+            addToast(`Please map all required fields: ${missingMappings.map(f => f.label).join(', ')}`, 'error');
+            setIsLoading(false);
+            return;
+        }
+
+        const existingStudents = await db.students.toArray();
+        const existingAdmissionNos = new Set(existingStudents.map(s => s.admissionNo));
+        const admissionNosInFile = new Set<string>();
+        const validStudents: Student[] = [];
+        const errors: string[] = [];
+
+        csvData.forEach((row, index) => {
+            let hasError = false;
+            const student: Partial<Student> = {};
+            for (const field of STUDENT_FIELDS) {
+                const csvHeader = columnMap[field.key];
+                const value = csvHeader ? row[csvHeader] : undefined;
+                if (field.required && !value) {
+                    errors.push(`Row ${index + 2}: Missing required field '${field.label}'.`);
+                    hasError = true;
+                }
+                if (value) (student as any)[field.key] = value;
+            }
+
+            if (hasError) return;
+
+            const admNo = student.admissionNo!;
+            if (existingAdmissionNos.has(admNo) || admissionNosInFile.has(admNo)) {
+                errors.push(`Row ${index + 2}: Duplicate Admission No '${admNo}'.`);
+                hasError = true;
+            } else {
+                admissionNosInFile.add(admNo);
+            }
+            
+            if (student.gender && !['Male', 'Female', 'Other'].includes(student.gender)) {
+                errors.push(`Row ${index + 2}: Invalid gender '${student.gender}'. Must be Male, Female, or Other.`);
+                hasError = true;
+            }
+            if (student.dob && isNaN(new Date(student.dob).getTime())) {
+                errors.push(`Row ${index + 2}: Invalid date format for DOB '${student.dob}'. Use YYYY-MM-DD.`);
+                hasError = true;
+            }
+
+            if (!hasError) validStudents.push(student as Student);
+        });
+
+        setProcessedData({ valid: validStudents, errors });
+        setIsLoading(false);
+        setStep(3);
     };
 
     const handleImport = async () => {
         setIsLoading(true);
-        setError('');
-        const studentsToImport = getMappedStudents();
-        let successCount = 0;
-        let failedRecords: string[] = [];
-
-        try {
-            await db.transaction('rw', db.students, db.studentSessionInfo, async () => {
-                for (const studentData of studentsToImport) {
-                    try {
-                        const { className, section, rollNo, ...coreStudentData } = studentData;
-                        
-                        if (!coreStudentData.admissionNo) {
-                             failedRecords.push(`${studentData.name || 'Unknown'} - Missing Admission No`);
-                            continue;
-                        }
-
-                        const existingStudent = await db.students.where('admissionNo').equals(coreStudentData.admissionNo).first();
-                        if (existingStudent) {
-                            failedRecords.push(`${coreStudentData.name} (Adm No: ${coreStudentData.admissionNo}) - Duplicate`);
-                            continue;
-                        }
-                        
-                        // @ts-ignore
-                        delete coreStudentData.id;
-                        const studentId = await db.students.add(coreStudentData as Omit<Student, 'id'>);
-                        
-                        const sessionInfo: Omit<StudentSessionInfo, 'id'> = {
-                            studentId,
-                            session: activeSession,
-                            className: className || '',
-                            section: section || '',
-                            rollNo: rollNo || '',
-                        };
-                        await db.studentSessionInfo.add(sessionInfo);
-                        
-                        successCount++;
-                    } catch (e: any) {
-                        failedRecords.push(`${studentData.name} - ${e.message}`);
-                    }
-                }
-            });
-
-            const failedCount = studentsToImport.length - successCount;
-            setImportResult({ success: successCount, failed: failedCount, errors: failedRecords });
-            setStep('result');
-            addToast(`${successCount} students imported successfully!`, 'success');
-            if (failedCount > 0) {
-                addToast(`${failedCount} records failed to import.`, 'error');
-                console.error("Failed records:", failedRecords);
-            }
-
-        } catch (err: any) {
-            console.error("Bulk add transaction failed:", err);
-            setError(`A critical error occurred during import: ${err.message}. Operation was rolled back.`);
-            setImportResult({ success: successCount, failed: studentsToImport.length - successCount, errors: failedRecords });
-            setStep('result');
-            addToast('A critical error occurred. The import process was stopped.', 'error');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const renderContent = () => {
-        switch (step) {
-            case 'upload':
-                return (
-                    <div className="text-center">
-                        <h3 className="text-lg font-medium">Upload a CSV file</h3>
-                        <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Ensure the first row matches the template.
-                        </p>
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                             <label className="cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">
-                                <UploadIcon className="w-5 h-5"/>
-                                <span>Choose File</span>
-                                <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
-                            </label>
-                             <button onClick={handleDownloadTemplate} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition-colors text-sm font-semibold">
-                                <DownloadIcon className="w-5 h-5"/>
-                                <span>Download Template</span>
-                            </button>
-                        </div>
-                        {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
-                    </div>
-                );
-            case 'map':
-                return (
-                    <div>
-                        <h3 className="text-lg font-medium">Map CSV Columns to Student Fields</h3>
-                        <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Match columns from your file to the required fields. Data will be added to the active session: <strong>{activeSession}</strong>.
-                        </p>
-                        <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
-                           {STUDENT_FIELDS.map(field => (
-                               <div key={field.key}>
-                                   <label className="font-medium text-sm block mb-1">
-                                       {field.label} {field.required && <span className="text-red-500">*</span>}
-                                   </label>
-                                   <select
-                                        value={mapping[field.key] || ''}
-                                        onChange={(e) => handleMappingChange(field.key, e.target.value)}
-                                        className="w-full p-3 bg-background border border-input rounded-md text-sm"
-                                    >
-                                       <option value="">-- Select Column --</option>
-                                       {csvHeaders.map(header => <option key={header} value={header}>{header}</option>)}
-                                   </select>
-                               </div>
-                           ))}
-                        </div>
-                        {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
-                        <div className="flex justify-end gap-2 mt-6">
-                            <button onClick={resetState} className="py-3 px-5 rounded-lg bg-gray-500/80 hover:bg-gray-500 text-white transition-colors text-sm font-semibold">Start Over</button>
-                            <button onClick={() => { if(validateMapping()) setStep('preview'); }} className="py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">Next: Preview</button>
-                        </div>
-                    </div>
-                );
-            case 'preview':
-                const previewStudents = getMappedStudents().slice(0, 5);
-                 return (
-                    <div>
-                        <h3 className="text-lg font-medium">Preview Data</h3>
-                        <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Review the first few records. A total of <strong>{csvData.length}</strong> students will be imported into session <strong>{activeSession}</strong>.
-                        </p>
-                        <div className="overflow-x-auto max-h-64 border border-border rounded-md">
-                           <table className="w-full text-left text-sm">
-                               <thead className="bg-background border-b border-border sticky top-0">
-                                   <tr>
-                                       {STUDENT_FIELDS.map(f => f.required || mapping[f.key] ? <th key={f.key} className="p-2 font-semibold">{f.label.split(' ')[0]}</th> : null)}
-                                   </tr>
-                               </thead>
-                               <tbody>
-                                    {previewStudents.map((student, index) => (
-                                        <tr key={index} className="border-b border-border last:border-b-0">
-                                           {STUDENT_FIELDS.map(f => f.required || mapping[f.key] ? <td key={f.key} className="p-2 truncate max-w-xs">{String(student[f.key] || '')}</td> : null)}
-                                        </tr>
-                                    ))}
-                               </tbody>
-                           </table>
-                        </div>
-                        <div className="flex justify-end gap-2 mt-6">
-                            <button onClick={() => setStep('map')} className="py-3 px-5 rounded-lg bg-gray-500/80 hover:bg-gray-500 text-white transition-colors text-sm font-semibold">Back to Mapping</button>
-                            <button onClick={handleImport} disabled={isLoading} className="py-3 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white disabled:bg-green-800 transition-colors text-sm font-semibold">
-                                {isLoading ? 'Importing...' : `Import ${csvData.length} Students`}
-                            </button>
-                        </div>
-                    </div>
-                );
-            case 'result':
-                return (
-                    <div className="text-center">
-                        <h3 className="text-lg font-medium mb-2">Import Complete</h3>
-                        {importResult && (
-                             <div className="space-y-1">
-                                <p className="text-green-600 dark:text-green-400">Successfully imported: {importResult.success} students</p>
-                                {importResult.failed > 0 && <p className="text-red-500">Failed to import: {importResult.failed} students</p>}
-                            </div>
-                        )}
-                        {importResult && importResult.errors.length > 0 && (
-                            <div className="mt-4 text-left text-xs bg-background p-2 rounded-md max-h-32 overflow-y-auto">
-                                <p className="font-semibold mb-1">Error Details:</p>
-                                {importResult.errors.map((err, i) => <p key={i}>{err}</p>)}
-                            </div>
-                        )}
-                        {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
-                        <div className="flex justify-center mt-6">
-                            <button onClick={handleClose} className="py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">Close</button>
-                        </div>
-                    </div>
-                )
-        }
-    };
+        const studentsToAdd = processedData.valid.map(s => {
+            const { className, section, rollNo, ...coreData } = s;
+            return coreData as Omit<Student, 'id'>;
+        });
     
+        try {
+            if (studentsToAdd.length > 0) {
+                await db.transaction('rw', db.students, db.studentSessionInfo, async () => {
+                    const addedIds = await db.students.bulkAdd(studentsToAdd, { allKeys: true }) as number[];
+                    const sessionInfoToAdd: Omit<StudentSessionInfo, 'id'>[] = addedIds.map((id, index) => {
+                        const originalStudent = processedData.valid[index];
+                        return { studentId: id, session: activeSession, className: originalStudent.className || '', section: originalStudent.section || '', rollNo: originalStudent.rollNo || '' };
+                    });
+                    await db.studentSessionInfo.bulkAdd(sessionInfoToAdd);
+                });
+            }
+            setImportSummary({ success: processedData.valid.length, errors: processedData.errors });
+            addToast(`${processedData.valid.length} students imported successfully.`, 'success');
+        } catch (e: any) {
+            const errorMsg = e.failures?.length > 0 ? e.failures.map((f: any) => f.message).join(', ') : e.message;
+            setImportSummary({ success: 0, errors: [...processedData.errors, `Database error: ${errorMsg}`] });
+            addToast('An error occurred during import.', 'error');
+        }
+        setIsLoading(false);
+        setStep(4);
+    };
+
+    const renderStepContent = () => {
+        switch (step) {
+            case 1: return (
+                <div className="p-4 text-center">
+                    <div className="bg-primary/10 border border-primary/20 p-3 rounded-lg flex items-start gap-3 text-sm text-left mb-4">
+                        <InfoIcon className="w-5 h-5 flex-shrink-0 mt-0.5 text-primary"/>
+                        <div>
+                            <p className="font-semibold">Instructions</p>
+                            <p className="mt-1">Upload a CSV file with student data. Ensure the column headers match the template. Required fields must be filled for all students.</p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                        <button onClick={handleDownloadTemplate} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm font-semibold">
+                            <DownloadIcon className="w-5 h-5"/> Download Template
+                        </button>
+                        <label className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold cursor-pointer">
+                            <UploadIcon className="w-5 h-5"/> Choose CSV File
+                            <input type="file" accept=".csv,text/csv" ref={fileInputRef} onChange={handleFileChange} className="hidden"/>
+                        </label>
+                    </div>
+                </div>
+            );
+            case 2: return (
+                <div className="p-4">
+                    <h3 className="font-semibold mb-2">Map CSV Columns to Student Fields</h3>
+                    <div className="space-y-2 max-h-96 overflow-y-auto pr-2 text-sm">
+                        {STUDENT_FIELDS.map(field => (
+                            <div key={field.key} className="grid grid-cols-2 items-center gap-2 p-2 bg-background rounded-md">
+                                <label htmlFor={field.key} className="font-medium">{field.label}{field.required && <span className="text-red-500">*</span>}</label>
+                                <select id={field.key} value={columnMap[field.key] || ''} onChange={e => setColumnMap(prev => ({ ...prev, [field.key]: e.target.value }))} className="p-2 w-full bg-white dark:bg-slate-800 border border-input rounded-md">
+                                    <option value="">-- Select Column --</option>
+                                    {csvHeaders.map(header => <option key={header} value={header}>{header}</option>)}
+                                </select>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex justify-between mt-4">
+                        <button onClick={() => setStep(1)} className="py-2 px-4 rounded-md bg-slate-200 dark:bg-slate-700 text-sm">Back</button>
+                        <button onClick={handleProceedToReview} disabled={isLoading} className="py-2 px-4 rounded-md bg-primary text-primary-foreground text-sm flex items-center gap-2">
+                            {isLoading ? 'Validating...' : 'Review Data'} <ArrowRightIcon className="w-4 h-4"/>
+                        </button>
+                    </div>
+                </div>
+            );
+            case 3: return (
+                <div className="p-4">
+                    <h3 className="font-semibold mb-2">Review Import</h3>
+                    <div className="bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-300 p-2 rounded-md text-sm mb-2 flex items-center gap-2"><CheckCircleIcon className="w-5 h-5"/>{processedData.valid.length} students are ready to be imported.</div>
+                    {processedData.errors.length > 0 && (
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 p-2 rounded-md text-sm mb-2 flex items-start gap-2">
+                            <AlertTriangleIcon className="w-5 h-5 flex-shrink-0 mt-0.5"/>
+                            <div>{processedData.errors.length} rows have errors and will be skipped. <br/> <span className="text-xs">({processedData.errors.slice(0, 2).join(', ')}{processedData.errors.length > 2 ? '... etc.' : ''})</span></div>
+                        </div>
+                    )}
+                    <div className="text-xs max-h-64 overflow-y-auto border border-border rounded-md p-2 bg-background">
+                        <p className="font-semibold mb-1">Preview of first 5 valid students:</p>
+                        <ul className="list-disc list-inside">
+                            {processedData.valid.slice(0, 5).map((s, i) => <li key={i}>{s.name} (Adm: {s.admissionNo})</li>)}
+                        </ul>
+                    </div>
+                    <div className="flex justify-between mt-4">
+                        <button onClick={() => setStep(2)} className="py-2 px-4 rounded-md bg-slate-200 dark:bg-slate-700 text-sm">Back</button>
+                        <button onClick={handleImport} disabled={isLoading || processedData.valid.length === 0} className="py-2 px-4 rounded-md bg-success text-success-foreground text-sm">{isLoading ? 'Importing...' : 'Import Students'}</button>
+                    </div>
+                </div>
+            );
+            case 4: return (
+                <div className="p-4 text-center">
+                    <CheckCircleIcon className="w-16 h-16 text-success mx-auto"/>
+                    <h3 className="text-lg font-bold mt-2">Import Complete</h3>
+                    <p>{importSummary?.success || 0} students imported successfully.</p>
+                    {importSummary && importSummary.errors.length > 0 && (
+                        <div className="mt-4 text-left text-sm bg-red-500/10 p-2 rounded-md max-h-48 overflow-y-auto">
+                            <p className="font-semibold text-red-700 dark:text-red-300">{importSummary.errors.length} errors occurred:</p>
+                            <ul className="list-disc list-inside text-xs mt-1">
+                                {importSummary.errors.slice(0, 10).map((err, i) => <li key={i}>{err}</li>)}
+                                {importSummary.errors.length > 10 && <li>... and {importSummary.errors.length - 10} more.</li>}
+                            </ul>
+                        </div>
+                    )}
+                    <button onClick={handleClose} className="mt-4 py-2 px-6 rounded-md bg-primary text-primary-foreground text-sm">Finish</button>
+                </div>
+            );
+        }
+    };
+
     return (
         <Modal isOpen={isOpen} onClose={handleClose} title="Bulk Add Students">
-            <div className="p-4">
-                {renderContent()}
-            </div>
+            {renderStepContent()}
         </Modal>
     );
 };

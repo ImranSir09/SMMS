@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -66,13 +67,11 @@ const SbaDataEntry: React.FC = () => {
         if (!activeSession) return [];
         const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
         const classNames = [...new Set(sessionInfos.map(info => info.className))];
-        // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
         return classNames.sort((a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
     }, [activeSession]);
     
     const studentsInClass = useLiveQuery(async () => {
         if (!selectedClass || !activeSession) return [];
-        // FIX: Explicitly type sessionInfos to prevent it from being inferred as 'unknown[]'.
         const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ className: selectedClass, session: activeSession }).toArray();
         if (sessionInfos.length === 0) return [];
 
@@ -80,7 +79,6 @@ const SbaDataEntry: React.FC = () => {
         const studentDetails = await db.students.where('id').anyOf(studentIds).toArray();
         const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
         
-        // FIX: Error on this line is resolved by typing `sessionInfos` above.
         const mergedStudents = studentDetails.map(student => ({
             ...student,
             rollNo: sessionInfoMap.get(student.id!)?.rollNo || '',

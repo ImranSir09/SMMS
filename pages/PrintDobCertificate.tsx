@@ -1,14 +1,17 @@
 
+
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student } from '../types';
-import DobCertificate from '../components/DobCertificate';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
 import { generatePdfFromElement } from '../utils/pdfGenerator';
+import DobCertificate from '../components/DobCertificate';
+import BonafideCertificate from '../components/BonafideCertificate';
 
-const PrintDobCertificate: React.FC = () => {
+const PrintCertificatePage: React.FC = () => {
+    const { type } = useParams<{ type: string }>();
     const { state } = useLocation();
     const studentId = state?.studentId;
     const [student, setStudent] = useState<Student | null>(null);
@@ -30,18 +33,32 @@ const PrintDobCertificate: React.FC = () => {
     const handlePrint = () => window.print();
 
     const handleDownloadPdf = async () => {
-        if (student) {
-            await generatePdfFromElement('dob-certificate', `DOB-Certificate-${student.name}`);
+        if (student && type) {
+            const elementId = `${type}-certificate`;
+            const filename = `${type.charAt(0).toUpperCase() + type.slice(1)}-Certificate-${student.name}`;
+            await generatePdfFromElement(elementId, filename);
         }
     };
 
-    if (!student || !schoolDetails) return <div>Loading...</div>;
+    if (!student || !schoolDetails || !type) return <div>Loading...</div>;
+    
+    const certificateMap: { [key: string]: React.FC<any> } = {
+        'dob': DobCertificate,
+        'bonafide': BonafideCertificate
+    };
+    
+    const CertificateComponent = certificateMap[type];
+    const elementId = `${type}-certificate`;
+
+    if (!CertificateComponent) return <div>Invalid certificate type specified.</div>;
+    
+    const pageTitle = type === 'dob' ? "Date of Birth Certificate" : "Bonafide Certificate";
 
     return (
         <div className="bg-gray-200 min-h-screen p-4 sm:p-8 print:p-0 print:bg-white">
             <div className="max-w-4xl mx-auto mb-4 p-4 bg-white rounded-lg shadow-md print:hidden">
                 <h1 className="text-2xl font-bold text-gray-800">Certificate Preview</h1>
-                <p className="text-gray-600 mb-4">Preview for {student.name}'s Date of Birth Certificate.</p>
+                <p className="text-gray-600 mb-4">Preview for {student.name}'s {pageTitle}.</p>
                 <div className="flex flex-wrap gap-4">
                     <button onClick={handleDownloadPdf} className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700">
                         <DownloadIcon className="w-5 h-5"/> Download PDF
@@ -52,15 +69,15 @@ const PrintDobCertificate: React.FC = () => {
                 </div>
             </div>
             <div className="flex justify-center items-start">
-                <DobCertificate student={student} schoolDetails={schoolDetails} photo={student.photo} />
+                <CertificateComponent student={student} schoolDetails={schoolDetails} photo={student.photo} />
             </div>
              <style>{`
                 body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 @page { size: A4; margin: 0; }
                 @media print {
                     body * { visibility: hidden; }
-                    #dob-certificate, #dob-certificate * { visibility: visible; }
-                    #dob-certificate { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
+                    #${elementId}, #${elementId} * { visibility: visible; }
+                    #${elementId} { position: absolute; left: 0; top: 0; width: 100%; height: auto; }
                     .A4-page-container { transform: scale(1.0) !important; margin: 0 !important; }
                 }
                 .A4-page-container {
@@ -77,4 +94,4 @@ const PrintDobCertificate: React.FC = () => {
     );
 };
 
-export default PrintDobCertificate;
+export default PrintCertificatePage;

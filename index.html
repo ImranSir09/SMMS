@@ -6,9 +6,9 @@
     <title>School Management System Mobile</title>
     <!-- PWA enhancements -->
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" href="https://via.placeholder.com/32.png?text=SMS" sizes="any">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192.png?text=SMS">
-    <meta name="theme-color" content="#475569" />
+    <link rel="icon" href="https://i.postimg.cc/crKyx21z/1761750206751.png" sizes="any">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/crKyx21z/1761750206751.png">
+    <meta name="theme-color" content="#2563eb" />
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,39 +52,39 @@
     
     <style>
       :root {
-        --background: #f4f4f5; /* zinc-100 */
-        --foreground: #27272a; /* zinc-800 */
+        --background: #f8fafc; /* slate-50 */
+        --foreground: #1e293b; /* slate-800 */
         --card: #ffffff;
-        --card-foreground: #27272a;
-        --primary: #475569; /* slate-600 */
-        --primary-hover: #334155; /* slate-700 */
+        --card-foreground: #1e293b;
+        --primary: #2563eb; /* blue-600 */
+        --primary-hover: #1d4ed8; /* blue-700 */
         --primary-foreground: #ffffff;
-        --accent: #16a34a; /* green-600 */
-        --accent-hover: #15803d; /* green-700 */
+        --accent: #0891b2; /* cyan-600 */
+        --accent-hover: #0e7490; /* cyan-700 */
         --accent-foreground: #ffffff;
         --success: #16a34a; /* green-600 */
         --success-hover: #15803d; /* green-700 */
         --success-foreground: #ffffff;
-        --input: #e4e4e7; /* zinc-200 */
-        --border: #d4d4d8; /* zinc-300 */
+        --input: #e2e8f0; /* slate-200 */
+        --border: #cbd5e1; /* slate-300 */
       }
 
       .dark {
-        --background: #09090b; /* zinc-950 */
-        --foreground: #e4e4e7; /* zinc-200 */
-        --card: #18181b; /* zinc-900 */
-        --card-foreground: #e4e4e7;
-        --primary: #94a3b8; /* slate-400 */
-        --primary-hover: #cbd5e1; /* slate-300 */
-        --primary-foreground: #09090b;
-        --accent: #22c55e; /* green-500 */
-        --accent-hover: #16a34a; /* green-600 */
-        --accent-foreground: #09090b;
+        --background: #0f172a; /* slate-900 */
+        --foreground: #e2e8f0; /* slate-200 */
+        --card: #1e293b; /* slate-800 */
+        --card-foreground: #e2e8f0;
+        --primary: #60a5fa; /* blue-400 */
+        --primary-hover: #93c5fd; /* blue-300 */
+        --primary-foreground: #0f172a;
+        --accent: #22d3ee; /* cyan-400 */
+        --accent-hover: #67e8f9; /* cyan-300 */
+        --accent-foreground: #0f172a;
         --success: #22c55e; /* green-500 */
         --success-hover: #16a34a; /* green-600 */
-        --success-foreground: #09090b;
-        --input: #27272a; /* zinc-800 */
-        --border: #3f3f46; /* zinc-700 */
+        --success-foreground: #0f172a;
+        --input: #334155; /* slate-700 */
+        --border: #475569; /* slate-600 */
       }
       
       html, body {
@@ -107,22 +107,21 @@
         width: 100%;
         height: 100%;
         z-index: 0;
-        opacity: 0.03;
+        opacity: 0.04;
         transform: scale(1.5);
         filter: blur(60px);
       }
       
       .dark .background-design {
-        opacity: 0.05;
+        opacity: 0.06;
       }
 
       /* Enhanced Glassmorphism Effect */
       .bg-card {
-        background-color: color-mix(in srgb, var(--card) 85%, transparent);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
-        box-shadow: 0 4px 30px color-mix(in srgb, black 5%, transparent);
+        background-color: color-mix(in srgb, var(--card) 75%, transparent);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
       }
       
       /* Animation classes */
@@ -130,8 +129,8 @@
         transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
       }
       .hover-lift:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 12px -2px color-mix(in srgb, black 8%, transparent), 0 3px 5px -3px color-mix(in srgb, black 8%, transparent);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -4px color-mix(in srgb, var(--primary) 20%, transparent);
       }
 
       .animate-fade-in {

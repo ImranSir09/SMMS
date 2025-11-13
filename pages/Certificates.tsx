@@ -1,7 +1,8 @@
 
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student, StudentSessionInfo } from '../types';
 import Card from '../components/Card';
@@ -9,6 +10,8 @@ import { SearchIcon, BonafideIcon, CertificateIcon, SchoolIcon } from '../compon
 import { useAppData } from '../hooks/useAppData';
 
 const Certificates: React.FC = () => {
+    const { state } = useLocation();
+    const searchId = state?.searchId;
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const navigate = useNavigate();
@@ -28,6 +31,21 @@ const Certificates: React.FC = () => {
             rollNo: sessionInfoMap.get(student.id!)?.rollNo,
         }));
     }, [activeSession], []);
+    
+    const handleSelectStudent = (student: Student) => {
+        setSelectedStudent(student);
+        setSearchTerm('');
+    };
+
+    useEffect(() => {
+        if (searchId && students) {
+            const studentToSelect = students.find(s => s.admissionNo === searchId);
+            if (studentToSelect) {
+                handleSelectStudent(studentToSelect);
+            }
+        }
+    }, [searchId, students]);
+
 
     const filteredStudents = useMemo(() => {
         if (!searchTerm) return [];
@@ -37,18 +55,13 @@ const Certificates: React.FC = () => {
             student.admissionNo.includes(searchTerm)
         ).slice(0, 5); // Limit results for performance
     }, [students, searchTerm]);
-
-    const handleSelectStudent = (student: Student) => {
-        setSelectedStudent(student);
-        setSearchTerm('');
-    };
     
     const handleGenerateCertificate = (type: 'dob' | 'bonafide' | 'leaving' | 'admission') => {
         if (!selectedStudent) return;
         
         const routeMap: { [key: string]: string } = {
-            dob: '/print/dob-certificate',
-            bonafide: '/print/bonafide-certificate'
+            dob: `/print/certificate/dob`,
+            bonafide: `/print/certificate/bonafide`
         };
 
         if (routeMap[type]) {

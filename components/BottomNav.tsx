@@ -11,19 +11,17 @@ const BottomNav: React.FC = () => {
     { to: "/settings", icon: <SettingsIcon className="w-5 h-5" />, label: "Settings" },
   ];
 
-  const linkClasses = "flex flex-col items-center justify-center flex-1 p-1 transition-colors text-foreground/60 hover:text-primary";
-  const activeClassName = "text-primary";
-
+  const linkClasses = "flex flex-col items-center justify-center flex-1 p-2 transition-all duration-200 text-foreground/70 hover:text-primary rounded-xl";
+  
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t border-border flex md:hidden z-30">
+    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 h-16 w-[95%] max-w-sm bg-card rounded-2xl shadow-lg flex md:hidden z-30 p-1 gap-1">
       {navItems.map(item => (
-        // FIX: Replaced exact and activeClassName with a className function for react-router-dom v6. The 'end' prop replicates 'exact'.
         <NavLink
           key={item.to}
           to={item.to}
           end
           className={({ isActive }) =>
-            `${linkClasses} ${isActive ? activeClassName : ""}`
+            `${linkClasses} ${isActive ? "text-primary bg-primary/10" : ""}`
           }
         >
           {item.icon}

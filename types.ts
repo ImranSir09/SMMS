@@ -1,4 +1,4 @@
-// FIX: Define and export the SchoolDetails interface. The previous import was circular.
+
 export interface SchoolDetails {
   id?: number;
   name: string;
@@ -40,8 +40,7 @@ export interface Student {
   accountNo?: string;
   ifscCode?: string;
   photo?: string | null;
-  // FIX: Add optional properties to match UI component expectations after DB schema change.
-  // The UI logic has not been updated to handle the separation of student and session info.
+  // Session-specific info is merged at runtime, not part of the core Student type
   className?: string;
   section?: string;
   rollNo?: string;

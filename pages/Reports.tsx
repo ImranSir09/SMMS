@@ -3,7 +3,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
-import { PieChartIcon, UserListIcon, BarChart3Icon } from '../components/icons';
+import { PieChartIcon, UserListIcon, BarChart3Icon, CertificateIcon } from '../components/icons';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { useAppData } from '../hooks/useAppData';
@@ -18,7 +18,6 @@ const Reports: React.FC = () => {
             if (!activeSession) return [];
             const sessionInfos = await db.studentSessionInfo.where({ session: activeSession }).toArray();
             const classNames = [...new Set(sessionInfos.map(info => info.className))];
-            // FIX: Add explicit string types to sort callback parameters to resolve 'unknown' type error.
             return classNames.sort((a: string, b: string) => {
                 const indexA = CLASS_OPTIONS.indexOf(a);
                 const indexB = CLASS_OPTIONS.indexOf(b);
@@ -54,6 +53,13 @@ const Reports: React.FC = () => {
                     <div>
                         <h3 className="font-semibold">Category-wise Roll Statement</h3>
                         <p className="text-xs text-foreground/70">Student counts by category and gender.</p>
+                    </div>
+                </Card>
+                <Card onClick={() => navigate('/reports/generate-certificate')} className="p-4 flex items-center gap-3 cursor-pointer hover-lift">
+                    <CertificateIcon className="w-8 h-8 text-primary" />
+                    <div>
+                        <h3 className="font-semibold">Generate Certificates</h3>
+                        <p className="text-xs text-foreground/70">Create Bonafide, D.O.B., etc.</p>
                     </div>
                 </Card>
                  <Card className="p-4 flex items-center gap-3 opacity-50">

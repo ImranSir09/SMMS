@@ -10,7 +10,7 @@ import { useToast } from '../contexts/ToastContext';
 import { CLASS_OPTIONS } from '../constants';
 import { useAppData } from '../hooks/useAppData';
 
-const inputStyle = "p-3 w-full bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
+const inputStyle = "p-3 w-full bg-background border border-input rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 
 const Exams: React.FC = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -64,7 +64,7 @@ const Exams: React.FC = () => {
 
     return (
         <div className="flex flex-col">
-            <button onClick={handleOpenCreateModal} className="w-full mb-3 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+            <button onClick={handleOpenCreateModal} className="w-full mb-3 py-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5 shadow-md flex items-center justify-center gap-2">
                 <PlusIcon className="w-5 h-5"/>
                 Create Summative Assessment
             </button>
@@ -90,7 +90,7 @@ const Exams: React.FC = () => {
             </div>
 
              {(!exams || exams.length === 0) && (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-border rounded-lg">
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-border rounded-xl">
                     <ExamsIcon className="w-10 h-10 text-foreground/20" />
                     <h3 className="text-md font-semibold mt-2">No Summative Assessments Found</h3>
                     <p className="mt-1 text-xs text-foreground/60">
@@ -127,7 +127,7 @@ const Exams: React.FC = () => {
                     <div className="flex justify-end pt-2">
                         <button 
                             onClick={handleSaveExam}
-                            className="py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors"
+                            className="py-3 px-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover text-sm font-semibold transition-colors"
                         >
                             Create & Go to Marks
                         </button>
