@@ -180,7 +180,12 @@ const SbaDataEntry: React.FC = () => {
                                     selectedStudentId === student.id ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-primary/10'
                                 }`}
                             >
-                                <p className="font-bold text-sm truncate">{student.name} (R: {student.rollNo})</p>
+                                <div>
+                                    <p className="font-bold text-sm truncate">{student.name} (R: {student.rollNo})</p>
+                                    <p className={`text-xs truncate ${selectedStudentId === student.id ? 'text-primary-foreground/80' : 'text-foreground/70'}`}>
+                                        S/O: {student.fathersName} | DOB: {student.dob} | Contact: {student.contact}
+                                    </p>
+                                </div>
                              </button>
                         ))}
                     </div>

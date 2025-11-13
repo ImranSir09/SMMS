@@ -90,7 +90,10 @@ const FormativeAssessment: React.FC = () => {
         return studentsInClass.filter(student =>
             student.name.toLowerCase().includes(lowercasedTerm) ||
             (student.rollNo || '').includes(lowercasedTerm) ||
-            student.admissionNo.includes(lowercasedTerm)
+            student.admissionNo.includes(lowercasedTerm) ||
+            student.fathersName.toLowerCase().includes(lowercasedTerm) ||
+            (student.dob || '').includes(searchTerm) ||
+            (student.contact || '').includes(searchTerm)
         );
     }, [studentsInClass, searchTerm]);
     
@@ -209,7 +212,12 @@ const FormativeAssessment: React.FC = () => {
                                     selectedStudentId === student.id ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-primary/10'
                                 }`}
                             >
-                                <p className="font-bold text-sm truncate">{student.name} (R: {student.rollNo})</p>
+                                <div>
+                                    <p className="font-bold text-sm truncate">{student.name} (R: {student.rollNo})</p>
+                                    <p className={`text-xs truncate ${selectedStudentId === student.id ? 'text-primary-foreground/80' : 'text-foreground/70'}`}>
+                                        S/O: {student.fathersName} | DOB: {student.dob} | Contact: {student.contact}
+                                    </p>
+                                </div>
                              </button>
                         ))}
                     </div>

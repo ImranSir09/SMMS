@@ -50,9 +50,13 @@ const Certificates: React.FC = () => {
     const filteredStudents = useMemo(() => {
         if (!searchTerm) return [];
         if (!students) return [];
+        const lowercasedTerm = searchTerm.toLowerCase();
         return students.filter(student =>
-            student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.admissionNo.includes(searchTerm)
+            student.name.toLowerCase().includes(lowercasedTerm) ||
+            student.admissionNo.includes(searchTerm) ||
+            student.fathersName.toLowerCase().includes(lowercasedTerm) ||
+            (student.dob || '').includes(searchTerm) ||
+            (student.contact || '').includes(searchTerm)
         ).slice(0, 5); // Limit results for performance
     }, [students, searchTerm]);
     
@@ -88,6 +92,9 @@ const Certificates: React.FC = () => {
                             filteredStudents.map(student => (
                                 <div key={student.id} onClick={() => handleSelectStudent(student)} className="p-3 cursor-pointer hover:bg-primary/10">
                                     <p className="font-semibold">{student.name}</p>
+                                    <p className="text-xs text-foreground/70">
+                                        S/O: {student.fathersName} | DOB: {student.dob} | Contact: {student.contact}
+                                    </p>
                                     <p className="text-xs text-foreground/70">Adm No: {student.admissionNo} | Class: {student.className}</p>
                                 </div>
                             ))
