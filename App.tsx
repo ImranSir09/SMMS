@@ -1,5 +1,4 @@
 
-
 import React, { useContext, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppContext } from './contexts/AppContext';
@@ -22,8 +21,8 @@ import FormativeAssessment from './pages/FormativeAssessment';
 import StudentReport from './pages/StudentReport';
 import PrintCoCurricularReport from './pages/PrintCoCurricularReport';
 import PrintFormativeAssessmentReport from './pages/PrintFormativeAssessmentReport';
-import PrintCertificatePage from './pages/PrintDobCertificate';
-import PrintBonafideCertificate from './pages/PrintBonafideCertificate';
+import PrintCertificatePage from './pages/PrintCertificatePage';
+import PrintSbaResultSheet from './pages/PrintSbaResultSheet';
 
 const App: React.FC = () => {
   const context = useContext(AppContext);
@@ -94,6 +93,7 @@ const App: React.FC = () => {
                 <Route path="/print/certificate/:type" element={<PrintCertificatePage />} />
                 <Route path="/print/co-curricular-report/:studentId/:subject" element={<PrintCoCurricularReport />} />
                 <Route path="/print/formative-assessment-report/:studentId" element={<PrintFormativeAssessmentReport />} />
+                <Route path="/print/sba-result-sheet/:className/:examId" element={<PrintSbaResultSheet />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>

@@ -1,8 +1,2 @@
-import React from 'react';
-
-// This component is deprecated. Its functionality has been merged into
-// the generic PrintCertificatePage (located in PrintDobCertificate.tsx)
-// to reduce code duplication.
-const PrintBonafideCertificate: React.FC = () => null;
-
-export default PrintBonafideCertificate;
+// This component has been removed as it was deprecated.
+// Its functionality is handled by the generic PrintCertificatePage.tsx component.

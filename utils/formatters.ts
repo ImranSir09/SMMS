@@ -1,3 +1,4 @@
+
 import { Student } from "../types";
 
 export const formatDateLong = (dateString: string): string => {
@@ -74,4 +75,13 @@ export const getImageDimensions = (base64: string): Promise<{ width: number, hei
         img.onerror = reject;
         img.src = base64;
     });
+};
+
+export const getGrade = (percentage: number): string => {
+    if (percentage > 85) return 'A+';
+    if (percentage > 70) return 'A';
+    if (percentage > 55) return 'B';
+    if (percentage > 40) return 'C';
+    if (percentage >= 33) return 'D';
+    return 'E';
 };

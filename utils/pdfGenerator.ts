@@ -1,12 +1,11 @@
 
-
-import { jsPDF } from 'jspdf';
+import { jsPDF, jsPDFOptions } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { Student, SchoolDetails } from '../types';
 import { CATEGORY_OPTIONS } from '../constants';
 
-export const generatePdfFromElement = async (elementId: string, filename: string) => {
+export const generatePdfFromElement = async (elementId: string, filename: string, orientation: 'p' | 'l' = 'p') => {
     const input = document.getElementById(elementId);
     if (!input) {
         console.error(`Element with id ${elementId} not found.`);
@@ -20,7 +19,14 @@ export const generatePdfFromElement = async (elementId: string, filename: string
     });
 
     const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    const pdfOptions: jsPDFOptions = {
+        orientation,
+        unit: 'mm',
+        format: 'a4'
+    };
+    const pdf = new jsPDF(pdfOptions);
+    
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     
