@@ -7,8 +7,8 @@ import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, Do
 import { useToast } from '../contexts/ToastContext';
 import SessionManager from '../components/SessionManager';
 
-const inputStyle = "p-3 w-full bg-background border border-input rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
-const buttonStyle = "py-3 px-5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5";
+const inputStyle = "p-3 w-full bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
+const buttonStyle = "py-3 px-5 rounded-lg text-sm font-semibold transition-colors";
 const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground hover:bg-primary-hover`;
 
 
@@ -104,6 +104,7 @@ const Settings: React.FC = () => {
             document.body.appendChild(link);
             link.click();
             
+            // FIX: Delay cleanup to ensure download starts in all environments.
             setTimeout(() => {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
@@ -248,11 +249,11 @@ const Settings: React.FC = () => {
                             <label className="block text-xs font-medium text-foreground/80 mb-1">School Logo</label>
                             <div className="flex items-center gap-3">
                                 {logoPreview ? (
-                                    <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 object-contain rounded-xl border border-border p-1" />
+                                    <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 object-contain rounded-md border border-border p-1" />
                                 ) : (
-                                    <div className="w-16 h-16 rounded-xl bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Logo</div>
+                                    <div className="w-16 h-16 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Logo</div>
                                 )}
-                                <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-3 rounded-xl bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5">
+                                <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-3 rounded-lg bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5">
                                     <UploadIcon className="w-4 h-4 text-foreground/60" />
                                     <span className="text-xs text-foreground/80">Upload Logo</span>
                                     <input type="file" accept="image/png, image/jpeg" onChange={handleLogoChange} className="hidden" />
@@ -292,7 +293,7 @@ const Settings: React.FC = () => {
                         </p>
                         <button
                             onClick={handleResetData}
-                            className="w-full py-2 px-4 rounded-xl text-sm font-semibold transition-colors bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            className="w-full py-2 px-4 rounded-lg text-sm font-semibold transition-colors bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                         >
                             Reset All Data
                         </button>

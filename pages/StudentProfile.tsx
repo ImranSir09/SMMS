@@ -11,7 +11,7 @@ import { StudentForm } from '../components/StudentForm';
 import { useToast } from '../contexts/ToastContext';
 import { useAppData } from '../hooks/useAppData';
 
-const buttonStyle = "py-2 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5";
+const buttonStyle = "py-2 px-3 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-colors";
 
 const StudentProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -158,7 +158,7 @@ const StudentProfile: React.FC = () => {
             <div className="grid grid-cols-2 gap-2">
                 <button onClick={handleEdit} className={`${buttonStyle} bg-blue-600 text-white`}><EditIcon className="w-3 h-3" /> Edit</button>
                 <button onClick={() => navigate(`/print/hpc/${student.id}`)} className={`${buttonStyle} bg-purple-600 text-white`}><HolisticIcon className="w-3 h-3" /> HPC Report</button>
-                <button onClick={() => navigate('/reports/generate-certificate', { state: { searchId: student.admissionNo } })} className={`${buttonStyle} bg-green-600 text-white col-span-2`}><CertificateIcon className="w-3 h-3" /> Other Certificates</button>
+                <button onClick={() => navigate('/certificates', { state: { searchId: student.admissionNo } })} className={`${buttonStyle} bg-green-600 text-white col-span-2`}><CertificateIcon className="w-3 h-3" /> Other Certificates</button>
                 <button onClick={handleDelete} className={`${buttonStyle} bg-red-600 text-white col-span-2`}><TrashIcon className="w-3 h-3" /> Delete</button>
             </div>
 

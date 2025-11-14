@@ -1,12 +1,11 @@
 
-
 import React, { useEffect, useState } from 'react';
 import { db } from '../services/db';
 import { Student, StudentSessionInfo } from '../types';
 import CategoryWiseRollStatement from '../components/CategoryWiseRollStatement';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { generateCategoryRollStatementVectorPdf } from '../utils/pdfGenerator';
+import { generateCategoryRollStatementPdf } from '../utils/pdfGenerator';
 
 const PrintCategoryRollStatement: React.FC = () => {
     const [studentsByClass, setStudentsByClass] = useState<Map<string, Student[]>>(new Map());
@@ -22,6 +21,7 @@ const PrintCategoryRollStatement: React.FC = () => {
                     return;
                 }
                 const studentIds = sessionInfos.map(info => info.studentId);
+                // FIX: Explicitly type studentDetails to ensure `student` is inferred as an object, resolving the spread operator error.
                 const studentDetails: Student[] = await db.students.where('id').anyOf(studentIds).toArray();
                 const studentMap = new Map(studentDetails.map(s => [s.id!, s]));
 
@@ -29,6 +29,7 @@ const PrintCategoryRollStatement: React.FC = () => {
                 sessionInfos.forEach(info => {
                     const student = studentMap.get(info.studentId);
                     if (student) {
+                        // FIX: Manually construct object to avoid spread error on `info` which might be inferred as a non-object type.
                         const studentWithSessionInfo = {
                             ...student,
                             className: info.className,
@@ -63,12 +64,7 @@ const PrintCategoryRollStatement: React.FC = () => {
     const handleDownloadPdf = async () => {
         const studentsForSelectedClass = studentsByClass.get(activeClassName) || [];
         if (schoolDetails && studentsForSelectedClass.length > 0) {
-             await generateCategoryRollStatementVectorPdf(
-                studentsForSelectedClass, 
-                activeClassName, 
-                schoolDetails,
-                `Category-Roll-Statement-${activeClassName}`
-            );
+            await generateCategoryRollStatementPdf(studentsForSelectedClass, activeClassName, schoolDetails);
         }
     };
     

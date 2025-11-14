@@ -1,6 +1,5 @@
 import React from 'react';
 import { Student } from '../types';
-import { UserIcon } from './icons';
 
 interface StudentCardProps {
     student: Student;
@@ -15,17 +14,10 @@ const StudentCard: React.FC<StudentCardProps> = ({ student, onClick }) => {
     };
     
     return (
-        <div 
-            onClick={handleClick} 
-            className="bg-card text-card-foreground p-3 rounded-xl border border-border/50 shadow-sm cursor-pointer hover-lift group flex items-center gap-3"
-        >
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <UserIcon className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-grow overflow-hidden">
-                <p className="font-bold text-sm truncate">{student.name}</p>
-                <p className="text-xs text-foreground/70">Roll: {student.rollNo} | Adm: {student.admissionNo}</p>
-            </div>
+        <div onClick={handleClick} className="bg-card text-card-foreground p-3 rounded-lg border border-border shadow-sm cursor-pointer hover-lift">
+            <p className="font-bold text-sm truncate">{student.name}</p>
+            <p className="text-xs text-foreground/70">Roll: {student.rollNo}</p>
+            <p className="text-xs text-foreground/70">Adm: {student.admissionNo}</p>
         </div>
     );
 };

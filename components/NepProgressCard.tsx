@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { Student, SchoolDetails, Mark, HPCReportData } from '../types';
 import { formatDateLong } from '../utils/formatters';
@@ -118,6 +117,7 @@ const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, schoo
                         </tr>
                     </thead>
                     <tbody>
+                        {/* FIX: Changed from Object.entries to Object.keys to fix TypeScript inference issue with index signatures. */}
                         {Object.keys(hpcReport.summaries).map((domain) => {
                             const summary = hpcReport.summaries[domain];
                             return (

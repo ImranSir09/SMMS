@@ -1,8 +1,7 @@
 
-
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../services/db';
 import { Student, StudentSessionInfo } from '../types';
 import Card from '../components/Card';
@@ -10,8 +9,6 @@ import { SearchIcon, BonafideIcon, CertificateIcon, SchoolIcon } from '../compon
 import { useAppData } from '../hooks/useAppData';
 
 const Certificates: React.FC = () => {
-    const { state } = useLocation();
-    const searchId = state?.searchId;
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const navigate = useNavigate();
@@ -31,41 +28,27 @@ const Certificates: React.FC = () => {
             rollNo: sessionInfoMap.get(student.id!)?.rollNo,
         }));
     }, [activeSession], []);
-    
-    const handleSelectStudent = (student: Student) => {
-        setSelectedStudent(student);
-        setSearchTerm('');
-    };
-
-    useEffect(() => {
-        if (searchId && students) {
-            const studentToSelect = students.find(s => s.admissionNo === searchId);
-            if (studentToSelect) {
-                handleSelectStudent(studentToSelect);
-            }
-        }
-    }, [searchId, students]);
-
 
     const filteredStudents = useMemo(() => {
         if (!searchTerm) return [];
         if (!students) return [];
-        const lowercasedTerm = searchTerm.toLowerCase();
         return students.filter(student =>
-            student.name.toLowerCase().includes(lowercasedTerm) ||
-            student.admissionNo.includes(searchTerm) ||
-            student.fathersName.toLowerCase().includes(lowercasedTerm) ||
-            (student.dob || '').includes(searchTerm) ||
-            (student.contact || '').includes(searchTerm)
+            student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            student.admissionNo.includes(searchTerm)
         ).slice(0, 5); // Limit results for performance
     }, [students, searchTerm]);
+
+    const handleSelectStudent = (student: Student) => {
+        setSelectedStudent(student);
+        setSearchTerm('');
+    };
     
     const handleGenerateCertificate = (type: 'dob' | 'bonafide' | 'leaving' | 'admission') => {
         if (!selectedStudent) return;
         
         const routeMap: { [key: string]: string } = {
-            dob: `/print/certificate/dob`,
-            bonafide: `/print/certificate/bonafide`
+            dob: '/print/dob-certificate',
+            bonafide: '/print/bonafide-certificate'
         };
 
         if (routeMap[type]) {
@@ -92,9 +75,6 @@ const Certificates: React.FC = () => {
                             filteredStudents.map(student => (
                                 <div key={student.id} onClick={() => handleSelectStudent(student)} className="p-3 cursor-pointer hover:bg-primary/10">
                                     <p className="font-semibold">{student.name}</p>
-                                    <p className="text-xs text-foreground/70">
-                                        S/O: {student.fathersName} | DOB: {student.dob} | Contact: {student.contact}
-                                    </p>
                                     <p className="text-xs text-foreground/70">Adm No: {student.admissionNo} | Class: {student.className}</p>
                                 </div>
                             ))

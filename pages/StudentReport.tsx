@@ -79,9 +79,7 @@ const StudentReport: React.FC = () => {
                     <label className="block text-xs font-medium text-foreground/80 mb-1">Select Student</label>
                     <select value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)} disabled={!selectedClass} className={inputStyle}>
                         <option value="">-- Choose Student --</option>
-                        {studentsInClass?.map(s => <option key={s.id} value={String(s.id!)}>
-                            {s.name} (R: {s.rollNo}) | S/O: {s.fathersName} | DOB: {s.dob} | {s.contact}
-                        </option>)}
+                        {studentsInClass?.map(s => <option key={s.id} value={String(s.id!)}>{s.name} (Roll: {s.rollNo})</option>)}
                     </select>
                 </div>
                 <div className="flex justify-end pt-2">
