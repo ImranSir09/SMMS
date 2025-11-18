@@ -53,7 +53,6 @@ db.version(18).stores({
     const formativeCount = await tx.table('detailedFormativeAssessments').count();
     
     // Only create a default session and migrate if there is existing data from ANY relevant table.
-    // This resolves a critical edge case where users with partial data would have a failed migration.
     if (studentCount > 0 || examCount > 0 || sbaReportCount > 0 || hpcReportCount > 0 || formativeCount > 0) {
         const defaultSessionName = '2024-25';
 
@@ -102,7 +101,18 @@ db.version(18).stores({
     }
 });
 
-db.version(19).stores({}).upgrade(async (tx) => {
+db.version(19).stores({
+  sessions: '++id, &name',
+  studentSessionInfo: '++id, &[studentId+session], studentId, session, className',
+  students: '++id, name, admissionNo, gender',
+  exams: '++id, &[name+className+session], className, session',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  hpcReports: '++id, &[studentId+session], studentId, session',
+  sbaReports: '++id, &[studentId+session], studentId, session',
+  detailedFormativeAssessments: '++id, &[studentId+subject+assessmentName+session], studentId, session',
+}).upgrade(async (tx) => {
     const corrections: { [key: string]: string } = {
         '2st': '2nd',
         '3nd': '3rd',

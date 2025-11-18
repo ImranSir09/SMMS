@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { SchoolIcon, ArrowRightIcon } from '../components/icons';
@@ -38,7 +39,7 @@ const Setup: React.FC = () => {
                 
                 <div className="mt-8">
                     <input 
-                        type="tel" 
+                        type="text" 
                         value={sessionName}
                         onChange={(e) => setSessionName(e.target.value)}
                         onKeyPress={handleKeyPress}
