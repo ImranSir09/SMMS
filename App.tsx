@@ -26,11 +26,12 @@ import PrintFormativeAssessmentReport from './pages/PrintFormativeAssessmentRepo
 import PrintDobCertificate from './pages/PrintDobCertificate';
 import PrintBonafideCertificate from './pages/PrintBonafideCertificate';
 import Setup from './pages/Setup';
+import Login from './pages/Login';
 import { useAppData } from './hooks/useAppData';
 
 const App: React.FC = () => {
   const context = useAppData();
-  const { theme, schoolDetails, isSetupComplete, isLoading } = context;
+  const { theme, schoolDetails, isSetupComplete, isLoading, isAuthenticated } = context;
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -68,6 +69,10 @@ const App: React.FC = () => {
 
   if (!isSetupComplete) {
     return <Setup />;
+  }
+
+  if (!isAuthenticated) {
+    return <Login />;
   }
 
   const backgroundStyle = "text-foreground transition-colors duration-300";

@@ -1,3 +1,4 @@
+
 // FIX: Define and export the SchoolDetails interface. The previous import was circular.
 export interface SchoolDetails {
   id?: number;
@@ -7,6 +8,12 @@ export interface SchoolDetails {
   email: string;
   udiseCode: string;
   logo: string | null;
+}
+
+export interface UserProfile {
+    id?: number;
+    username: string;
+    accessKey: string; // In a real app, this should be hashed. For offline-first/local, plain text or simple encoding is often used, but we will treat it as a password.
 }
 
 export interface Session {

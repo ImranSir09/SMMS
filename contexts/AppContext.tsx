@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { db } from '../services/db';
-import { SchoolDetails } from '../types';
+import { SchoolDetails, UserProfile } from '../types';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 type Theme = 'light' | 'dark';
@@ -16,8 +16,11 @@ interface AppContextType {
   availableSessions: string[];
   refreshSessions: () => Promise<void>;
   isSetupComplete: boolean;
-  completeSetup: (initialSession: string) => Promise<void>;
+  completeSetup: (initialSession: string, schoolDetails: SchoolDetails, user: UserProfile) => Promise<void>;
   isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (username: string, key: string) => Promise<boolean>;
+  logout: () => void;
 }
 
 export const AppContext = createContext<AppContextType | null>(null);
@@ -28,6 +31,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isSetupComplete, setIsSetupComplete] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeSession, _setActiveSession] = useState<string>('');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const availableSessionsData = useLiveQuery(() => 
     db.sessions.orderBy('name').reverse().toArray().then(sessions => sessions.map(s => s.name)),
@@ -49,8 +53,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         // 2. Check if setup is complete by looking for any sessions.
         const sessionCount = await db.sessions.count();
+        const userCount = await db.user.count();
+
         if (sessionCount > 0) {
           setIsSetupComplete(true);
+          
+          // Backward compatibility: If sessions exist but no user, auto-login (for old versions)
+          if (userCount === 0) {
+             setIsAuthenticated(true);
+          } else {
+             // For secured apps, check session storage or require fresh login
+             try {
+                 const sessionAuth = sessionStorage.getItem('isAuthenticated');
+                 if (sessionAuth === 'true') setIsAuthenticated(true);
+             } catch(e) { console.warn("No session storage access"); }
+          }
+
           // 3. If setup is complete, determine the active session.
           const sessions = await db.sessions.orderBy('name').reverse().toArray();
           const sessionNames = sessions.map(s => s.name);
@@ -68,33 +86,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         } else {
           setIsSetupComplete(false);
+          setIsAuthenticated(false);
         }
 
         // 4. Initialize School Details (with isolated error handling)
         let details: SchoolDetails | null = null;
         try {
             details = await db.schoolDetails.get(1);
-            if (!details) {
-                await db.schoolDetails.add({
-                    id: 1,
-                    name: 'My School',
-                    address: '123 Education Lane',
-                    phone: '555-1234',
-                    email: 'contact@myschool.edu',
-                    udiseCode: '12345678901',
-                    logo: null,
-                });
-                details = await db.schoolDetails.get(1);
-            }
         } catch (detailsError) {
             console.error("Failed to initialize school details. The app will continue.", detailsError);
-            details = null; // Ensure details are null if an error occurs
+            details = null; 
         }
         setSchoolDetails(details || null);
 
       } catch (error) {
         console.error("Critical error during application initialization:", error);
-        // In a real-world app, we might set an error state here to show a crash screen.
       } finally {
         // 5. Signal that loading is complete, allowing the app to render.
         setIsLoading(false);
@@ -114,11 +120,35 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     _setActiveSession(session);
   };
   
-  const completeSetup = async (initialSession: string) => {
-    if (!initialSession.trim()) return;
-    await db.sessions.add({ name: initialSession.trim() });
+  const completeSetup = async (initialSession: string, details: SchoolDetails, user: UserProfile) => {
+    if (!initialSession.trim() || !details.name) return;
+    
+    await db.transaction('rw', db.sessions, db.schoolDetails, db.user, async () => {
+        await db.sessions.add({ name: initialSession.trim() });
+        await db.schoolDetails.put({ ...details, id: 1 });
+        await db.user.add(user);
+    });
+    
     setActiveSession(initialSession.trim());
+    setSchoolDetails(details);
     setIsSetupComplete(true);
+    setIsAuthenticated(true);
+    try { sessionStorage.setItem('isAuthenticated', 'true'); } catch(e) {}
+  };
+
+  const login = async (username: string, key: string): Promise<boolean> => {
+      const user = await db.user.where('username').equals(username).first();
+      if (user && user.accessKey === key) {
+          setIsAuthenticated(true);
+          try { sessionStorage.setItem('isAuthenticated', 'true'); } catch(e) {}
+          return true;
+      }
+      return false;
+  };
+
+  const logout = () => {
+      setIsAuthenticated(false);
+      try { sessionStorage.removeItem('isAuthenticated'); } catch(e) {}
   };
 
   const refreshSessions = async () => {
@@ -146,7 +176,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   };
   
-  // Memoize the context value to prevent unnecessary re-renders of consumers.
   const contextValue = React.useMemo(() => ({
     theme, 
     toggleTheme, 
@@ -158,8 +187,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     refreshSessions,
     isSetupComplete,
     completeSetup,
-    isLoading
-  }), [theme, schoolDetails, activeSession, availableSessions, isSetupComplete, isLoading]);
+    isLoading,
+    isAuthenticated,
+    login,
+    logout
+  }), [theme, schoolDetails, activeSession, availableSessions, isSetupComplete, isLoading, isAuthenticated]);
   
   return (
     <AppContext.Provider value={contextValue}>
