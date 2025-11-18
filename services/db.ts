@@ -45,14 +45,16 @@ db.version(18).stores({
   sbaReports: '++id, &[studentId+session], studentId, session', // Renamed academicYear
   detailedFormativeAssessments: '++id, &[studentId+subject+assessmentName+session], studentId, session', // Renamed academicYear & added session index
 }).upgrade(async (tx) => {
-    // Check if there's any data from the old schema to migrate.
+    // Check if there's any data from the old schema to migrate. This is more robust.
     const studentCount = await tx.table('students').count();
     const examCount = await tx.table('exams').count();
+    const sbaReportCount = await tx.table('sbaReports').count();
+    const hpcReportCount = await tx.table('hpcReports').count();
+    const formativeCount = await tx.table('detailedFormativeAssessments').count();
     
-    // Only create a default session and migrate if there is existing data.
-    // For new users, counts will be 0, and no session will be created,
-    // allowing the setup screen to show.
-    if (studentCount > 0 || examCount > 0) {
+    // Only create a default session and migrate if there is existing data from ANY relevant table.
+    // This resolves a critical edge case where users with partial data would have a failed migration.
+    if (studentCount > 0 || examCount > 0 || sbaReportCount > 0 || hpcReportCount > 0 || formativeCount > 0) {
         const defaultSessionName = '2024-25';
 
         // 1. Create a default session for the migration

@@ -38,7 +38,7 @@ const Setup: React.FC = () => {
                 
                 <div className="mt-8">
                     <input 
-                        type="text" 
+                        type="tel" 
                         value={sessionName}
                         onChange={(e) => setSessionName(e.target.value)}
                         onKeyPress={handleKeyPress}

@@ -92,12 +92,12 @@ export const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave,
                    </div>
                     <div>
                         <label htmlFor="rollNo" className={labelStyle}>Roll No</label>
-                        <input id="rollNo" name="rollNo" value={formData.rollNo || ''} onChange={handleChange} className={inputStyle} />
+                        <input id="rollNo" name="rollNo" type="text" inputMode="numeric" value={formData.rollNo || ''} onChange={handleChange} className={inputStyle} />
                         {errors.rollNo && <p className="text-red-500 text-xs mt-1">{errors.rollNo}</p>}
                     </div>
                     <div>
                         <label htmlFor="admissionNo" className={labelStyle}>Admission No</label>
-                        <input id="admissionNo" name="admissionNo" value={formData.admissionNo || ''} onChange={handleChange} className={inputStyle} />
+                        <input id="admissionNo" name="admissionNo" type="text" inputMode="numeric" value={formData.admissionNo || ''} onChange={handleChange} className={inputStyle} />
                         {errors.admissionNo && <p className="text-red-500 text-xs mt-1">{errors.admissionNo}</p>}
                     </div>
                     <div>
@@ -136,7 +136,7 @@ export const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave,
                    </div>
                    <div className="col-span-2">
                        <label htmlFor="contact" className={labelStyle}>Contact</label>
-                       <input id="contact" name="contact" value={formData.contact || ''} onChange={handleChange} className={inputStyle} />
+                       <input id="contact" name="contact" type="tel" value={formData.contact || ''} onChange={handleChange} className={inputStyle} />
                        {errors.contact && <p className="text-red-500 text-xs mt-1">{errors.contact}</p>}
                    </div>
                    <div className="col-span-2">
@@ -168,17 +168,17 @@ export const StudentForm: React.FC<StudentFormProps> = ({ studentToEdit, onSave,
                     </div>
                     <div className="col-span-2">
                         <label htmlFor="aadharNo" className={labelStyle}>Aadhar No (Optional)</label>
-                        <input id="aadharNo" name="aadharNo" value={formData.aadharNo || ''} onChange={handleChange} className={inputStyle} placeholder="12-digit Aadhar Number" />
+                        <input id="aadharNo" name="aadharNo" type="tel" value={formData.aadharNo || ''} onChange={handleChange} className={inputStyle} placeholder="12-digit Aadhar Number" />
                         {errors.aadharNo && <p className="text-red-500 text-xs mt-1">{errors.aadharNo}</p>}
                     </div>
                     <div className="col-span-2">
                         <label htmlFor="accountNo" className={labelStyle}>Account No (Optional)</label>
-                        <input id="accountNo" name="accountNo" value={formData.accountNo || ''} onChange={handleChange} className={inputStyle} placeholder="Bank Account Number" />
+                        <input id="accountNo" name="accountNo" type="text" inputMode="numeric" value={formData.accountNo || ''} onChange={handleChange} className={inputStyle} placeholder="Bank Account Number" />
                         {errors.accountNo && <p className="text-red-500 text-xs mt-1">{errors.accountNo}</p>}
                     </div>
                     <div className="col-span-2">
                         <label htmlFor="ifscCode" className={labelStyle}>IFSC Code (Optional)</label>
-                        <input id="ifscCode" name="ifscCode" value={formData.ifscCode || ''} onChange={handleChange} className={`${inputStyle} uppercase`} placeholder="Bank IFSC Code" />
+                        <input id="ifscCode" name="ifscCode" type="text" autoCapitalize="characters" value={formData.ifscCode || ''} onChange={handleChange} className={`${inputStyle} uppercase`} placeholder="Bank IFSC Code" />
                         {errors.ifscCode && <p className="text-red-500 text-xs mt-1">{errors.ifscCode}</p>}
                     </div>
                 </div>
