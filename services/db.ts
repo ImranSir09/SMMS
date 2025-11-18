@@ -1,3 +1,4 @@
+
 import Dexie, { Table } from 'dexie';
 import { SchoolDetails, Student, Exam, Mark, DailyLog, HPCReportData, StudentExamData, SbaReportData, DetailedFormativeAssessment, Session, StudentSessionInfo } from '../types';
 
@@ -44,50 +45,58 @@ db.version(18).stores({
   sbaReports: '++id, &[studentId+session], studentId, session', // Renamed academicYear
   detailedFormativeAssessments: '++id, &[studentId+subject+assessmentName+session], studentId, session', // Renamed academicYear & added session index
 }).upgrade(async (tx) => {
-    const defaultSessionName = '2024-25';
-
-    // 1. Create a default session
-    const sessionsTable = tx.table('sessions');
-    await sessionsTable.add({ name: defaultSessionName });
-
-    // 2. Migrate student data
-    const studentsTable = tx.table('students');
-    const studentSessionInfoTable = tx.table('studentSessionInfo');
-    await studentsTable.toCollection().modify(async (student: any) => {
-      // Create a session info record for each student
-      if (student.id && student.className && student.rollNo) {
-        await studentSessionInfoTable.add({
-          studentId: student.id,
-          session: defaultSessionName,
-          className: student.className,
-          section: student.section,
-          rollNo: student.rollNo,
-        });
-      }
-      // Remove old fields from the student record
-      delete student.className;
-      delete student.section;
-      delete student.rollNo;
-    });
-
-    // 3. Add session to exams
-    const examsTable = tx.table('exams');
-    await examsTable.toCollection().modify((exam: any) => {
-      exam.session = defaultSessionName;
-    });
+    // Check if there's any data from the old schema to migrate.
+    const studentCount = await tx.table('students').count();
+    const examCount = await tx.table('exams').count();
     
-    // 4. Rename academicYear to session in other tables
-    const tablesToRename = ['sbaReports', 'detailedFormativeAssessments', 'hpcReports'];
-    for (const tableName of tablesToRename) {
-        const table = tx.table(tableName);
-        await table.toCollection().modify((record: any) => {
-            if (record.academicYear) {
-                record.session = record.academicYear;
-                delete record.academicYear;
-            } else {
-                record.session = defaultSessionName;
-            }
+    // Only create a default session and migrate if there is existing data.
+    // For new users, counts will be 0, and no session will be created,
+    // allowing the setup screen to show.
+    if (studentCount > 0 || examCount > 0) {
+        const defaultSessionName = '2024-25';
+
+        // 1. Create a default session for the migration
+        await tx.table('sessions').add({ name: defaultSessionName });
+
+        // 2. Migrate student data
+        const studentsTable = tx.table('students');
+        const studentSessionInfoTable = tx.table('studentSessionInfo');
+        await studentsTable.toCollection().modify(async (student: any) => {
+          // Create a session info record for each student
+          if (student.id && student.className && student.rollNo) {
+            await studentSessionInfoTable.add({
+              studentId: student.id,
+              session: defaultSessionName,
+              className: student.className,
+              section: student.section,
+              rollNo: student.rollNo,
+            });
+          }
+          // Remove old fields from the student record
+          delete student.className;
+          delete student.section;
+          delete student.rollNo;
         });
+
+        // 3. Add session to exams
+        const examsTable = tx.table('exams');
+        await examsTable.toCollection().modify((exam: any) => {
+          exam.session = defaultSessionName;
+        });
+        
+        // 4. Rename academicYear to session in other tables
+        const tablesToRename = ['sbaReports', 'detailedFormativeAssessments', 'hpcReports'];
+        for (const tableName of tablesToRename) {
+            const table = tx.table(tableName);
+            await table.toCollection().modify((record: any) => {
+                if (record.academicYear) {
+                    record.session = record.academicYear;
+                    delete record.academicYear;
+                } else {
+                    record.session = defaultSessionName;
+                }
+            });
+        }
     }
 });
 

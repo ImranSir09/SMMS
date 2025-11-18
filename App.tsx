@@ -1,5 +1,4 @@
 
-
 import React, { useContext, useEffect } from 'react';
 // FIX: Update react-router-dom imports for v6
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -26,15 +25,12 @@ import PrintFormativeAssessmentReport from './pages/PrintFormativeAssessmentRepo
 // FIX: Add import for the new print page component.
 import PrintDobCertificate from './pages/PrintDobCertificate';
 import PrintBonafideCertificate from './pages/PrintBonafideCertificate';
+import Setup from './pages/Setup';
+import { useAppData } from './hooks/useAppData';
 
 const App: React.FC = () => {
-  const context = useContext(AppContext);
-
-  if (!context) {
-    return <div className="h-screen w-screen flex items-center justify-center">Loading...</div>;
-  }
-  
-  const { theme, schoolDetails } = context;
+  const context = useAppData();
+  const { theme, schoolDetails, isSetupComplete, isLoading } = context;
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -60,6 +56,19 @@ const App: React.FC = () => {
       };
     }
   }, []);
+
+  if (isLoading) {
+    return (
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p className="text-lg font-semibold">Loading Application...</p>
+        </div>
+    );
+  }
+
+  if (!isSetupComplete) {
+    return <Setup />;
+  }
 
   const backgroundStyle = "text-foreground transition-colors duration-300";
 

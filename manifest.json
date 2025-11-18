@@ -5,42 +5,42 @@
   "description": "A comprehensive, offline-first school management application for modern educational institutions.",
   "icons": [
     {
-      "src": "https://via.placeholder.com/72.png?text=SMS",
+      "src": "https://i.imgur.com/O6f6C5R.png",
       "sizes": "72x72",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/96.png?text=SMS",
+      "src": "https://i.imgur.com/O6f6C5R.png",
       "sizes": "96x96",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/128.png?text=SMS",
+      "src": "https://i.imgur.com/O6f6C5R.png",
       "sizes": "128x128",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/144.png?text=SMS",
+      "src": "https://i.imgur.com/O6f6C5R.png",
       "sizes": "144x144",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/152.png?text=SMS",
+      "src": "https://i.imgur.com/O6f6C5R.png",
       "sizes": "152x152",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/192.png?text=SMS",
+      "src": "https://i.imgur.com/O6f6C5R.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/384.png?text=SMS",
+      "src": "https://i.imgur.com/O6f6C5R.png",
       "sizes": "384x384",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/512.png?text=SMS",
+      "src": "https://i.imgur.com/O6f6C5R.png",
       "sizes": "512x512",
       "type": "image/png"
     },
@@ -63,7 +63,7 @@
       "short_name": "New Student",
       "description": "Quickly add a new student record",
       "url": "/#/students",
-      "icons": [{ "src": "https://via.placeholder.com/192.png?text=Student", "sizes": "192x192" }]
+      "icons": [{ "src": "https://i.imgur.com/O6f6C5R.png", "sizes": "192x192" }]
     }
   ],
   "screenshots": [
