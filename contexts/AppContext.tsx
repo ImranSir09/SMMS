@@ -3,6 +3,7 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { db } from '../services/db';
 import { SchoolDetails, UserProfile } from '../types';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { hashString } from '../utils/crypto';
 
 type Theme = 'light' | 'dark';
 
@@ -123,10 +124,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const completeSetup = async (initialSession: string, details: SchoolDetails, user: UserProfile) => {
     if (!initialSession.trim() || !details.name) return;
     
+    // Hash the password before saving
+    const hashedKey = await hashString(user.accessKey);
+
     await db.transaction('rw', db.sessions, db.schoolDetails, db.user, async () => {
         await db.sessions.add({ name: initialSession.trim() });
         await db.schoolDetails.put({ ...details, id: 1 });
-        await db.user.add(user);
+        await db.user.add({ ...user, accessKey: hashedKey });
     });
     
     setActiveSession(initialSession.trim());
@@ -138,11 +142,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const login = async (username: string, key: string): Promise<boolean> => {
       const user = await db.user.where('username').equals(username).first();
-      if (user && user.accessKey === key) {
+      if (!user) return false;
+
+      // 1. Check Hashed Password (New Standard)
+      const hashedInput = await hashString(key);
+      if (user.accessKey === hashedInput) {
           setIsAuthenticated(true);
           try { sessionStorage.setItem('isAuthenticated', 'true'); } catch(e) {}
           return true;
       }
+
+      // 2. Check Plain Text (Legacy Migration)
+      // If the stored key matches the input exactly (and wasn't the hash), it's an old record.
+      if (user.accessKey === key) {
+          // Migrate to hash immediately
+          await db.user.update(user.id!, { accessKey: hashedInput });
+          console.log("Security Upgrade: User credentials migrated to hash.");
+          
+          setIsAuthenticated(true);
+          try { sessionStorage.setItem('isAuthenticated', 'true'); } catch(e) {}
+          return true;
+      }
+
       return false;
   };
 

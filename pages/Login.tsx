@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { SchoolIcon, UserIcon, HashIcon, ArrowRightIcon, KeyIcon, ArrowLeftIcon } from '../components/icons';
 import { db } from '../services/db';
+import { hashString } from '../utils/crypto';
 
 const Login: React.FC = () => {
     const { login, schoolDetails } = useAppData();
@@ -59,15 +60,18 @@ const Login: React.FC = () => {
                 return;
             }
 
+            // Hash the new key before saving
+            const hashedNewKey = await hashString(newKey);
+
             // Perform Reset
             await db.transaction('rw', db.user, async () => {
                 await db.user.clear(); // Remove old credentials
-                await db.user.add({ username: newUsername, accessKey: newKey });
+                await db.user.add({ username: newUsername, accessKey: hashedNewKey });
             });
 
             setSuccessMsg('Credentials reset successfully! Logging in...');
             
-            // Auto-login after short delay
+            // Auto-login after short delay (login will hash input internally)
             setTimeout(async () => {
                 await login(newUsername, newKey);
             }, 1500);
