@@ -1,15 +1,19 @@
 
 import React, { useState } from 'react';
 import { useAppData } from '../hooks/useAppData';
-import { SchoolIcon, ArrowRightIcon, BuildingIcon, UserIcon, HashIcon, CalendarIcon, CheckCircleIcon } from '../components/icons';
+import { SchoolIcon, ArrowRightIcon, BuildingIcon, UserIcon, HashIcon, CalendarIcon, CheckCircleIcon, KeyIcon } from '../components/icons';
 import { SchoolDetails, UserProfile } from '../types';
 
-type Step = 'school' | 'security' | 'session';
+type Step = 'activation' | 'school' | 'security' | 'session';
 
 const Setup: React.FC = () => {
     const { completeSetup } = useAppData();
-    const [currentStep, setCurrentStep] = useState<Step>('school');
+    const [currentStep, setCurrentStep] = useState<Step>('activation');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Step 0: Activation
+    const [activationKey, setActivationKey] = useState('');
+    const [activationError, setActivationError] = useState('');
 
     // Step 1: School Data
     const [schoolData, setSchoolData] = useState<SchoolDetails>({
@@ -42,6 +46,14 @@ const Setup: React.FC = () => {
         setCurrentStep(nextStep);
     };
 
+    const handleActivation = () => {
+        if (activationKey === 'IMRAN-ZONE') {
+             setCurrentStep('school');
+        } else {
+             setActivationError('Invalid activation key. Contact developer.');
+        }
+    };
+
     const handleFinalSubmit = async () => {
         if (sessionName.trim()) {
             setIsLoading(true);
@@ -56,6 +68,36 @@ const Setup: React.FC = () => {
     
     const inputClass = "w-full p-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all text-sm";
     const labelClass = "block text-xs font-bold text-foreground/70 mb-1 uppercase tracking-wider";
+
+    const renderActivationStep = () => (
+        <div className="space-y-4 animate-fade-in">
+             <div className="text-center mb-6">
+                <div className="inline-flex p-3 rounded-full bg-red-100 text-red-600 mb-3">
+                    <KeyIcon className="w-8 h-8" />
+                </div>
+                <h2 className="text-xl font-bold">Product Activation</h2>
+                <p className="text-xs text-foreground/60">This software is protected. Enter key to activate.</p>
+            </div>
+            <div>
+                <label className={labelClass}>Activation Key <span className="text-red-500">*</span></label>
+                <input 
+                    type="text" 
+                    value={activationKey} 
+                    onChange={(e) => { setActivationKey(e.target.value); setActivationError(''); }} 
+                    className={`${inputClass} text-center font-mono tracking-widest uppercase`} 
+                    placeholder="XXXX-XXXX" 
+                />
+                {activationError && <p className="text-red-500 text-xs mt-2 text-center">{activationError}</p>}
+            </div>
+            <button 
+                onClick={handleActivation} 
+                disabled={!activationKey}
+                className="w-full py-3 mt-4 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+                Activate Software
+            </button>
+        </div>
+    );
 
     const renderSchoolStep = () => (
         <div className="space-y-4 animate-fade-in">
@@ -177,13 +219,16 @@ const Setup: React.FC = () => {
 
             <div className="w-full max-w-md bg-card border border-border p-6 rounded-2xl shadow-xl z-10 flex flex-col max-h-[90vh] overflow-y-auto">
                 
-                {/* Progress Bar */}
-                <div className="flex items-center justify-between mb-8 px-2">
-                    <div className={`h-2 flex-1 rounded-l-full ${currentStep === 'school' ? 'bg-primary' : 'bg-green-500'}`}></div>
-                    <div className={`h-2 flex-1 ${currentStep === 'school' ? 'bg-border' : (currentStep === 'security' ? 'bg-primary' : 'bg-green-500')}`}></div>
-                    <div className={`h-2 flex-1 rounded-r-full ${currentStep === 'session' ? 'bg-primary' : 'bg-border'}`}></div>
-                </div>
+                {/* Progress Bar - Only visible after activation */}
+                {currentStep !== 'activation' && (
+                    <div className="flex items-center justify-between mb-8 px-2">
+                        <div className={`h-2 flex-1 rounded-l-full ${currentStep === 'school' ? 'bg-primary' : 'bg-green-500'}`}></div>
+                        <div className={`h-2 flex-1 ${currentStep === 'school' ? 'bg-border' : (currentStep === 'security' ? 'bg-primary' : 'bg-green-500')}`}></div>
+                        <div className={`h-2 flex-1 rounded-r-full ${currentStep === 'session' ? 'bg-primary' : 'bg-border'}`}></div>
+                    </div>
+                )}
 
+                {currentStep === 'activation' && renderActivationStep()}
                 {currentStep === 'school' && renderSchoolStep()}
                 {currentStep === 'security' && renderSecurityStep()}
                 {currentStep === 'session' && renderSessionStep()}
