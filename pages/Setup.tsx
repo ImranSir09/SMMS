@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { useAppData } from '../hooks/useAppData';
-import { SchoolIcon, ArrowRightIcon, BuildingIcon, UserIcon, HashIcon, CalendarIcon, CheckCircleIcon, KeyIcon } from '../components/icons';
+import { SchoolIcon, ArrowRightIcon, BuildingIcon, UserIcon, HashIcon, CalendarIcon, CheckCircleIcon, KeyIcon, BookIcon } from '../components/icons';
 import { SchoolDetails, UserProfile } from '../types';
 
-type Step = 'activation' | 'school' | 'security' | 'session';
+type Step = 'activation' | 'terms' | 'school' | 'security' | 'session';
 
 const Setup: React.FC = () => {
     const { completeSetup } = useAppData();
@@ -14,8 +14,11 @@ const Setup: React.FC = () => {
     // Step 0: Activation
     const [activationKey, setActivationKey] = useState('');
     const [activationError, setActivationError] = useState('');
+    
+    // Step 1: Terms
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-    // Step 1: School Data
+    // Step 2: School Data
     const [schoolData, setSchoolData] = useState<SchoolDetails>({
         name: '',
         address: '',
@@ -25,13 +28,13 @@ const Setup: React.FC = () => {
         logo: null
     });
 
-    // Step 2: Security Data
+    // Step 3: Security Data
     const [authData, setAuthData] = useState<UserProfile>({
         username: '',
         accessKey: ''
     });
 
-    // Step 3: Session
+    // Step 4: Session
     const [sessionName, setSessionName] = useState('');
 
     const handleSchoolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,7 +51,7 @@ const Setup: React.FC = () => {
 
     const handleActivation = () => {
         if (activationKey === 'IMRAN-ZONE') {
-             setCurrentStep('school');
+             setCurrentStep('terms');
         } else {
              setActivationError('Invalid activation key. Contact developer.');
         }
@@ -95,6 +98,50 @@ const Setup: React.FC = () => {
                 className="w-full py-3 mt-4 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
             >
                 Activate Software
+            </button>
+        </div>
+    );
+
+    const renderTermsStep = () => (
+        <div className="space-y-4 animate-fade-in flex flex-col h-full">
+             <div className="text-center mb-4">
+                <div className="inline-flex p-3 rounded-full bg-gray-100 text-gray-600 mb-3">
+                    <BookIcon className="w-8 h-8" />
+                </div>
+                <h2 className="text-xl font-bold">Terms & Conditions</h2>
+            </div>
+            
+            <div className="flex-1 border border-border rounded-lg p-3 overflow-y-auto text-xs text-foreground/80 bg-background/50 h-48">
+                <h3 className="font-bold mb-1">1. Introduction</h3>
+                <p className="mb-2">Welcome to School Management Pro V2. By using this application, you agree to comply with and be bound by the following terms and conditions.</p>
+                
+                <h3 className="font-bold mb-1">2. Offline-First Policy</h3>
+                <p className="mb-2">This application operates on an "Offline-First" architecture. All data is stored locally on your device. The developer does not store or access your data remotely.</p>
+                
+                <h3 className="font-bold mb-1">3. Data Responsibility</h3>
+                <p className="mb-2">You are solely responsible for the safety, backup, and security of the data stored on your device. We recommend regular backups using the "Backup Data" feature.</p>
+                
+                <h3 className="font-bold mb-1">4. Limitation of Liability</h3>
+                <p className="mb-2">The developer shall not be held liable for any data loss, corruption, or damages arising from the use of this application. The software is provided "as is".</p>
+                
+                <h3 className="font-bold mb-1">5. Contact</h3>
+                <p>For support, contact: Imran Gani Mugloo (Teacher Zone Vailoo).</p>
+            </div>
+
+            <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-primary/5 transition-colors">
+                <div className={`w-5 h-5 rounded border flex items-center justify-center ${agreedToTerms ? 'bg-primary border-primary text-white' : 'border-gray-400'}`}>
+                    {agreedToTerms && <CheckCircleIcon className="w-4 h-4" />}
+                </div>
+                <input type="checkbox" checked={agreedToTerms} onChange={e => setAgreedToTerms(e.target.checked)} className="hidden" />
+                <span className="text-sm font-medium">I agree to the Terms and Conditions</span>
+            </label>
+
+            <button 
+                onClick={() => handleNext('school')} 
+                disabled={!agreedToTerms}
+                className="w-full py-3 mt-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Next Step
             </button>
         </div>
     );
@@ -219,8 +266,8 @@ const Setup: React.FC = () => {
 
             <div className="w-full max-w-md bg-card border border-border p-6 rounded-2xl shadow-xl z-10 flex flex-col max-h-[90vh] overflow-y-auto">
                 
-                {/* Progress Bar - Only visible after activation */}
-                {currentStep !== 'activation' && (
+                {/* Progress Bar - Only visible after activation and terms */}
+                {currentStep !== 'activation' && currentStep !== 'terms' && (
                     <div className="flex items-center justify-between mb-8 px-2">
                         <div className={`h-2 flex-1 rounded-l-full ${currentStep === 'school' ? 'bg-primary' : 'bg-green-500'}`}></div>
                         <div className={`h-2 flex-1 ${currentStep === 'school' ? 'bg-border' : (currentStep === 'security' ? 'bg-primary' : 'bg-green-500')}`}></div>
@@ -229,6 +276,7 @@ const Setup: React.FC = () => {
                 )}
 
                 {currentStep === 'activation' && renderActivationStep()}
+                {currentStep === 'terms' && renderTermsStep()}
                 {currentStep === 'school' && renderSchoolStep()}
                 {currentStep === 'security' && renderSecurityStep()}
                 {currentStep === 'session' && renderSessionStep()}

@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppData } from '../hooks/useAppData';
-import { SunIcon, MoonIcon, ArrowLeftIcon, SchoolIcon } from './icons';
+import { SunIcon, MoonIcon, ArrowLeftIcon, SchoolIcon, LogOutIcon } from './icons';
 
 const Header: React.FC = () => {
-  const { theme, toggleTheme, schoolDetails } = useAppData();
+  const { theme, toggleTheme, schoolDetails, logout, isAuthenticated } = useAppData();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -28,6 +29,12 @@ const Header: React.FC = () => {
     
     // Generic formatter
     return mainPath.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
+  const handleLogout = () => {
+      if (window.confirm("Are you sure you want to logout?")) {
+          logout();
+      }
   };
 
   return (
@@ -64,7 +71,17 @@ const Header: React.FC = () => {
         )}
       </div>
 
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
+        {isAuthenticated && (
+             <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-full hover:bg-red-500/10 text-red-500 transition-colors"
+              aria-label="Logout"
+              title="Logout"
+            >
+              <LogOutIcon className="w-6 h-6" />
+            </button>
+        )}
         <button
           onClick={toggleTheme}
           className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
