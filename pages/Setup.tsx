@@ -27,7 +27,7 @@ const Setup: React.FC = () => {
     };
 
     return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4 animate-fade-in">
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4 animate-fade-in relative z-10">
             <div className="text-center max-w-sm w-full">
                 <div className="mx-auto h-16 w-16 flex items-center justify-center bg-primary/10 rounded-full mb-4">
                     <SchoolIcon className="w-9 h-9 text-primary" />
@@ -45,7 +45,6 @@ const Setup: React.FC = () => {
                         onKeyPress={handleKeyPress}
                         placeholder="e.g., 2024-25"
                         className="p-3 w-full bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-center text-lg font-semibold"
-                        autoFocus
                     />
                 </div>
 
