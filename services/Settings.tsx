@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { db } from '../services/db';
 import { SchoolDetails } from '../types';
 import Card from '../components/Card';
-import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon } from '../components/icons';
+import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon, UserIcon, BookIcon, LogOutIcon } from '../components/icons';
 import { useToast } from '../contexts/ToastContext';
 import SessionManager from '../components/SessionManager';
+import { useNavigate } from 'react-router-dom';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const buttonStyle = "py-3 px-5 rounded-lg text-sm font-semibold transition-colors";
@@ -13,8 +15,9 @@ const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground ho
 
 
 const Settings: React.FC = () => {
-    const { schoolDetails, refreshSchoolDetails } = useAppData();
+    const { schoolDetails, refreshSchoolDetails, logout } = useAppData();
     const { addToast } = useToast();
+    const navigate = useNavigate();
     const [details, setDetails] = useState<Partial<SchoolDetails>>({});
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -187,6 +190,12 @@ const Settings: React.FC = () => {
         }
     };
 
+    const handleLogout = () => {
+        if (window.confirm("Are you sure you want to logout?")) {
+            logout();
+        }
+    };
+
     const getAutoVersion = () => {
         const d = new Date();
         const year = d.getFullYear().toString().slice(-2);
@@ -233,7 +242,7 @@ const Settings: React.FC = () => {
                             <label className="block text-xs font-medium text-foreground/80 mb-1">UDISE Code</label>
                             <div className="relative">
                                 <HashIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
-                                <input name="udiseCode" value={details.udiseCode || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
+                                <input name="udiseCode" inputMode="numeric" value={details.udiseCode || ''} onChange={handleChange} className={`${inputStyle} pl-10`} />
                             </div>
                             {errors.udiseCode && <p className="text-red-500 text-xs mt-1">{errors.udiseCode}</p>}
                         </div>
@@ -266,6 +275,23 @@ const Settings: React.FC = () => {
             </div>
             {/* Right Column */}
             <div className="flex flex-col gap-4">
+                <Card className="p-3">
+                    <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">
+                        <UserIcon className="w-5 h-5" />
+                        <h2>Account & Info</h2>
+                    </div>
+                    <div className="space-y-2">
+                        <button onClick={() => navigate('/terms')} className={`${buttonStyle} bg-background border border-input hover:bg-accent/10 w-full flex items-center justify-start gap-3 text-foreground`}>
+                             <BookIcon className="w-5 h-5 text-primary" />
+                             Terms & Conditions
+                        </button>
+                        <button onClick={handleLogout} className={`${buttonStyle} bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 w-full flex items-center justify-start gap-3`}>
+                             <LogOutIcon className="w-5 h-5" />
+                             Logout
+                        </button>
+                    </div>
+                </Card>
+
                 <SessionManager />
                 <Card className="p-3">
                     <div className="flex items-center gap-1.5 text-md font-semibold mb-2 border-b border-border pb-1">

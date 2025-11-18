@@ -27,6 +27,7 @@ import PrintDobCertificate from './pages/PrintDobCertificate';
 import PrintBonafideCertificate from './pages/PrintBonafideCertificate';
 import Setup from './pages/Setup';
 import Login from './pages/Login';
+import Terms from './pages/Terms';
 import { useAppData } from './hooks/useAppData';
 
 const App: React.FC = () => {
@@ -113,6 +114,7 @@ const App: React.FC = () => {
                 <Route path="/print/bonafide-certificate" element={<PrintBonafideCertificate />} />
                 <Route path="/print/co-curricular-report/:studentId/:subject" element={<PrintCoCurricularReport />} />
                 <Route path="/print/formative-assessment-report/:studentId" element={<PrintFormativeAssessmentReport />} />
+                <Route path="/terms" element={<Terms />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
