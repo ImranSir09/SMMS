@@ -13,6 +13,16 @@ const inputStyle = "p-3 w-full bg-background border border-input rounded-lg focu
 const buttonStyle = "py-3 px-5 rounded-lg text-sm font-semibold transition-colors";
 const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground hover:bg-primary-hover`;
 
+// Masked Configuration (Base64 Encoded) to prevent plain-text exposure
+const DEFAULT_MASKED_CONFIG = {
+    apiKey: "QUl6YVN5RDFaTXMtelJQS1ZNWGRJb3N4dDk2cE5uY2xpZUNweXQ4",
+    authDomain: "c2Nob29sLW1hbmFnZW1lbnQtcHJvLTUyYWJjLmZpcmViYXNlYXBwLmNvbQ==",
+    projectId: "c2Nob29sLW1hbmFnZW1lbnQtcHJvLTUyYWJj",
+    storageBucket: "c2Nob29sLW1hbmFnZW1lbnQtcHJvLTUyYWJjLmZpcmViYXNlc3RvcmFnZS5hcHA=",
+    messagingSenderId: "NzI0NjE4MDI5MTM2",
+    appId: "MTo3MjQ2MTgwMjkxMzY6d2ViOjdiY2Y3MmYwODQxYzUzMWJlNDQ5NTU="
+};
+
 type Tab = 'profile' | 'cloud' | 'data';
 
 const Settings: React.FC = () => {
@@ -48,6 +58,24 @@ const Settings: React.FC = () => {
         if (config) {
             setCloudConfig(config);
             await initFirebase();
+        } else {
+            // Auto-configure using masked defaults if no config exists
+            try {
+                const defaultConfig: CloudConfig = {
+                    apiKey: atob(DEFAULT_MASKED_CONFIG.apiKey),
+                    authDomain: atob(DEFAULT_MASKED_CONFIG.authDomain),
+                    projectId: atob(DEFAULT_MASKED_CONFIG.projectId),
+                    storageBucket: atob(DEFAULT_MASKED_CONFIG.storageBucket),
+                    messagingSenderId: atob(DEFAULT_MASKED_CONFIG.messagingSenderId),
+                    appId: atob(DEFAULT_MASKED_CONFIG.appId)
+                };
+                setCloudConfig(defaultConfig);
+                await db.cloudConfig.put({ ...defaultConfig, id: 1 });
+                await initFirebase();
+                // console.log("Auto-configured cloud settings.");
+            } catch (e) {
+                console.error("Failed to decode default config", e);
+            }
         }
     };
 

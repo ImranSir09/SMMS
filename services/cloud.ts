@@ -1,11 +1,10 @@
 
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, collection, writeBatch, doc, getDocs, Firestore } from 'firebase/firestore';
 import { db } from './db';
-import { CloudConfig } from '../types';
 
-let firebaseApp: FirebaseApp | null = null;
-let firestoreDb: Firestore | null = null;
+// Use 'any' to avoid static type imports from firebase which might trigger loading
+let firebaseApp: any = null;
+let firestoreDb: any = null;
+let firestoreUtils: any = null; // Will hold { collection, writeBatch, doc, getDocs }
 
 const TABLE_NAMES = [
     'schoolDetails', 'students', 'exams', 'marks', 'dailyLogs', 
@@ -17,11 +16,17 @@ const TABLE_NAMES = [
 export const initFirebase = async () => {
     try {
         const config = await db.cloudConfig.get(1);
-        if (config) {
-            // Check if config is valid
-            if (!config.apiKey || !config.projectId) return false;
-
+        if (config && config.apiKey && config.projectId) {
+            // Only load Firebase if config exists
             if (!firebaseApp) {
+                // Dynamic imports to prevent loading issues when offline or not configured
+                // @ts-ignore
+                const { initializeApp } = await import('firebase/app');
+                // @ts-ignore
+                const { getFirestore, collection, writeBatch, doc, getDocs } = await import('firebase/firestore');
+                
+                firestoreUtils = { collection, writeBatch, doc, getDocs };
+
                 firebaseApp = initializeApp({
                     apiKey: config.apiKey,
                     authDomain: config.authDomain,
@@ -36,21 +41,23 @@ export const initFirebase = async () => {
         }
         return false;
     } catch (error) {
-        console.error("Error initializing Firebase:", error);
+        console.warn("Firebase initialization skipped/failed (likely offline or config missing):", error);
         return false;
     }
 };
 
 export const backupToCloud = async (onProgress?: (msg: string) => void): Promise<void> => {
-    if (!firestoreDb) {
+    if (!firestoreDb || !firestoreUtils) {
         const initialized = await initFirebase();
-        if (!initialized) throw new Error("Cloud configuration missing or invalid.");
+        if (!initialized) throw new Error("Cloud connection could not be established. Check internet or settings.");
     }
+
+    const { collection, writeBatch, doc } = firestoreUtils;
 
     // Get a unique identifier for the school document (using user's username or generic ID)
     const user = await db.user.get(1);
     const docId = user?.username || 'school_backup';
-    const rootRef = doc(firestoreDb!, 'schools', docId);
+    const rootRef = doc(firestoreDb, 'schools', docId);
 
     onProgress?.("Starting backup...");
 
@@ -69,7 +76,7 @@ export const backupToCloud = async (onProgress?: (msg: string) => void): Promise
         }
 
         for (const chunk of chunks) {
-            const batch = writeBatch(firestoreDb!);
+            const batch = writeBatch(firestoreDb);
             const colRef = collection(rootRef, tableName);
             
             chunk.forEach((record: any) => {
@@ -89,14 +96,16 @@ export const backupToCloud = async (onProgress?: (msg: string) => void): Promise
 };
 
 export const restoreFromCloud = async (onProgress?: (msg: string) => void): Promise<void> => {
-     if (!firestoreDb) {
+     if (!firestoreDb || !firestoreUtils) {
         const initialized = await initFirebase();
-        if (!initialized) throw new Error("Cloud configuration missing or invalid.");
+        if (!initialized) throw new Error("Cloud connection could not be established. Check internet or settings.");
     }
+
+    const { collection, getDocs, doc } = firestoreUtils;
 
     const user = await db.user.get(1);
     const docId = user?.username || 'school_backup';
-    const rootRef = doc(firestoreDb!, 'schools', docId);
+    const rootRef = doc(firestoreDb, 'schools', docId);
 
     onProgress?.("Starting restore...");
 
@@ -115,7 +124,7 @@ export const restoreFromCloud = async (onProgress?: (msg: string) => void): Prom
             const snapshot = await getDocs(colRef);
 
             if (!snapshot.empty) {
-                const records = snapshot.docs.map(doc => doc.data());
+                const records = snapshot.docs.map((d: any) => d.data());
                 await db.table(tableName).bulkAdd(records);
             }
         }
