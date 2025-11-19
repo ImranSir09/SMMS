@@ -26,12 +26,12 @@ const Settings: React.FC = () => {
     
     // Cloud State
     const [cloudConfig, setCloudConfig] = useState<CloudConfig>({
-        apiKey: 'AIzaSyD1ZMs-zRPKZMXdIosxt96pNnclieCpyt8',
-        authDomain: 'school-management-pro-52abc.firebaseapp.com',
-        projectId: 'school-management-pro-52abc',
-        storageBucket: 'school-management-pro-52abc.firebasestorage.app',
-        messagingSenderId: '724618029136',
-        appId: '1:724618029136:web:7bcf72f0841c531be44955'
+        apiKey: '',
+        authDomain: '',
+        projectId: '',
+        storageBucket: '',
+        messagingSenderId: '',
+        appId: ''
     });
     const [isSyncing, setIsSyncing] = useState(false);
 
@@ -48,26 +48,6 @@ const Settings: React.FC = () => {
         if (config) {
             setCloudConfig(config);
             await initFirebase();
-        } else {
-            // Auto-save the default config provided by the user if DB is empty
-             const defaultConfig = {
-                apiKey: 'AIzaSyD1ZMs-zRPKZMXdIosxt96pNnclieCpyt8',
-                authDomain: 'school-management-pro-52abc.firebaseapp.com',
-                projectId: 'school-management-pro-52abc',
-                storageBucket: 'school-management-pro-52abc.firebasestorage.app',
-                messagingSenderId: '724618029136',
-                appId: '1:724618029136:web:7bcf72f0841c531be44955'
-            };
-            // We update the state
-            setCloudConfig(defaultConfig);
-            // We save to DB so it persists
-            try {
-                await db.cloudConfig.put({ ...defaultConfig, id: 1 });
-                await initFirebase();
-                console.log('Default Cloud Configuration loaded automatically.');
-            } catch (e) {
-                console.error("Failed to auto-save default cloud config", e);
-            }
         }
     };
 
@@ -83,16 +63,62 @@ const Settings: React.FC = () => {
         }
     };
 
+    // Helper to resize image
+    const resizeImage = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    // Resize to max 300px width/height to save space
+                    const MAX_WIDTH = 300;
+                    const MAX_HEIGHT = 300;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        ctx.drawImage(img, 0, 0, width, height);
+                        // Compress to JPEG with 0.7 quality
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    } else {
+                        reject(new Error("Canvas context unavailable"));
+                    }
+                };
+                img.onerror = (err) => reject(err);
+                img.src = event.target?.result as string;
+            };
+            reader.onerror = (err) => reject(err);
+            reader.readAsDataURL(file);
+        });
+    };
+
     const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64String = reader.result as string;
-                setDetails(prev => ({ ...prev, logo: base64String }));
-                setLogoPreview(base64String);
-            };
-            reader.readAsDataURL(file);
+            try {
+                const resizedBase64 = await resizeImage(file);
+                setDetails(prev => ({ ...prev, logo: resizedBase64 }));
+                setLogoPreview(resizedBase64);
+                addToast("Logo processed and ready to save.", "info");
+            } catch (error) {
+                console.error("Error processing image", error);
+                addToast("Failed to process image. Please try another.", "error");
+            }
         }
     };
     
@@ -360,7 +386,7 @@ const Settings: React.FC = () => {
                                     )}
                                     <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-3 rounded-lg bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                                         <UploadIcon className="w-4 h-4 text-foreground/60" />
-                                        <span className="text-xs text-foreground/80">Upload Logo</span>
+                                        <span className="text-xs text-foreground/80">Upload Logo (Auto-Resized)</span>
                                         <input type="file" accept="image/png, image/jpeg" onChange={handleLogoChange} className="hidden" />
                                     </label>
                                 </div>
