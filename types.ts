@@ -375,3 +375,13 @@ export interface DetailedFormativeAssessment {
     observation: string;
   };
 }
+
+export interface CloudConfig {
+    id?: number;
+    apiKey: string;
+    authDomain: string;
+    projectId: string;
+    storageBucket: string;
+    messagingSenderId: string;
+    appId: string;
+}

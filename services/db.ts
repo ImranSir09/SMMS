@@ -1,6 +1,6 @@
 
 import Dexie, { Table } from 'dexie';
-import { SchoolDetails, Student, Exam, Mark, DailyLog, HPCReportData, StudentExamData, SbaReportData, DetailedFormativeAssessment, Session, StudentSessionInfo, UserProfile } from '../types';
+import { SchoolDetails, Student, Exam, Mark, DailyLog, HPCReportData, StudentExamData, SbaReportData, DetailedFormativeAssessment, Session, StudentSessionInfo, UserProfile, CloudConfig } from '../types';
 
 export const db = new Dexie('AegisSchoolDB') as Dexie & {
   schoolDetails: Table<SchoolDetails, number>;
@@ -15,6 +15,7 @@ export const db = new Dexie('AegisSchoolDB') as Dexie & {
   sessions: Table<Session, number>;
   studentSessionInfo: Table<StudentSessionInfo, number>;
   user: Table<UserProfile, number>;
+  cloudConfig: Table<CloudConfig, number>;
 };
 
 // ... (previous versions remain the same)
@@ -151,4 +152,19 @@ db.version(20).stores({
   sbaReports: '++id, &[studentId+session], studentId, session',
   detailedFormativeAssessments: '++id, &[studentId+subject+assessmentName+session], studentId, session',
   user: '++id, username',
+});
+
+db.version(21).stores({
+  sessions: '++id, &name',
+  studentSessionInfo: '++id, &[studentId+session], studentId, session, className',
+  students: '++id, name, admissionNo, gender',
+  exams: '++id, &[name+className+session], className, session',
+  marks: '++id, &[examId+studentId+subject], [examId+subject], studentId',
+  dailyLogs: '++id, &date',
+  studentExamData: '++id, &[examId+studentId], studentId',
+  hpcReports: '++id, &[studentId+session], studentId, session',
+  sbaReports: '++id, &[studentId+session], studentId, session',
+  detailedFormativeAssessments: '++id, &[studentId+subject+assessmentName+session], studentId, session',
+  user: '++id, username',
+  cloudConfig: '++id'
 });
