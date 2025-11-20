@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
@@ -56,11 +55,11 @@ const Reports: React.FC = () => {
                         <p className="text-xs text-foreground/70">Student counts by category and gender.</p>
                     </div>
                 </Card>
-                 <Card className="p-4 flex items-center gap-3 opacity-50">
+                 <Card onClick={() => navigate('/exams')} className="p-4 flex items-center gap-3 cursor-pointer hover-lift">
                     <BarChart3Icon className="w-8 h-8 text-primary" />
                     <div>
                         <h3 className="font-semibold">Exam Performance</h3>
-                        <p className="text-xs text-foreground/70">Coming soon.</p>
+                        <p className="text-xs text-foreground/70">Manage marks and view results.</p>
                     </div>
                 </Card>
             </div>
