@@ -104,12 +104,17 @@ export const backupToCloud = async (onProgress?: (msg: string) => void): Promise
             const colRef = collection(rootRef, tableName);
             
             chunk.forEach((record: any) => {
-                // Use record ID as document ID if possible for idempotency
-                const recordId = record.id ? String(record.id) : null;
-                const docRef = recordId ? doc(colRef, recordId) : doc(colRef);
-                // Sanitize undefined values (Firestore doesn't like them)
-                const sanitizedRecord = JSON.parse(JSON.stringify(record));
-                batch.set(docRef, sanitizedRecord);
+                try {
+                    // Use record ID as document ID if possible for idempotency
+                    const recordId = record.id ? String(record.id) : null;
+                    const docRef = recordId ? doc(colRef, recordId) : doc(colRef);
+                    
+                    // Deep sanitize undefined values (Firestore doesn't like them)
+                    const sanitizedRecord = JSON.parse(JSON.stringify(record));
+                    batch.set(docRef, sanitizedRecord);
+                } catch (recErr) {
+                    console.warn(`Skipping record in ${tableName} due to error:`, recErr);
+                }
             });
 
             await batch.commit();
@@ -149,30 +154,28 @@ export const restoreFromCloud = async (onProgress?: (msg: string) => void): Prom
             // Skip cloud config table itself to prevent lockout
             if(tableName === 'cloudConfig') continue;
 
-            onProgress?.(`Restoring ${tableName}...`);
+            onProgress?.(`Checking ${tableName}...`);
             
-            // Clear local table
-            await db.table(tableName).clear();
-
-            // Fetch from Cloud
+            // Fetch from Cloud FIRST
             const colRef = collection(rootRef, tableName);
             const snapshot = await getDocs(colRef);
 
             if (!snapshot.empty) {
+                // Only clear local table if we actually have data to replace it with
+                await db.table(tableName).clear();
+                
                 const records = snapshot.docs.map((d: any) => {
                     const data = d.data();
-                    // ID Normalization Fix:
-                    // Ensure School Details always has ID 1 so the app can find it
+                    // Force normalization for critical single-record tables
                     if (tableName === 'schoolDetails') {
                         data.id = 1; 
-                    }
-                    // Ensure User always has ID 1 (optional but good for consistency)
-                    if (tableName === 'user' && !data.id) {
-                        data.id = 1;
                     }
                     return data;
                 });
                 await db.table(tableName).bulkAdd(records);
+                console.log(`Restored ${records.length} records to ${tableName}`);
+            } else {
+                console.log(`No data found for ${tableName} in cloud. Keeping local data.`);
             }
         }
     });

@@ -90,10 +90,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           setIsAuthenticated(false);
         }
 
-        // 4. Initialize School Details (with isolated error handling)
+        // 4. Initialize School Details (Robust Fetch)
         let details: SchoolDetails | null = null;
         try {
-            details = await db.schoolDetails.get(1);
+            // FIX: Fetch first available record instead of specific ID to be resilient to restore operations
+            const allDetails = await db.schoolDetails.toArray();
+            details = allDetails.length > 0 ? allDetails[0] : null;
         } catch (detailsError) {
             console.error("Failed to initialize school details. The app will continue.", detailsError);
             details = null; 
@@ -181,8 +183,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const refreshSchoolDetails = async () => {
-    const details = await db.schoolDetails.get(1);
-    setSchoolDetails(details || null);
+    // FIX: Fetch first available record instead of specific ID
+    const allDetails = await db.schoolDetails.toArray();
+    setSchoolDetails(allDetails.length > 0 ? allDetails[0] : null);
   };
 
   const toggleTheme = () => {
