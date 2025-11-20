@@ -46,23 +46,22 @@ export const initFirebase = async () => {
     }
 };
 
-// Helper to find the correct document ID for backup/restore
-const getBackupDocId = async (currentUsername: string): Promise<string> => {
+// Helper to find the best backup document ID
+const findBestBackupId = async (currentUsername: string): Promise<string | null> => {
     const { collection, getDocs } = firestoreUtils;
     const schoolsCol = collection(firestoreDb, 'schools');
     const snapshot = await getDocs(schoolsCol);
     
     if (snapshot.empty) {
-        // No backups exist yet, use current username
-        return currentUsername || 'school_backup';
+        return null;
     }
 
-    // If backups exist, try to find one that matches the username
+    // 1. Try to find exact match for username
     const matchingDoc = snapshot.docs.find((d: any) => d.id === currentUsername);
     if (matchingDoc) return matchingDoc.id;
 
-    // If no match (e.g. different username or re-install), return the first one found
-    // This assumes the Firebase project is dedicated to one school/user.
+    // 2. If not found, fallback to the first available backup
+    // This handles cases where username changed or on fresh install
     return snapshot.docs[0].id;
 };
 
@@ -74,18 +73,26 @@ export const backupToCloud = async (onProgress?: (msg: string) => void): Promise
 
     const { collection, writeBatch, doc } = firestoreUtils;
 
-    // Robust user fetch: get the first user found, regardless of ID
-    const users = await db.user.toArray();
-    const currentUser = users.length > 0 ? users[0] : null;
-    const currentUsername = currentUser?.username || 'school_backup';
+    // Robust user fetch
+    let currentUsername = 'school_backup';
+    try {
+        const users = await db.user.toArray();
+        if (users.length > 0 && users[0].username) {
+            currentUsername = users[0].username;
+        }
+    } catch (e) { console.warn("Error fetching user", e); }
 
-    // Determine Doc ID: Prefer existing one to overwrite, otherwise create new
-    const docId = await getBackupDocId(currentUsername);
+    // Determine Doc ID
+    const existingDocId = await findBestBackupId(currentUsername);
+    const docId = existingDocId || currentUsername;
+    
     const rootRef = doc(firestoreDb, 'schools', docId);
 
     onProgress?.(`Syncing to cloud ID: ${docId}...`);
 
     for (const tableName of TABLE_NAMES) {
+        if (tableName === 'cloudConfig') continue;
+        
         onProgress?.(`Backing up ${tableName}...`);
         const table = db.table(tableName);
         const records = await table.toArray();
@@ -133,37 +140,40 @@ export const restoreFromCloud = async (onProgress?: (msg: string) => void): Prom
     const { collection, getDocs, doc } = firestoreUtils;
 
     // Robust user fetch
-    const users = await db.user.toArray();
-    const currentUser = users.length > 0 ? users[0] : null;
-    const currentUsername = currentUser?.username || 'school_backup';
+    let currentUsername = 'school_backup';
+    try {
+        const users = await db.user.toArray();
+        if (users.length > 0 && users[0].username) {
+            currentUsername = users[0].username;
+        }
+    } catch (e) { console.warn("Error fetching user", e); }
 
     onProgress?.("Searching for backup...");
     
-    // Smart Discovery: Find ANY backup
-    const docId = await getBackupDocId(currentUsername);
+    const docId = await findBestBackupId(currentUsername);
     
     if (!docId) {
-         throw new Error("No backup found in the cloud.");
+         throw new Error("No backups found in the cloud.");
     }
 
     const rootRef = doc(firestoreDb, 'schools', docId);
     onProgress?.(`Found backup: ${docId}. Restoring...`);
 
-    await db.transaction('rw', TABLE_NAMES, async () => {
-        for (const tableName of TABLE_NAMES) {
-            // Skip cloud config table itself to prevent lockout
-            if(tableName === 'cloudConfig') continue;
+    // Process tables sequentially. 
+    // CRITICAL FIX: Do NOT wrap the entire loop in a db.transaction. 
+    // Doing so with async network calls (getDocs) causes the transaction to commit/fail prematurely.
+    
+    for (const tableName of TABLE_NAMES) {
+        if (tableName === 'cloudConfig') continue;
 
-            onProgress?.(`Checking ${tableName}...`);
-            
-            // Fetch from Cloud FIRST
+        onProgress?.(`Restoring ${tableName}...`);
+        
+        try {
+            // 1. Fetch from Cloud
             const colRef = collection(rootRef, tableName);
             const snapshot = await getDocs(colRef);
 
             if (!snapshot.empty) {
-                // Only clear local table if we actually have data to replace it with
-                await db.table(tableName).clear();
-                
                 const records = snapshot.docs.map((d: any) => {
                     const data = d.data();
                     // Force normalization for critical single-record tables
@@ -172,13 +182,23 @@ export const restoreFromCloud = async (onProgress?: (msg: string) => void): Prom
                     }
                     return data;
                 });
-                await db.table(tableName).bulkAdd(records);
-                console.log(`Restored ${records.length} records to ${tableName}`);
+
+                // 2. Write to Local DB in a dedicated, fast transaction
+                await db.transaction('rw', db.table(tableName), async () => {
+                    await db.table(tableName).clear();
+                    await db.table(tableName).bulkAdd(records);
+                });
+                
+                // console.log(`Restored ${records.length} records to ${tableName}`);
             } else {
-                console.log(`No data found for ${tableName} in cloud. Keeping local data.`);
+                // console.log(`No data found for ${tableName} in cloud. Keeping local data.`);
             }
+        } catch (err: any) {
+            console.error(`Failed to restore table ${tableName}:`, err);
+            // We continue to the next table instead of crashing the whole process
+            // but we might want to notify the user.
         }
-    });
+    }
 
     onProgress?.("Restore completed successfully!");
 };
