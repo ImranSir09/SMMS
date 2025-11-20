@@ -46,6 +46,26 @@ export const initFirebase = async () => {
     }
 };
 
+// Helper to find the correct document ID for backup/restore
+const getBackupDocId = async (currentUsername: string): Promise<string> => {
+    const { collection, getDocs } = firestoreUtils;
+    const schoolsCol = collection(firestoreDb, 'schools');
+    const snapshot = await getDocs(schoolsCol);
+    
+    if (snapshot.empty) {
+        // No backups exist yet, use current username
+        return currentUsername || 'school_backup';
+    }
+
+    // If backups exist, try to find one that matches the username
+    const matchingDoc = snapshot.docs.find((d: any) => d.id === currentUsername);
+    if (matchingDoc) return matchingDoc.id;
+
+    // If no match (e.g. different username or re-install), return the first one found
+    // This assumes the Firebase project is dedicated to one school/user.
+    return snapshot.docs[0].id;
+};
+
 export const backupToCloud = async (onProgress?: (msg: string) => void): Promise<void> => {
     if (!firestoreDb || !firestoreUtils) {
         const initialized = await initFirebase();
@@ -54,12 +74,16 @@ export const backupToCloud = async (onProgress?: (msg: string) => void): Promise
 
     const { collection, writeBatch, doc } = firestoreUtils;
 
-    // Get a unique identifier for the school document (using user's username or generic ID)
-    const user = await db.user.get(1);
-    const docId = user?.username || 'school_backup';
+    // Robust user fetch: get the first user found, regardless of ID
+    const users = await db.user.toArray();
+    const currentUser = users.length > 0 ? users[0] : null;
+    const currentUsername = currentUser?.username || 'school_backup';
+
+    // Determine Doc ID: Prefer existing one to overwrite, otherwise create new
+    const docId = await getBackupDocId(currentUsername);
     const rootRef = doc(firestoreDb, 'schools', docId);
 
-    onProgress?.("Starting backup...");
+    onProgress?.(`Syncing to cloud ID: ${docId}...`);
 
     for (const tableName of TABLE_NAMES) {
         onProgress?.(`Backing up ${tableName}...`);
@@ -103,11 +127,22 @@ export const restoreFromCloud = async (onProgress?: (msg: string) => void): Prom
 
     const { collection, getDocs, doc } = firestoreUtils;
 
-    const user = await db.user.get(1);
-    const docId = user?.username || 'school_backup';
-    const rootRef = doc(firestoreDb, 'schools', docId);
+    // Robust user fetch
+    const users = await db.user.toArray();
+    const currentUser = users.length > 0 ? users[0] : null;
+    const currentUsername = currentUser?.username || 'school_backup';
 
-    onProgress?.("Starting restore...");
+    onProgress?.("Searching for backup...");
+    
+    // Smart Discovery: Find ANY backup
+    const docId = await getBackupDocId(currentUsername);
+    
+    if (!docId) {
+         throw new Error("No backup found in the cloud.");
+    }
+
+    const rootRef = doc(firestoreDb, 'schools', docId);
+    onProgress?.(`Found backup: ${docId}. Restoring...`);
 
     await db.transaction('rw', TABLE_NAMES, async () => {
         for (const tableName of TABLE_NAMES) {
@@ -124,7 +159,19 @@ export const restoreFromCloud = async (onProgress?: (msg: string) => void): Prom
             const snapshot = await getDocs(colRef);
 
             if (!snapshot.empty) {
-                const records = snapshot.docs.map((d: any) => d.data());
+                const records = snapshot.docs.map((d: any) => {
+                    const data = d.data();
+                    // ID Normalization Fix:
+                    // Ensure School Details always has ID 1 so the app can find it
+                    if (tableName === 'schoolDetails') {
+                        data.id = 1; 
+                    }
+                    // Ensure User always has ID 1 (optional but good for consistency)
+                    if (tableName === 'user' && !data.id) {
+                        data.id = 1;
+                    }
+                    return data;
+                });
                 await db.table(tableName).bulkAdd(records);
             }
         }
