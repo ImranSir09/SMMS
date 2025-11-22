@@ -442,12 +442,12 @@ const Settings: React.FC = () => {
                             
                             <div className="grid gap-3">
                                 <label className="block text-xs font-medium text-foreground/80">Firebase Configuration</label>
-                                <input placeholder="API Key" value={cloudConfig.apiKey} onChange={e => setCloudConfig({...cloudConfig, apiKey: e.target.value})} className={inputStyle} />
-                                <input placeholder="Project ID" value={cloudConfig.projectId} onChange={e => setCloudConfig({...cloudConfig, projectId: e.target.value})} className={inputStyle} />
-                                <input placeholder="App ID" value={cloudConfig.appId} onChange={e => setCloudConfig({...cloudConfig, appId: e.target.value})} className={inputStyle} />
-                                <input placeholder="Auth Domain" value={cloudConfig.authDomain} onChange={e => setCloudConfig({...cloudConfig, authDomain: e.target.value})} className={inputStyle} />
-                                <input placeholder="Storage Bucket" value={cloudConfig.storageBucket} onChange={e => setCloudConfig({...cloudConfig, storageBucket: e.target.value})} className={inputStyle} />
-                                <input placeholder="Messaging Sender ID" value={cloudConfig.messagingSenderId} onChange={e => setCloudConfig({...cloudConfig, messagingSenderId: e.target.value})} className={inputStyle} />
+                                <input type="password" placeholder="API Key" value={cloudConfig.apiKey} onChange={e => setCloudConfig({...cloudConfig, apiKey: e.target.value})} className={inputStyle} />
+                                <input type="password" placeholder="Project ID" value={cloudConfig.projectId} onChange={e => setCloudConfig({...cloudConfig, projectId: e.target.value})} className={inputStyle} />
+                                <input type="password" placeholder="App ID" value={cloudConfig.appId} onChange={e => setCloudConfig({...cloudConfig, appId: e.target.value})} className={inputStyle} />
+                                <input type="password" placeholder="Auth Domain" value={cloudConfig.authDomain} onChange={e => setCloudConfig({...cloudConfig, authDomain: e.target.value})} className={inputStyle} />
+                                <input type="password" placeholder="Storage Bucket" value={cloudConfig.storageBucket} onChange={e => setCloudConfig({...cloudConfig, storageBucket: e.target.value})} className={inputStyle} />
+                                <input type="text" placeholder="Messaging Sender ID" value={cloudConfig.messagingSenderId} onChange={e => setCloudConfig({...cloudConfig, messagingSenderId: e.target.value})} className={inputStyle} />
                             </div>
                             
                             <button onClick={handleSaveCloudConfig} className="w-full py-2 rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950 transition-colors text-xs font-bold">

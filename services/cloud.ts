@@ -4,7 +4,7 @@ import { db } from './db';
 // Use 'any' to avoid static type imports from firebase which might trigger loading
 let firebaseApp: any = null;
 let firestoreDb: any = null;
-let firestoreUtils: any = null; // Will hold { collection, writeBatch, doc, getDocs }
+let firestoreUtils: any = null; // Will hold { collection, writeBatch, doc, getDocs, getDoc }
 
 const TABLE_NAMES = [
     'schoolDetails', 'students', 'exams', 'marks', 'dailyLogs', 
@@ -12,6 +12,8 @@ const TABLE_NAMES = [
     'detailedFormativeAssessments', 'sessions', 
     'studentSessionInfo', 'user'
 ];
+
+const FIXED_BACKUP_ID = 'default_backup';
 
 export const initFirebase = async () => {
     try {
@@ -23,9 +25,9 @@ export const initFirebase = async () => {
                 // @ts-ignore
                 const { initializeApp } = await import('firebase/app');
                 // @ts-ignore
-                const { getFirestore, collection, writeBatch, doc, getDocs } = await import('firebase/firestore');
+                const { getFirestore, collection, writeBatch, doc, getDocs, getDoc } = await import('firebase/firestore');
                 
-                firestoreUtils = { collection, writeBatch, doc, getDocs };
+                firestoreUtils = { collection, writeBatch, doc, getDocs, getDoc };
 
                 firebaseApp = initializeApp({
                     apiKey: config.apiKey,
@@ -46,23 +48,36 @@ export const initFirebase = async () => {
     }
 };
 
-// Helper to find the best backup document ID
-const findBestBackupId = async (currentUsername: string): Promise<string | null> => {
-    const { collection, getDocs } = firestoreUtils;
-    const schoolsCol = collection(firestoreDb, 'schools');
-    const snapshot = await getDocs(schoolsCol);
-    
-    if (snapshot.empty) {
-        return null;
+// Helper to determine the document ID to use for backup/restore
+const resolveDocId = async (mode: 'backup' | 'restore'): Promise<string> => {
+    // 1. Always prefer the fixed ID for new backups
+    if (mode === 'backup') {
+        return FIXED_BACKUP_ID;
     }
 
-    // 1. Try to find exact match for username
-    const matchingDoc = snapshot.docs.find((d: any) => d.id === currentUsername);
-    if (matchingDoc) return matchingDoc.id;
+    // 2. For restore, check if the fixed ID exists first
+    const { doc, getDoc, collection, getDocs } = firestoreUtils;
+    
+    // Check if 'schoolDetails' exists under 'default_backup' to verify existence
+    const defaultRef = collection(doc(firestoreDb, 'schools', FIXED_BACKUP_ID), 'schoolDetails');
+    const defaultSnapshot = await getDocs(defaultRef);
+    
+    if (!defaultSnapshot.empty) {
+        return FIXED_BACKUP_ID;
+    }
 
-    // 2. If not found, fallback to the first available backup
-    // This handles cases where username changed or on fresh install
-    return snapshot.docs[0].id;
+    // 3. Fallback: Search for legacy backups (random IDs or usernames)
+    const schoolsCol = collection(firestoreDb, 'schools');
+    const rootSnapshot = await getDocs(schoolsCol);
+    
+    if (!rootSnapshot.empty) {
+        // Return the first available document ID
+        console.log("Found legacy backup:", rootSnapshot.docs[0].id);
+        return rootSnapshot.docs[0].id;
+    }
+
+    // Default to fixed ID if nothing found (will result in empty restore, which is handled)
+    return FIXED_BACKUP_ID;
 };
 
 export const backupToCloud = async (onProgress?: (msg: string) => void): Promise<void> => {
@@ -73,22 +88,11 @@ export const backupToCloud = async (onProgress?: (msg: string) => void): Promise
 
     const { collection, writeBatch, doc } = firestoreUtils;
 
-    // Robust user fetch
-    let currentUsername = 'school_backup';
-    try {
-        const users = await db.user.toArray();
-        if (users.length > 0 && users[0].username) {
-            currentUsername = users[0].username;
-        }
-    } catch (e) { console.warn("Error fetching user", e); }
-
-    // Determine Doc ID
-    const existingDocId = await findBestBackupId(currentUsername);
-    const docId = existingDocId || currentUsername;
-    
+    // Always write to the fixed ID to ensure consistency across resets/renames
+    const docId = FIXED_BACKUP_ID;
     const rootRef = doc(firestoreDb, 'schools', docId);
 
-    onProgress?.(`Syncing to cloud ID: ${docId}...`);
+    onProgress?.(`Preparing backup...`);
 
     for (const tableName of TABLE_NAMES) {
         if (tableName === 'cloudConfig') continue;
@@ -139,34 +143,20 @@ export const restoreFromCloud = async (onProgress?: (msg: string) => void): Prom
 
     const { collection, getDocs, doc } = firestoreUtils;
 
-    // Robust user fetch
-    let currentUsername = 'school_backup';
-    try {
-        const users = await db.user.toArray();
-        if (users.length > 0 && users[0].username) {
-            currentUsername = users[0].username;
-        }
-    } catch (e) { console.warn("Error fetching user", e); }
-
     onProgress?.("Searching for backup...");
     
-    const docId = await findBestBackupId(currentUsername);
-    
-    if (!docId) {
-         throw new Error("No backups found in the cloud.");
-    }
-
+    const docId = await resolveDocId('restore');
     const rootRef = doc(firestoreDb, 'schools', docId);
-    onProgress?.(`Found backup: ${docId}. Restoring...`);
+    
+    onProgress?.(`Found backup source. Restoring...`);
+
+    let hasRestoredData = false;
 
     // Process tables sequentially. 
-    // CRITICAL FIX: Do NOT wrap the entire loop in a db.transaction. 
-    // Doing so with async network calls (getDocs) causes the transaction to commit/fail prematurely.
-    
     for (const tableName of TABLE_NAMES) {
         if (tableName === 'cloudConfig') continue;
 
-        onProgress?.(`Restoring ${tableName}...`);
+        onProgress?.(`Checking ${tableName}...`);
         
         try {
             // 1. Fetch from Cloud
@@ -180,24 +170,31 @@ export const restoreFromCloud = async (onProgress?: (msg: string) => void): Prom
                     if (tableName === 'schoolDetails') {
                         data.id = 1; 
                     }
+                    // Ensure user always has ID 1 (or whatever logic you prefer, but consistent)
+                    if (tableName === 'user' && data.id) {
+                        // We keep the ID from cloud, but ensure we don't have conflicts if logic relies on ID 1
+                    }
                     return data;
                 });
 
                 // 2. Write to Local DB in a dedicated, fast transaction
+                // Only clear and write if we actually found data for this table
                 await db.transaction('rw', db.table(tableName), async () => {
                     await db.table(tableName).clear();
                     await db.table(tableName).bulkAdd(records);
                 });
                 
+                hasRestoredData = true;
                 // console.log(`Restored ${records.length} records to ${tableName}`);
-            } else {
-                // console.log(`No data found for ${tableName} in cloud. Keeping local data.`);
             }
         } catch (err: any) {
             console.error(`Failed to restore table ${tableName}:`, err);
-            // We continue to the next table instead of crashing the whole process
-            // but we might want to notify the user.
+            throw new Error(`Failed to restore ${tableName}. Please check your connection.`);
         }
+    }
+
+    if (!hasRestoredData) {
+        throw new Error("No data found in the cloud to restore.");
     }
 
     onProgress?.("Restore completed successfully!");
