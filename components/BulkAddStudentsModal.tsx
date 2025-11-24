@@ -68,20 +68,53 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         setError('');
+        setIsLoading(true);
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (!file) {
+            setIsLoading(false);
+            return;
+        }
 
         try {
-            const text = await file.text();
-            const { headers, data } = parseCSV(text);
+            let headers: string[] = [];
+            let data: string[][] = [];
+
+            if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                // Dynamic import of XLSX to save bundle size
+                // @ts-ignore
+                const { read, utils } = await import('xlsx');
+                const arrayBuffer = await file.arrayBuffer();
+                const wb = read(arrayBuffer);
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                // Get data as array of arrays, raw: false ensures we get strings/formatted text
+                const rawData = utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' }) as string[][];
+                
+                if (rawData.length < 2) {
+                    throw new Error("Excel file must have a header row and at least one data row.");
+                }
+                
+                headers = rawData[0].map(h => String(h).trim());
+                // Filter out empty rows
+                data = rawData.slice(1).filter(row => row.some(cell => cell.trim() !== '')).map(row => row.map(cell => String(cell).trim()));
+
+            } else {
+                // Fallback for CSV
+                const text = await file.text();
+                const parsed = parseCSV(text);
+                headers = parsed.headers;
+                data = parsed.data;
+            }
+
             setCsvHeaders(headers);
             setCsvData(data);
             setStep('map');
         } catch (err: any) {
-            const errorMessage = err.message || 'Failed to parse CSV file.';
+            console.error("File parse error:", err);
+            const errorMessage = err.message || 'Failed to parse file.';
             setError(errorMessage);
             addToast(errorMessage, 'error');
         } finally {
+            setIsLoading(false);
             // Reset input to allow re-uploading the same file if needed
             e.target.value = '';
         }
@@ -93,7 +126,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             // 1. Generate Headers
             const headers = STUDENT_FIELDS.map(field => `"${field.label.replace(/"/g, '""')}"`).join(',');
             
-            // Add BOM for Excel compatibility
+            // Add BOM for Excel compatibility in CSVs
             let csvContent = '\uFEFF' + headers;
 
             // 2. Fetch Existing Students if active session exists
@@ -182,7 +215,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                 const csvHeader = mapping[field.key];
                 if (csvHeader) {
                     let value = row[headerIndexMap[csvHeader]] || '';
-                    // Remove quotes if Excel added them during export
+                    // Remove quotes if Excel added them during export (CSV specific, but doesn't hurt)
                     value = value.replace(/^"|"$/g, '').replace(/""/g, '"');
 
                     if (field.key === 'gender') {
@@ -272,20 +305,26 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             case 'upload':
                 return (
                     <div className="text-center">
-                        <h3 className="text-lg font-medium">Upload a CSV file</h3>
+                        <h3 className="text-lg font-medium">Upload File</h3>
                         <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Download the template to see existing students and add new ones.
+                            Upload an Excel (.xlsx, .xls) or CSV file. Download the template to view existing data.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                             <label className="cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">
+                             <label className={`cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <UploadIcon className="w-5 h-5"/>
-                                <span>Choose File</span>
-                                {/* Extended accept attributes for better mobile compatibility */}
-                                <input type="file" accept=".csv,text/csv,application/vnd.ms-excel,application/csv,text/x-csv,text/plain" onChange={handleFileChange} className="hidden" />
+                                <span>{isLoading ? 'Processing...' : 'Choose File (Excel/CSV)'}</span>
+                                {/* Extended accept attributes for Excel */}
+                                <input 
+                                    type="file" 
+                                    accept=".csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain" 
+                                    onChange={handleFileChange} 
+                                    className="hidden" 
+                                    disabled={isLoading}
+                                />
                             </label>
                              <button type="button" onClick={handleDownloadTemplate} disabled={isLoading} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition-colors text-sm font-semibold disabled:opacity-70">
                                 <DownloadIcon className="w-5 h-5"/>
-                                <span>{isLoading ? 'Generating...' : 'Download Student List'}</span>
+                                <span>{isLoading ? 'Generating...' : 'Download Template'}</span>
                             </button>
                         </div>
                         {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
@@ -294,9 +333,9 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             case 'map':
                 return (
                     <div>
-                        <h3 className="text-lg font-medium">Map CSV Columns to Student Fields</h3>
+                        <h3 className="text-lg font-medium">Map Columns</h3>
                         <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Match columns from your file to the required fields. Data will be added to the active session: <strong>{activeSession}</strong>.
+                            Match columns from your file to the required fields. Session: <strong>{activeSession}</strong>.
                         </p>
                         <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                            {STUDENT_FIELDS.map(field => (
@@ -328,7 +367,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     <div>
                         <h3 className="text-lg font-medium">Preview Data</h3>
                         <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Review the first few records. A total of <strong>{csvData.length}</strong> students found in file.
+                            Review the first few records. A total of <strong>{csvData.length}</strong> students found.
                         </p>
                         <div className="overflow-x-auto max-h-64 border border-border rounded-md">
                            <table className="w-full text-left text-sm">
