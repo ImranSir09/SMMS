@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import Modal from './Modal';
 import { db } from '../services/db';
 import { Student, StudentSessionInfo } from '../types';
-import { DownloadIcon, UploadIcon } from './icons';
+import { DownloadIcon, UploadIcon, AlertTriangleIcon } from './icons';
 import { useToast } from '../contexts/ToastContext';
 import { useAppData } from '../hooks/useAppData';
 
@@ -38,6 +38,8 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
     const [error, setError] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
     const [importResult, setImportResult] = useState<{ success: number; failed: number, errors: string[] } | null>(null);
+    const [replaceExisting, setReplaceExisting] = useState(false);
+    
     const { addToast } = useToast();
     const { activeSession } = useAppData();
 
@@ -49,6 +51,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         setError('');
         setIsLoading(false);
         setImportResult(null);
+        setReplaceExisting(false);
     }, []);
 
     const handleClose = () => {
@@ -240,6 +243,13 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
 
         try {
             await db.transaction('rw', db.students, db.studentSessionInfo, async () => {
+                
+                // Clear existing data if "Replace All" is selected
+                if (replaceExisting) {
+                    await db.students.clear();
+                    await db.studentSessionInfo.clear();
+                }
+
                 for (const studentData of studentsToImport) {
                     try {
                         const { className, section, rollNo, ...coreStudentData } = studentData;
@@ -249,11 +259,12 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                             continue;
                         }
 
-                        const existingStudent = await db.students.where('admissionNo').equals(coreStudentData.admissionNo).first();
-                        if (existingStudent) {
-                            // Skip duplicates silently or log them. Currently skipping to prevent overwriting without explicit intent.
-                            // failedRecords.push(`${coreStudentData.name} (Adm No: ${coreStudentData.admissionNo}) - Skipped (Duplicate)`);
-                            continue;
+                        if (!replaceExisting) {
+                            const existingStudent = await db.students.where('admissionNo').equals(coreStudentData.admissionNo).first();
+                            if (existingStudent) {
+                                // Skip duplicates if NOT replacing
+                                continue;
+                            }
                         }
                         
                         // @ts-ignore
@@ -279,14 +290,9 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             const failedCount = studentsToImport.length - successCount;
             setImportResult({ success: successCount, failed: failedCount, errors: failedRecords });
             setStep('result');
-            addToast(`${successCount} new students imported successfully!`, 'success');
-            if (failedCount > 0) {
-                // If failed count equals total count, it might mean they are all duplicates
-                if (failedCount === studentsToImport.length && successCount === 0) {
-                     addToast(`No new students added. ${failedCount} records were duplicates or invalid.`, 'info');
-                } else {
-                     addToast(`${failedCount} records failed or were duplicates.`, 'info');
-                }
+            addToast(`${successCount} students imported successfully!`, 'success');
+            if (failedCount > 0 && !replaceExisting) {
+                 addToast(`${failedCount} records were skipped (duplicates/errors).`, 'info');
             }
 
         } catch (err: any) {
@@ -369,6 +375,28 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                         <p className="text-sm text-foreground/70 mt-1 mb-4">
                             Review the first few records. A total of <strong>{csvData.length}</strong> students found.
                         </p>
+                        
+                        {/* Replace Toggle */}
+                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                            <label className="flex items-start gap-3 cursor-pointer">
+                                <div className="relative flex items-center">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={replaceExisting} 
+                                        onChange={e => setReplaceExisting(e.target.checked)} 
+                                        className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <span className="block font-bold text-red-700 dark:text-red-400 text-sm">Clear existing database and replace all?</span>
+                                    <span className="block text-xs text-red-600/80 dark:text-red-400/80 mt-1">
+                                        Warning: This will delete ALL current students and their class assignments.
+                                        New students will get new IDs, which may unlink existing marks/results. Use only for initial setup or full roster updates.
+                                    </span>
+                                </div>
+                            </label>
+                        </div>
+
                         <div className="overflow-x-auto max-h-64 border border-border rounded-md">
                            <table className="w-full text-left text-sm">
                                <thead className="bg-background border-b border-border sticky top-0">
@@ -387,8 +415,14 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                         </div>
                         <div className="flex justify-end gap-2 mt-6">
                             <button onClick={() => setStep('map')} className="py-3 px-5 rounded-lg bg-gray-500/80 hover:bg-gray-500 text-white transition-colors text-sm font-semibold">Back to Mapping</button>
-                            <button onClick={handleImport} disabled={isLoading} className="py-3 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white disabled:bg-green-800 transition-colors text-sm font-semibold">
-                                {isLoading ? 'Importing...' : `Import Students`}
+                            <button 
+                                onClick={handleImport} 
+                                disabled={isLoading} 
+                                className={`py-3 px-5 rounded-lg text-white transition-colors text-sm font-semibold flex items-center gap-2 ${replaceExisting ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+                            >
+                                {isLoading ? 'Importing...' : (
+                                    replaceExisting ? <><AlertTriangleIcon className="w-4 h-4"/> Replace All</> : 'Append Students'
+                                )}
                             </button>
                         </div>
                     </div>
@@ -399,8 +433,9 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                         <h3 className="text-lg font-medium mb-2">Import Complete</h3>
                         {importResult && (
                              <div className="space-y-1">
-                                <p className="text-green-600 dark:text-green-400">Successfully imported: {importResult.success} new students</p>
-                                {importResult.failed > 0 && <p className="text-amber-500">Skipped/Failed: {importResult.failed} (Duplicates or Errors)</p>}
+                                <p className="text-green-600 dark:text-green-400">Successfully imported: {importResult.success} students</p>
+                                {replaceExisting && <p className="text-xs text-red-500">(Database was cleared before import)</p>}
+                                {importResult.failed > 0 && <p className="text-amber-500">Skipped/Failed: {importResult.failed}</p>}
                             </div>
                         )}
                         {importResult && importResult.errors.length > 0 && (
