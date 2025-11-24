@@ -81,6 +81,9 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             const errorMessage = err.message || 'Failed to parse CSV file.';
             setError(errorMessage);
             addToast(errorMessage, 'error');
+        } finally {
+            // Reset input to allow re-uploading the same file if needed
+            e.target.value = '';
         }
     };
     
@@ -90,11 +93,11 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             // 1. Generate Headers
             const headers = STUDENT_FIELDS.map(field => `"${field.label.replace(/"/g, '""')}"`).join(',');
             
-            let csvContent = headers;
+            // Add BOM for Excel compatibility
+            let csvContent = '\uFEFF' + headers;
 
             // 2. Fetch Existing Students if active session exists
             if (activeSession) {
-                // FIX: Explicitly type sessionInfos to avoid unknown type errors downstream
                 const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ session: activeSession }).toArray();
                 
                 if (sessionInfos.length > 0) {
@@ -128,18 +131,24 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                 }
             }
 
-            // 3. Create and Download Blob
+            // 3. Create Blob
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', `student_list_${activeSession || 'template'}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
             
-            addToast("Student list downloaded successfully.", 'success');
+            // 4. Use FileReader to create a Data URL (More compatible with Mobile WebViews/Median than blob: URLs)
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const link = document.createElement('a');
+                if (e.target?.result) {
+                    link.setAttribute('href', e.target.result as string);
+                    link.setAttribute('download', `student_list_${activeSession || 'template'}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    addToast("Student list downloaded successfully.", 'success');
+                }
+            };
+            reader.readAsDataURL(blob);
+            
         } catch (err) {
             console.error("Failed to download template", err);
             addToast("Failed to generate template.", 'error');
@@ -271,9 +280,10 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                              <label className="cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">
                                 <UploadIcon className="w-5 h-5"/>
                                 <span>Choose File</span>
-                                <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+                                {/* Extended accept attributes for better mobile compatibility */}
+                                <input type="file" accept=".csv,text/csv,application/vnd.ms-excel,application/csv,text/x-csv,text/plain" onChange={handleFileChange} className="hidden" />
                             </label>
-                             <button onClick={handleDownloadTemplate} disabled={isLoading} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition-colors text-sm font-semibold disabled:opacity-70">
+                             <button type="button" onClick={handleDownloadTemplate} disabled={isLoading} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition-colors text-sm font-semibold disabled:opacity-70">
                                 <DownloadIcon className="w-5 h-5"/>
                                 <span>{isLoading ? 'Generating...' : 'Download Student List'}</span>
                             </button>
