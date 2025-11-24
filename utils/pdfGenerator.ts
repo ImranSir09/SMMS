@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { Student, SchoolDetails } from '../types';
-import { CATEGORY_OPTIONS } from '../constants';
+import { CATEGORY_OPTIONS, CLASS_OPTIONS } from '../constants';
 
 // FIX: Removed manual module augmentation for 'jspdf' as it caused an error. 
 // The functional import of `autoTable` provides the necessary types.
@@ -164,4 +164,92 @@ export const generateCategoryRollStatementPdf = async (students: Student[], clas
     });
 
     doc.save(`Category-Roll-Statement-${className}.pdf`);
+};
+
+export const generateConsolidatedRollStatementPdf = async (
+    studentsByClass: Map<string, Student[]>,
+    schoolDetails: SchoolDetails,
+    session: string
+) => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    const GENDERS = ['M', 'F', 'O', 'T']; // Male, Female, Other, Total
+
+    addHeader(doc, schoolDetails);
+    doc.setFontSize(12);
+    doc.text(`Consolidated Category & Gender Wise Roll Statement - Session ${session}`, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
+
+    // Build Headers
+    const headerRow1 = [
+        { content: 'Class', rowSpan: 2, styles: { valign: 'middle', halign: 'center' } },
+        ...CATEGORY_OPTIONS.map(cat => ({ content: cat, colSpan: 4, styles: { halign: 'center' } })),
+        { content: 'Grand Total', colSpan: 4, styles: { halign: 'center' } }
+    ];
+
+    const headerRow2: string[] = [];
+    // For Categories
+    CATEGORY_OPTIONS.forEach(() => headerRow2.push(...GENDERS));
+    // For Grand Total
+    headerRow2.push(...GENDERS);
+
+    // Prepare Data
+    const classNames = Array.from(studentsByClass.keys()).sort((a, b) => {
+        const indexA = CLASS_OPTIONS.indexOf(a);
+        const indexB = CLASS_OPTIONS.indexOf(b);
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        return a.localeCompare(b, undefined, { numeric: true });
+    });
+
+    const body = classNames.map(className => {
+        const students = studentsByClass.get(className) || [];
+        const rowData: (number | string)[] = [className];
+        
+        let classMaleTotal = 0;
+        let classFemaleTotal = 0;
+        let classOtherTotal = 0;
+
+        // Count per Category
+        CATEGORY_OPTIONS.forEach(cat => {
+            const catStudents = students.filter(s => (s.category || 'General') === cat);
+            const m = catStudents.filter(s => s.gender === 'Male').length;
+            const f = catStudents.filter(s => s.gender === 'Female').length;
+            const o = catStudents.filter(s => s.gender === 'Other' || !s.gender).length;
+            const t = m + f + o;
+
+            classMaleTotal += m;
+            classFemaleTotal += f;
+            classOtherTotal += o;
+
+            rowData.push(m || '', f || '', o || '', t || '');
+        });
+
+        // Grand Totals for Class
+        rowData.push(classMaleTotal, classFemaleTotal, classOtherTotal, classMaleTotal + classFemaleTotal + classOtherTotal);
+        return rowData;
+    });
+
+    // Footer Calculation (Total of columns)
+    const footerRow = ['TOTAL'];
+    for (let i = 1; i < headerRow2.length + 1; i++) { // +1 because of 'Class' column
+        let colSum = 0;
+        body.forEach(row => {
+            const val = Number(row[i]);
+            if (!isNaN(val)) colSum += val;
+        });
+        footerRow.push(String(colSum));
+    }
+
+    autoTable(doc, {
+        head: [headerRow1, headerRow2],
+        body: body,
+        foot: [footerRow],
+        startY: 35,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 1, halign: 'center' },
+        headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', lineWidth: 0.1, lineColor: 0 },
+        footStyles: { fillColor: [200, 200, 200], textColor: 0, fontStyle: 'bold' },
+        tableLineColor: 0,
+        tableLineWidth: 0.1,
+    });
+
+    doc.save(`Consolidated-Roll-Statement-${session}.pdf`);
 };

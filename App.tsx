@@ -16,6 +16,7 @@ import StudentProfile from './pages/StudentProfile';
 import PrintRollStatement from './pages/PrintRollStatement';
 import PrintHPC from './pages/PrintHPC';
 import PrintCategoryRollStatement from './pages/PrintCategoryRollStatement';
+import PrintConsolidatedRollStatement from './pages/PrintConsolidatedRollStatement';
 import SBA from './pages/SBA';
 import SbaDataEntry from './pages/SbaDataEntry';
 import FormativeAssessment from './pages/FormativeAssessment';
@@ -107,6 +108,7 @@ const App: React.FC = () => {
                 <Route path="/student-report" element={<StudentReport />} />
                 <Route path="/print/roll-statement/:className" element={<PrintRollStatement />} />
                 <Route path="/print/category-roll-statement" element={<PrintCategoryRollStatement />} />
+                <Route path="/print/consolidated-roll-statement" element={<PrintConsolidatedRollStatement />} />
                 <Route path="/print/hpc/:studentId" element={<PrintHPC />} />
                 {/* FIX: Add new route for DOB certificate printing. */}
                 <Route path="/print/dob-certificate" element={<PrintDobCertificate />} />
