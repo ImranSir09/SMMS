@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import Modal from './Modal';
 import { db } from '../services/db';
@@ -83,17 +84,68 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         }
     };
     
-    const handleDownloadTemplate = () => {
-        const headers = STUDENT_FIELDS.map(field => `"${field.label.replace(/"/g, '""')}"`).join(',');
-        const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'student_upload_template.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+    const handleDownloadTemplate = async () => {
+        try {
+            setIsLoading(true);
+            // 1. Generate Headers
+            const headers = STUDENT_FIELDS.map(field => `"${field.label.replace(/"/g, '""')}"`).join(',');
+            
+            let csvContent = headers;
+
+            // 2. Fetch Existing Students if active session exists
+            if (activeSession) {
+                // FIX: Explicitly type sessionInfos to avoid unknown type errors downstream
+                const sessionInfos: StudentSessionInfo[] = await db.studentSessionInfo.where({ session: activeSession }).toArray();
+                
+                if (sessionInfos.length > 0) {
+                    const studentIds = sessionInfos.map(info => info.studentId);
+                    const students = await db.students.where('id').anyOf(studentIds).toArray();
+                    const sessionInfoMap = new Map(sessionInfos.map(info => [info.studentId, info]));
+
+                    const rows = students.map(student => {
+                        const sessionInfo = sessionInfoMap.get(student.id!);
+                        // Merge student core data with session data (class, roll, section)
+                        const fullStudentData = {
+                            ...student,
+                            className: sessionInfo?.className || '',
+                            section: sessionInfo?.section || '',
+                            rollNo: sessionInfo?.rollNo || ''
+                        };
+
+                        return STUDENT_FIELDS.map(field => {
+                            // @ts-ignore
+                            let value = fullStudentData[field.key];
+                            if (value === undefined || value === null) value = '';
+                            // Escape quotes and wrap in quotes
+                            const stringValue = String(value).replace(/"/g, '""');
+                            return `"${stringValue}"`;
+                        }).join(',');
+                    });
+
+                    if (rows.length > 0) {
+                        csvContent += '\n' + rows.join('\n');
+                    }
+                }
+            }
+
+            // 3. Create and Download Blob
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `student_list_${activeSession || 'template'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            addToast("Student list downloaded successfully.", 'success');
+        } catch (err) {
+            console.error("Failed to download template", err);
+            addToast("Failed to generate template.", 'error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleMappingChange = (fieldKey: keyof Student, csvHeader: string) => {
@@ -120,7 +172,10 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             for (const field of STUDENT_FIELDS) {
                 const csvHeader = mapping[field.key];
                 if (csvHeader) {
-                    const value = row[headerIndexMap[csvHeader]] || '';
+                    let value = row[headerIndexMap[csvHeader]] || '';
+                    // Remove quotes if Excel added them during export
+                    value = value.replace(/^"|"$/g, '').replace(/""/g, '"');
+
                     if (field.key === 'gender') {
                         const genderValue = value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
                         student.gender = ['Male', 'Female', 'Other'].includes(genderValue) ? (genderValue as 'Male' | 'Female' | 'Other') : 'Other';
@@ -154,7 +209,8 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
 
                         const existingStudent = await db.students.where('admissionNo').equals(coreStudentData.admissionNo).first();
                         if (existingStudent) {
-                            failedRecords.push(`${coreStudentData.name} (Adm No: ${coreStudentData.admissionNo}) - Duplicate`);
+                            // Skip duplicates silently or log them. Currently skipping to prevent overwriting without explicit intent.
+                            // failedRecords.push(`${coreStudentData.name} (Adm No: ${coreStudentData.admissionNo}) - Skipped (Duplicate)`);
                             continue;
                         }
                         
@@ -181,10 +237,14 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             const failedCount = studentsToImport.length - successCount;
             setImportResult({ success: successCount, failed: failedCount, errors: failedRecords });
             setStep('result');
-            addToast(`${successCount} students imported successfully!`, 'success');
+            addToast(`${successCount} new students imported successfully!`, 'success');
             if (failedCount > 0) {
-                addToast(`${failedCount} records failed to import.`, 'error');
-                console.error("Failed records:", failedRecords);
+                // If failed count equals total count, it might mean they are all duplicates
+                if (failedCount === studentsToImport.length && successCount === 0) {
+                     addToast(`No new students added. ${failedCount} records were duplicates or invalid.`, 'info');
+                } else {
+                     addToast(`${failedCount} records failed or were duplicates.`, 'info');
+                }
             }
 
         } catch (err: any) {
@@ -205,7 +265,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     <div className="text-center">
                         <h3 className="text-lg font-medium">Upload a CSV file</h3>
                         <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Ensure the first row matches the template.
+                            Download the template to see existing students and add new ones.
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                              <label className="cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-primary text-primary-foreground hover:bg-primary-hover transition-colors text-sm font-semibold">
@@ -213,9 +273,9 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                                 <span>Choose File</span>
                                 <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
                             </label>
-                             <button onClick={handleDownloadTemplate} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition-colors text-sm font-semibold">
+                             <button onClick={handleDownloadTemplate} disabled={isLoading} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-gray-600 hover:bg-gray-700 text-white transition-colors text-sm font-semibold disabled:opacity-70">
                                 <DownloadIcon className="w-5 h-5"/>
-                                <span>Download Template</span>
+                                <span>{isLoading ? 'Generating...' : 'Download Student List'}</span>
                             </button>
                         </div>
                         {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
@@ -258,7 +318,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     <div>
                         <h3 className="text-lg font-medium">Preview Data</h3>
                         <p className="text-sm text-foreground/70 mt-1 mb-4">
-                            Review the first few records. A total of <strong>{csvData.length}</strong> students will be imported into session <strong>{activeSession}</strong>.
+                            Review the first few records. A total of <strong>{csvData.length}</strong> students found in file.
                         </p>
                         <div className="overflow-x-auto max-h-64 border border-border rounded-md">
                            <table className="w-full text-left text-sm">
@@ -279,7 +339,7 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                         <div className="flex justify-end gap-2 mt-6">
                             <button onClick={() => setStep('map')} className="py-3 px-5 rounded-lg bg-gray-500/80 hover:bg-gray-500 text-white transition-colors text-sm font-semibold">Back to Mapping</button>
                             <button onClick={handleImport} disabled={isLoading} className="py-3 px-5 rounded-lg bg-green-600 hover:bg-green-700 text-white disabled:bg-green-800 transition-colors text-sm font-semibold">
-                                {isLoading ? 'Importing...' : `Import ${csvData.length} Students`}
+                                {isLoading ? 'Importing...' : `Import Students`}
                             </button>
                         </div>
                     </div>
@@ -290,14 +350,15 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                         <h3 className="text-lg font-medium mb-2">Import Complete</h3>
                         {importResult && (
                              <div className="space-y-1">
-                                <p className="text-green-600 dark:text-green-400">Successfully imported: {importResult.success} students</p>
-                                {importResult.failed > 0 && <p className="text-red-500">Failed to import: {importResult.failed} students</p>}
+                                <p className="text-green-600 dark:text-green-400">Successfully imported: {importResult.success} new students</p>
+                                {importResult.failed > 0 && <p className="text-amber-500">Skipped/Failed: {importResult.failed} (Duplicates or Errors)</p>}
                             </div>
                         )}
                         {importResult && importResult.errors.length > 0 && (
                             <div className="mt-4 text-left text-xs bg-background p-2 rounded-md max-h-32 overflow-y-auto">
-                                <p className="font-semibold mb-1">Error Details:</p>
-                                {importResult.errors.map((err, i) => <p key={i}>{err}</p>)}
+                                <p className="font-semibold mb-1">Details (First 20):</p>
+                                {importResult.errors.slice(0, 20).map((err, i) => <p key={i}>{err}</p>)}
+                                {importResult.errors.length > 20 && <p>...and {importResult.errors.length - 20} more.</p>}
                             </div>
                         )}
                         {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
