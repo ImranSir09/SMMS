@@ -43,6 +43,8 @@ const addHeader = (doc: jsPDF, schoolDetails: SchoolDetails, yPos = 20) => {
     let contact = '';
     if (schoolDetails.udiseCode) contact += `UDISE: ${schoolDetails.udiseCode}  `;
     if (schoolDetails.phone) contact += `Ph: ${schoolDetails.phone}`;
+    if (schoolDetails.email) contact += ` | Email: ${schoolDetails.email}`;
+    
     doc.setFontSize(9);
     doc.setTextColor(100);
     doc.text(contact, pageWidth / 2, yPos + 11, { align: 'center' });
@@ -143,76 +145,161 @@ export const generateDobCertificatePdf = async (student: Student, schoolDetails:
     doc.save(`${student.name}_DOB_Certificate.pdf`);
 };
 
-// --- 2. Vector Bonafide Certificate ---
+// --- 2. Vector Bonafide Certificate (Updated Draft) ---
 export const generateBonafideCertificatePdf = async (student: Student, schoolDetails: SchoolDetails) => {
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-    // Decorative Border
-    doc.setLineWidth(1);
-    doc.rect(5, 5, pageWidth - 10, doc.internal.pageSize.getHeight() - 10);
+    // Double decorative border
+    doc.setLineWidth(0.8);
+    doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
     doc.setLineWidth(0.3);
-    doc.rect(8, 8, pageWidth - 16, doc.internal.pageSize.getHeight() - 16);
+    doc.rect(12, 12, pageWidth - 24, pageHeight - 24);
 
+    // -- Header --
     let y = 25;
-    y = addHeader(doc, schoolDetails, y);
+    // Manually add header to control spacing tightly
+    if (schoolDetails.logo) {
+        try {
+            // Supports PNG transparency if logo is base64 PNG
+            doc.addImage(schoolDetails.logo, 'PNG', (pageWidth / 2) - 10, y - 10, 20, 20);
+            y += 15;
+        } catch (e) { console.warn("Logo add failed", e); }
+    }
 
-    y += 10;
     doc.setFont('times', 'bold');
     doc.setFontSize(20);
-    doc.text('TO WHOM IT MAY CONCERN', pageWidth / 2, y, { align: 'center' });
-    doc.setFontSize(16);
-    doc.text('(BONAFIDE CERTIFICATE)', pageWidth / 2, y + 8, { align: 'center' });
+    doc.text(schoolDetails.name.toUpperCase(), pageWidth / 2, y, { align: 'center' });
+    y += 6;
+    
+    doc.setFont('times', 'normal');
+    doc.setFontSize(10);
+    const addressLines = doc.splitTextToSize(schoolDetails.address, 160);
+    doc.text(addressLines, pageWidth / 2, y, { align: 'center' });
+    y += (addressLines.length * 4) + 2;
 
-    // Photo
-    const photoX = pageWidth - 50;
-    const photoY = 50;
+    let contactStr = "";
+    if (schoolDetails.phone) contactStr += `Phone: ${schoolDetails.phone}`;
+    if (schoolDetails.email) contactStr += ` | Email: ${schoolDetails.email}`;
+    doc.text(contactStr, pageWidth / 2, y, { align: 'center' });
+    y += 10;
+
+    // Line under header
+    doc.setLineWidth(0.5);
+    doc.line(20, y, pageWidth - 20, y);
+    y += 10;
+
+    // -- Photo --
+    const photoW = 25;
+    const photoH = 32;
+    const photoX = pageWidth - 25 - photoW; // Right margin
+    const photoY = y + 5;
+    
     if (student.photo) {
         try {
-            doc.addImage(student.photo, 'JPEG', photoX, photoY, 30, 38);
+            doc.addImage(student.photo, 'JPEG', photoX, photoY, photoW, photoH);
         } catch(e){}
     }
-    doc.rect(photoX, photoY, 30, 38);
+    doc.setLineWidth(0.1);
+    doc.rect(photoX, photoY, photoW, photoH);
 
-    y += 30;
-    const mx = 25; // margin x
-    const w = pageWidth - 50; // writable width
-
-    doc.setFont('times', 'normal');
-    doc.setFontSize(14);
-    doc.setLineHeightFactor(1.8);
-
-    const genderPronoun = student.gender === 'Female' ? 'she' : 'he';
-    const relationPronoun = student.gender === 'Female' ? 'Daughter' : 'Son';
-    const possPronoun = student.gender === 'Female' ? 'her' : 'his';
-    const possPronounObj = student.gender === 'Female' ? 'her' : 'him';
-
-    const text = `This is to certify that ${student.name}, ${relationPronoun} of Mr. ${student.fathersName}, is a bonafide student of this institution.`;
-    const text2 = `At present, ${genderPronoun} is studying in Class ${student.className} (Section '${student.section}') under Admission Number ${student.admissionNo} for the academic session.`;
-    const text3 = `According to our school records, ${possPronoun} Date of Birth is ${formatDateLong(student.dob)}.`;
-    const text4 = `We wish ${possPronounObj} all the best for ${possPronoun} future endeavors.`;
-
-    const splitText1 = doc.splitTextToSize(text, w - 40); 
-    
-    doc.text(splitText1, mx, y);
-    y += (splitText1.length * 10) + 10;
-
-    doc.text(doc.splitTextToSize(text2, w), mx, y);
-    y += 25;
-
-    doc.text(doc.splitTextToSize(text3, w), mx, y);
+    // -- Title --
+    y += 15;
+    doc.setFont('times', 'bold');
+    doc.setFontSize(22);
+    doc.text('BONAFIDE CERTIFICATE', pageWidth / 2, y, { align: 'center' });
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth / 2 - 45, y + 2, pageWidth / 2 + 45, y + 2);
     y += 20;
 
-    doc.text(doc.splitTextToSize(text4, w), mx, y);
+    // -- Body Paragraph 1 --
+    doc.setFontSize(12);
+    doc.setFont('times', 'normal');
+    
+    const genderRel = student.gender === 'Female' ? 'daughter' : 'son';
+    const startDate = student.admissionDate ? formatDateLong(student.admissionDate) : 'Session Start';
+    const margin = 20;
+    const textWidth = pageWidth - (margin * 2);
+    
+    // For wrapping text around photo if needed, but usually photo is high enough.
+    // Let's just put text below title.
+    
+    // We need to bold specific parts. jsPDF doesn't support inline rich text easily.
+    // We will construct strings and print bold parts separately if needed, 
+    // but for simplicity and reliability in this prompt context, we will use standard text 
+    // or split specifically where critical.
+    
+    // Constructing the paragraph logic
+    const p1 = `This is to certify that ${student.name}, ${genderRel} of ${student.fathersName}, has been a bonafide student of ${schoolDetails.name} from ${startDate} to Present.`;
+    const p2 = `The student was enrolled in Class ${student.className} and bears Enrollment/Admission Number ${student.admissionNo}.`;
+    const p3 = `During the period of study, the student has conducted themselves in a disciplined manner and is pursuing studies in accordance with the rules and regulations of the institution. This certificate is issued upon their request for whatever purpose it may serve.`;
+
+    const splitP1 = doc.splitTextToSize(p1, textWidth - 35); // Indent for photo space if needed, but photo is high up
+    // Reset margins for full width text
+    const fullWidth = textWidth;
+    
+    doc.text(p1, margin, y, { maxWidth: fullWidth - 30 }); // Wrapping slightly before photo column
+    y += 20;
+    
+    doc.text(p2, margin, y, { maxWidth: fullWidth });
+    y += 15;
+
+    doc.text(p3, margin, y, { maxWidth: fullWidth, align: 'justify' });
+    y += 25;
+
+    // -- Details Section --
+    doc.setFont('times', 'bold');
+    doc.text("Details:", margin + 5, y);
+    doc.setFont('times', 'normal');
+    y += 8;
+
+    const detailsStartX = margin + 10;
+    const valueStartX = margin + 70;
+    const rowHeight = 8;
+
+    const drawDetail = (label: string, value: string) => {
+        doc.setFont('times', 'bold');
+        doc.text(label, detailsStartX, y);
+        doc.setFont('times', 'normal');
+        doc.text(value, valueStartX, y);
+        y += rowHeight;
+    };
+
+    drawDetail("Name of Student:", student.name);
+    drawDetail("Enrollment/Admission Number:", student.admissionNo);
+    drawDetail("Course/Class:", student.className);
+    drawDetail("Duration:", `${startDate} to Present`);
+    drawDetail("Date of Birth:", student.dob ? formatDateLong(student.dob) : 'N/A');
+
+    y += 10;
+    doc.text("We hereby confirm that the above-mentioned particulars are true to the best of our knowledge and records.", margin, y, { maxWidth: fullWidth });
+    y += 20;
+
+    // -- Footer --
+    const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    doc.setFont('times', 'bold');
+    doc.text(`Issued on: ${date}`, margin, y);
+    y += 30;
 
     // Signatures
-    const sigY = 250;
-    doc.setFontSize(11);
-    doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`, mx, sigY);
+    const sigY = y;
     
-    doc.text("Principal / Headmaster", pageWidth - 40, sigY, { align: 'center' });
-    doc.text(schoolDetails.name, pageWidth - 40, sigY + 5, { align: 'center' });
+    // Left
+    doc.setFont('times', 'normal');
+    doc.text("Authorized Signatory: ____________________", margin, sigY);
+    doc.setFont('times', 'bold');
+    doc.text("Principal / Head of Institution", margin, sigY + 6);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(10);
+    doc.text("Designation: Principal/Headmaster", margin, sigY + 11);
 
+    // Right (Seal)
+    const rightX = pageWidth - margin - 40;
+    doc.setFontSize(10);
+    doc.text("Seal/Stamp of Institution:", rightX, sigY - 5, { align: 'center' });
+    doc.rect(rightX - 15, sigY, 30, 30); // Seal box
+    
     doc.save(`${student.name}_Bonafide.pdf`);
 };
 
