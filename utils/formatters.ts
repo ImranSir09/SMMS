@@ -1,72 +1,81 @@
+
 import { Student } from "../types";
 
 export const formatDateLong = (dateString: string): string => {
     if (!dateString) return '';
-    const date = new Date(dateString + 'T00:00:00');
-     if (isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'long', year: 'numeric'
-    });
+    const parts = dateString.split('-');
+    if (parts.length !== 3) return dateString;
+    
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+
+    const months = [
+        '', 'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    if (month < 1 || month > 12) return dateString;
+
+    return `${day} ${months[month]}, ${year}`;
 };
 
 export const formatDateDDMMYYYY = (dateString: string): string => {
-    if (!dateString) return '';
-    const date = new Date(dateString + 'T00:00:00');
-    if (isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('en-GB');
+    if (!dateString) return '__________________';
+    const parts = dateString.split('-');
+    // Input is YYYY-MM-DD, Output should be DD-MM-YYYY
+    if (parts.length === 3) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateString;
 };
 
 export const dateToWords = (dateString: string): string => {
-    if (!dateString) return '_______________________';
-    const date = new Date(dateString + 'T00:00:00');
-    if (isNaN(date.getTime())) return '_______________________';
-
-    const day = date.getDate();
-    const month = date.toLocaleString('en-US', { month: 'long' });
-    const year = date.getFullYear();
-
-    const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
-    const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-
-    const numberToWords = (num: number): string => {
-        if (num === 0) return '';
-        if (num < 20) return ones[num];
-        if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 !== 0 ? ' ' + ones[num % 10] : '');
-        if (num < 1000) return ones[Math.floor(num / 100)] + ' hundred' + (num % 100 !== 0 ? ' ' + numberToWords(num % 100) : '');
-        return numberToWords(Math.floor(num / 1000)) + ' thousand' + (num % 1000 !== 0 ? ' ' + numberToWords(num % 1000) : '');
-    };
-
-    const dayToOrdinalWord = (d: number): string => {
-        if (d === 0) return '';
-        const ordinals = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteen', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth', 'twenty-first', 'twenty-second', 'twenty-third', 'twenty-fourth', 'twenty-fifth', 'twenty-sixth', 'twenty-seventh', 'twenty-eighth', 'twenty-ninth', 'thirtieth', 'thirty-first'];
-        return ordinals[d - 1] || d.toString();
-    };
+    if (!dateString) return '_____________________________________________';
     
+    const parts = dateString.split('-');
+    if (parts.length !== 3) return '_____________________________________________';
+
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return '_____________________________________________';
+
+    const months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const numToWords = (n: number): string => {
+        if (n === 0) return '';
+        if (n < 20) return ones[n];
+        const digit = n % 10;
+        return tens[Math.floor(n / 10)] + (digit ? ' ' + ones[digit] : '');
+    };
+
+    const dayToOrdinal = (d: number): string => {
+        const ordinals = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth', 'Eleventh', 'Twelfth', 'Thirteenth', 'Fourteenth', 'Fifteenth', 'Sixteenth', 'Seventeenth', 'Eighteenth', 'Nineteenth', 'Twentieth', 'Twenty-first', 'Twenty-second', 'Twenty-third', 'Twenty-fourth', 'Twenty-fifth', 'Twenty-sixth', 'Twenty-seventh', 'Twenty-eighth', 'Twenty-ninth', 'Thirtieth', 'Thirty-first'];
+        return ordinals[d - 1] || numToWords(d);
+    };
+
     const yearToWords = (y: number): string => {
-        if (y >= 1900 && y < 2000) {
-            const firstPart = Math.floor(y / 100); // e.g., 19
-            const secondPart = y % 100; // e.g., 99
-            let yearText = numberToWords(firstPart) + ' hundred';
-            if (secondPart > 0) {
-                yearText += ' ' + numberToWords(secondPart);
-            }
-            return yearText;
+        if (y >= 2000) {
+            const lastTwo = y % 100;
+            if (lastTwo === 0) return 'Two Thousand';
+            return 'Two Thousand ' + numToWords(lastTwo);
+        } else {
+            const firstPart = Math.floor(y / 100);
+            const secondPart = y % 100;
+            return numToWords(firstPart) + ' Hundred ' + numToWords(secondPart);
         }
-        if (y >= 2000 && y < 2100) {
-             return numberToWords(y);
-        }
-        return y.toString();
     };
 
-    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+    if (month < 1 || month > 12) return 'Invalid Month';
 
-    const dayInWords = capitalize(dayToOrdinalWord(day));
-    const yearInWords = yearToWords(year);
-    
-    return `${dayInWords} of ${month}, ${yearInWords}`;
+    return `${dayToOrdinal(day)} of ${months[month]}, ${yearToWords(year)}`;
 };
 
-// Helper function to get image dimensions
 export const getImageDimensions = (base64: string): Promise<{ width: number, height: number }> => {
     return new Promise((resolve, reject) => {
         const img = new Image();
