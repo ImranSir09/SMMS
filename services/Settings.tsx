@@ -121,9 +121,10 @@ const Settings: React.FC = () => {
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
+                        ctx.clearRect(0, 0, width, height); // Ensure transparency
                         ctx.drawImage(img, 0, 0, width, height);
-                        // Compress to JPEG with 0.7 quality
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                        // Use PNG to preserve transparency
+                        resolve(canvas.toDataURL('image/png'));
                     } else {
                         reject(new Error("Canvas context unavailable"));
                     }
