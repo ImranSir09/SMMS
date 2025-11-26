@@ -219,24 +219,14 @@ export const generateBonafideCertificatePdf = async (student: Student, schoolDet
     doc.setFont('times', 'normal');
     
     const genderRel = student.gender === 'Female' ? 'daughter' : 'son';
-    const startDate = student.admissionDate ? formatDateLong(student.admissionDate) : 'Session Start';
     const margin = 20;
     const textWidth = pageWidth - (margin * 2);
     
-    // For wrapping text around photo if needed, but usually photo is high enough.
-    // Let's just put text below title.
-    
-    // We need to bold specific parts. jsPDF doesn't support inline rich text easily.
-    // We will construct strings and print bold parts separately if needed, 
-    // but for simplicity and reliability in this prompt context, we will use standard text 
-    // or split specifically where critical.
-    
     // Constructing the paragraph logic
-    const p1 = `This is to certify that ${student.name}, ${genderRel} of ${student.fathersName}, has been a bonafide student of ${schoolDetails.name} from ${startDate} to --------------------------.`;
+    const p1 = `This is to certify that ${student.name}, ${genderRel} of ${student.fathersName}, has been a bonafide student of ${schoolDetails.name} from -------------------------- to --------------------------.`;
     const p2 = `The student was enrolled in Class ${student.className} and bears Enrollment/Admission Number ${student.admissionNo}.`;
     const p3 = `During the period of study, the student has conducted themselves in a disciplined manner and is pursuing studies in accordance with the rules and regulations of the institution. This certificate is issued upon their request for whatever purpose it may serve.`;
 
-    const splitP1 = doc.splitTextToSize(p1, textWidth - 35); // Indent for photo space if needed, but photo is high up
     // Reset margins for full width text
     const fullWidth = textWidth;
     
@@ -270,7 +260,7 @@ export const generateBonafideCertificatePdf = async (student: Student, schoolDet
     drawDetail("Name of Student:", student.name);
     drawDetail("Enrollment/Admission Number:", student.admissionNo);
     drawDetail("Course/Class:", student.className);
-    drawDetail("Duration:", `${startDate} to --------------------------`);
+    drawDetail("Duration:", `-------------------------- to --------------------------`);
     drawDetail("Date of Birth:", student.dob ? formatDateLong(student.dob) : 'N/A');
 
     y += 10;

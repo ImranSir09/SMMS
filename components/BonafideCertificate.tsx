@@ -11,7 +11,6 @@ interface BonafideCertificateProps {
 
 const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, schoolDetails, photo }) => {
     const genderPronoun = student.gender === 'Female' ? 'Daughter' : 'Son';
-    const startDate = student.admissionDate ? formatDateLong(student.admissionDate) : 'Session Start';
     const dobFormatted = student.dob ? formatDateLong(student.dob) : 'N/A';
 
     return (
@@ -60,7 +59,7 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
                         <p className="mb-4 pr-28">
                             This is to certify that <strong className="font-bold">{student.name}</strong>, 
                             {genderPronoun} of <strong className="font-bold">{student.fathersName}</strong>, has been a bonafide student
-                            of <strong className="font-bold">{schoolDetails?.name}</strong> from <strong className="font-bold">{startDate}</strong> to <strong className="font-bold">--------------------------</strong>.
+                            of <strong className="font-bold">{schoolDetails?.name}</strong> from <strong className="font-bold">--------------------------</strong> to <strong className="font-bold">--------------------------</strong>.
                         </p>
                         
                         <p className="mb-4">
@@ -90,7 +89,7 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
                                     </tr>
                                     <tr className="h-8">
                                         <td className="font-semibold">Duration:</td>
-                                        <td>{startDate} to --------------------------</td>
+                                        <td>-------------------------- to --------------------------</td>
                                     </tr>
                                     <tr className="h-8">
                                         <td className="font-semibold">Date of Birth:</td>
