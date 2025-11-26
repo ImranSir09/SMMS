@@ -76,22 +76,45 @@ const Dashboard: React.FC = () => {
     return (
         <div className="flex flex-col gap-6 animate-fade-in pb-8">
             
-            {/* School Identity Section */}
-            <div className="flex flex-col items-center justify-center pt-4 pb-2">
-                {schoolDetails?.logo ? (
-                    <img 
-                        src={schoolDetails.logo} 
-                        alt="School Logo" 
-                        className="h-20 w-20 object-contain mb-2 drop-shadow-md" 
-                    />
-                ) : (
-                    <div className="h-16 w-16 flex items-center justify-center bg-primary/10 rounded-full mb-2">
-                        <SchoolIcon className="w-8 h-8 text-primary" />
+            {/* School Identity Section - Updated Design */}
+            <div className="relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-card via-background to-card border border-border/50 shadow-lg p-6 md:p-8">
+                {/* Ambient Background Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary/10 rounded-full blur-[80px] pointer-events-none"></div>
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-[60px] pointer-events-none"></div>
+
+                <div className="relative z-10 flex flex-col items-center justify-center gap-5">
+                    {/* Logo with Glassmorphism */}
+                    <div className="relative group">
+                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-accent/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                        {schoolDetails?.logo ? (
+                            <div className="relative h-28 w-28 rounded-full bg-background/80 backdrop-blur-sm p-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 dark:border-white/5 flex items-center justify-center transform transition-transform duration-500 hover:scale-105">
+                                <img 
+                                    src={schoolDetails.logo} 
+                                    alt="School Logo" 
+                                    className="w-full h-full object-contain drop-shadow-sm" 
+                                />
+                            </div>
+                        ) : (
+                            <div className="relative h-24 w-24 flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 text-white rounded-full shadow-xl">
+                                <SchoolIcon className="w-10 h-10" />
+                            </div>
+                        )}
                     </div>
-                )}
-                <h1 className="text-xl font-bold text-center text-foreground uppercase tracking-wide px-4 leading-tight">
-                    {schoolDetails?.name || 'Your School Name'}
-                </h1>
+
+                    {/* Typography */}
+                    <div className="text-center max-w-2xl mx-auto">
+                        <h1 className="text-2xl md:text-4xl font-black text-foreground tracking-tight leading-tight uppercase drop-shadow-sm">
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-foreground to-primary">
+                                {schoolDetails?.name || 'Your School Name'}
+                            </span>
+                        </h1>
+                        <div className="mt-3 flex items-center justify-center gap-2 opacity-60">
+                            <div className="h-[2px] w-8 bg-gradient-to-r from-transparent to-primary rounded-full"></div>
+                            <div className="h-1 w-1 bg-primary rounded-full"></div>
+                            <div className="h-[2px] w-8 bg-gradient-to-l from-transparent to-primary rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
