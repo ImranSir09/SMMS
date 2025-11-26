@@ -20,7 +20,8 @@ const DEFAULT_MASKED_CONFIG = {
     projectId: "c2Nob29sLW1hbmFnZW1lbnQtcHJvLTUyYWJj",
     storageBucket: "c2Nob29sLW1hbmFnZW1lbnQtcHJvLTUyYWJjLmZpcmViYXNlc3RvcmFnZS5hcHA=",
     messagingSenderId: "NzI0NjE4MDI5MTM2",
-    appId: "MTo3MjQ2MTgwMjkxMzY6d2ViOjdiY2Y3MmYwODQxYzUzMWJlNDQ5NTU="
+    appId: "MTo3MjQ2MTgwMjkxMzY6d2ViOjdiY2Y3MmYwODQxYzUzMWJlNDQ5NTU=",
+    measurementId: "Ry0zMlRLTTFWUU5O"
 };
 
 type Tab = 'profile' | 'cloud' | 'data';
@@ -231,12 +232,13 @@ const Settings: React.FC = () => {
                 allData[table.name] = await table.toArray();
             }
             
-            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            // Use application/octet-stream to prevent browser from opening it
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            // Updated filename as per user request
-            link.download = 'pmposhan.json';
+            // Updated filename as per request
+            link.download = 'smsbackup.json';
             
             document.body.appendChild(link);
             link.click();
@@ -449,6 +451,7 @@ const Settings: React.FC = () => {
                                 <input type="password" placeholder="Auth Domain" value={cloudConfig.authDomain} onChange={e => setCloudConfig({...cloudConfig, authDomain: e.target.value})} className={inputStyle} />
                                 <input type="password" placeholder="Storage Bucket" value={cloudConfig.storageBucket} onChange={e => setCloudConfig({...cloudConfig, storageBucket: e.target.value})} className={inputStyle} />
                                 <input type="text" placeholder="Messaging Sender ID" value={cloudConfig.messagingSenderId} onChange={e => setCloudConfig({...cloudConfig, messagingSenderId: e.target.value})} className={inputStyle} />
+                                <input type="password" placeholder="Measurement ID (Optional)" value={cloudConfig.measurementId || ''} onChange={e => setCloudConfig({...cloudConfig, measurementId: e.target.value})} className={inputStyle} />
                             </div>
                             
                             <button onClick={handleSaveCloudConfig} className="w-full py-2 rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950 transition-colors text-xs font-bold">
