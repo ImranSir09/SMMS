@@ -6,7 +6,7 @@ import { Student } from '../types';
 import DobCertificate from '../components/DobCertificate';
 import { useAppData } from '../hooks/useAppData';
 import { DownloadIcon, PrintIcon } from '../components/icons';
-import { generatePdfFromElement } from '../utils/pdfGenerator';
+import { generateDobCertificatePdf } from '../utils/pdfGenerator';
 
 const PrintDobCertificate: React.FC = () => {
     const { state } = useLocation();
@@ -30,8 +30,8 @@ const PrintDobCertificate: React.FC = () => {
     const handlePrint = () => window.print();
 
     const handleDownloadPdf = async () => {
-        if (student) {
-            await generatePdfFromElement('dob-certificate', `DOB-Certificate-${student.name}`);
+        if (student && schoolDetails) {
+            await generateDobCertificatePdf(student, schoolDetails);
         }
     };
 
@@ -44,7 +44,7 @@ const PrintDobCertificate: React.FC = () => {
                 <p className="text-gray-600 mb-4">Preview for {student.name}'s Date of Birth Certificate.</p>
                 <div className="flex flex-wrap gap-4">
                     <button onClick={handleDownloadPdf} className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700">
-                        <DownloadIcon className="w-5 h-5"/> Download PDF
+                        <DownloadIcon className="w-5 h-5"/> Download High-Quality PDF
                     </button>
                     <button onClick={handlePrint} className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700">
                         <PrintIcon className="w-5 h-5"/> Print
@@ -70,8 +70,6 @@ const PrintDobCertificate: React.FC = () => {
                 }
                 @media (max-width: 900px) { .A4-page-container { transform: scale(0.7); } }
                 @media (max-width: 640px) { .A4-page-container { transform: scale(0.55); } }
-                @media (max-width: 500px) { .A4-page-container { transform: scale(0.45); } }
-                @media (max-width: 400px) { .A4-page-container { transform: scale(0.4); } }
             `}</style>
         </div>
     );

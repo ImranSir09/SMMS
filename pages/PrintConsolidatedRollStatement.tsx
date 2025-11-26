@@ -68,7 +68,7 @@ const PrintConsolidatedRollStatement: React.FC = () => {
                 </div>
                 <div className="flex gap-4">
                     <button onClick={handleDownloadPdf} className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700">
-                        <DownloadIcon className="w-5 h-5"/> PDF
+                        <DownloadIcon className="w-5 h-5"/> Download PDF
                     </button>
                     <button onClick={handlePrint} className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700">
                         <PrintIcon className="w-5 h-5"/> Print
