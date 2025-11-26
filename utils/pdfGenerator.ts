@@ -23,6 +23,7 @@ const addHeader = (doc: jsPDF, schoolDetails: SchoolDetails, yPos = 20) => {
     if (schoolDetails.logo) {
         try {
             // Add Logo centered above name or to the left
+            // Let's put it top center for certificate style
             doc.addImage(schoolDetails.logo, 'PNG', (pageWidth / 2) - 12, yPos - 15, 24, 24);
             yPos += 15;
         } catch (e) {
@@ -231,7 +232,7 @@ export const generateBonafideCertificatePdf = async (student: Student, schoolDet
     // or split specifically where critical.
     
     // Constructing the paragraph logic
-    const p1 = `This is to certify that ${student.name}, ${genderRel} of ${student.fathersName}, has been a bonafide student of ${schoolDetails.name} from ${startDate} to Present.`;
+    const p1 = `This is to certify that ${student.name}, ${genderRel} of ${student.fathersName}, has been a bonafide student of ${schoolDetails.name} from ${startDate} to --------------------------.`;
     const p2 = `The student was enrolled in Class ${student.className} and bears Enrollment/Admission Number ${student.admissionNo}.`;
     const p3 = `During the period of study, the student has conducted themselves in a disciplined manner and is pursuing studies in accordance with the rules and regulations of the institution. This certificate is issued upon their request for whatever purpose it may serve.`;
 
@@ -269,7 +270,7 @@ export const generateBonafideCertificatePdf = async (student: Student, schoolDet
     drawDetail("Name of Student:", student.name);
     drawDetail("Enrollment/Admission Number:", student.admissionNo);
     drawDetail("Course/Class:", student.className);
-    drawDetail("Duration:", `${startDate} to Present`);
+    drawDetail("Duration:", `${startDate} to --------------------------`);
     drawDetail("Date of Birth:", student.dob ? formatDateLong(student.dob) : 'N/A');
 
     y += 10;

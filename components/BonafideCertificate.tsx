@@ -60,7 +60,7 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
                         <p className="mb-4 pr-28">
                             This is to certify that <strong className="font-bold">{student.name}</strong>, 
                             {genderPronoun} of <strong className="font-bold">{student.fathersName}</strong>, has been a bonafide student
-                            of <strong className="font-bold">{schoolDetails?.name}</strong> from <strong className="font-bold">{startDate}</strong> to <strong className="font-bold">Present</strong>.
+                            of <strong className="font-bold">{schoolDetails?.name}</strong> from <strong className="font-bold">{startDate}</strong> to <strong className="font-bold">--------------------------</strong>.
                         </p>
                         
                         <p className="mb-4">
@@ -90,7 +90,7 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
                                     </tr>
                                     <tr className="h-8">
                                         <td className="font-semibold">Duration:</td>
-                                        <td>{startDate} to Present</td>
+                                        <td>{startDate} to --------------------------</td>
                                     </tr>
                                     <tr className="h-8">
                                         <td className="font-semibold">Date of Birth:</td>
