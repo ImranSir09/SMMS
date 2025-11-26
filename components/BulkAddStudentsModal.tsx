@@ -27,6 +27,21 @@ const STUDENT_FIELDS: { key: keyof Student; label: string; required: boolean }[]
     { key: 'ifscCode', label: 'IFSC Code', required: false },
 ];
 
+// Common aliases to help auto-map columns
+const FIELD_ALIASES: { [key: string]: string[] } = {
+    name: ['name', 'student name', 'full name', 'student_name', 'fullname'],
+    rollNo: ['roll no', 'roll number', 'roll_no', 'rollno', 'r.no'],
+    admissionNo: ['admission no', 'admission number', 'adm no', 'adm_no', 'reg no', 'registration no'],
+    dob: ['dob', 'date of birth', 'birth date', 'd.o.b'],
+    gender: ['gender', 'sex'],
+    fathersName: ['father name', "father's name", 'father_name', 'father'],
+    mothersName: ['mother name', "mother's name", 'mother_name', 'mother'],
+    contact: ['contact', 'mobile', 'phone', 'cell', 'mobile number', 'phone number'],
+    address: ['address', 'residence', 'location'],
+    className: ['class', 'grade', 'standard'],
+    section: ['section', 'sec'],
+};
+
 type Step = 'upload' | 'map' | 'preview' | 'result';
 type Mapping = { [K in keyof Student]?: string };
 
@@ -110,7 +125,55 @@ const BulkAddStudentsModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
 
             setCsvHeaders(headers);
             setCsvData(data);
-            setStep('map');
+
+            // --- Smart Auto-Mapping Logic ---
+            const autoMapping: Mapping = {};
+            const lowerHeaders = headers.map(h => h.toLowerCase().replace(/['".]/g, '').trim());
+
+            STUDENT_FIELDS.forEach(field => {
+                // 1. Check exact label match (case-insensitive)
+                const labelMatchIndex = lowerHeaders.indexOf(field.label.toLowerCase().replace(/['".]/g, '').trim());
+                if (labelMatchIndex !== -1) {
+                    // @ts-ignore
+                    autoMapping[field.key] = headers[labelMatchIndex];
+                    return;
+                }
+
+                // 2. Check key match
+                const keyMatchIndex = lowerHeaders.indexOf(field.key.toLowerCase());
+                if (keyMatchIndex !== -1) {
+                    // @ts-ignore
+                    autoMapping[field.key] = headers[keyMatchIndex];
+                    return;
+                }
+
+                // 3. Check Aliases
+                const aliases = FIELD_ALIASES[field.key] || [];
+                for (const alias of aliases) {
+                    const aliasIndex = lowerHeaders.indexOf(alias);
+                    if (aliasIndex !== -1) {
+                        // @ts-ignore
+                        autoMapping[field.key] = headers[aliasIndex];
+                        return;
+                    }
+                }
+            });
+
+            setMapping(autoMapping);
+
+            // Check if all REQUIRED fields are mapped
+            const missingRequired = STUDENT_FIELDS.filter(f => f.required && !autoMapping[f.key]);
+            
+            if (missingRequired.length === 0) {
+                // Perfect match! Skip mapping step.
+                addToast("Template recognized! Skipping mapping step.", "success");
+                setStep('preview');
+            } else {
+                // Partial match, go to mapping step but pre-fill what we found
+                addToast(`Auto-mapped ${Object.keys(autoMapping).length} columns. Please review.`, "info");
+                setStep('map');
+            }
+
         } catch (err: any) {
             console.error("File parse error:", err);
             const errorMessage = err.message || 'Failed to parse file.';
