@@ -5,14 +5,19 @@ import { db } from '../services/db';
 import { Student } from '../types';
 import DobCertificate from '../components/DobCertificate';
 import { useAppData } from '../hooks/useAppData';
-import { DownloadIcon, PrintIcon } from '../components/icons';
+import { DownloadIcon, PrintIcon, UploadIcon } from '../components/icons';
 import { generateDobCertificatePdf } from '../utils/pdfGenerator';
+import PhotoUploadModal from '../components/PhotoUploadModal';
 
 const PrintDobCertificate: React.FC = () => {
     const { state } = useLocation();
     const studentId = state?.studentId;
     const [student, setStudent] = useState<Student | null>(null);
     const { schoolDetails, activeSession } = useAppData();
+    
+    // Temporary photo state
+    const [tempPhoto, setTempPhoto] = useState<string | null>(null);
+    const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchStudent = async () => {
@@ -31,8 +36,13 @@ const PrintDobCertificate: React.FC = () => {
 
     const handleDownloadPdf = async () => {
         if (student && schoolDetails) {
-            await generateDobCertificatePdf(student, schoolDetails);
+            await generateDobCertificatePdf(student, schoolDetails, tempPhoto);
         }
+    };
+
+    const handlePhotoSave = (base64: string) => {
+        setTempPhoto(base64);
+        setIsPhotoModalOpen(false);
     };
 
     if (!student || !schoolDetails) return <div>Loading...</div>;
@@ -43,6 +53,9 @@ const PrintDobCertificate: React.FC = () => {
                 <h1 className="text-2xl font-bold text-gray-800">Certificate Preview</h1>
                 <p className="text-gray-600 mb-4">Preview for {student.name}'s Date of Birth Certificate.</p>
                 <div className="flex flex-wrap gap-4">
+                    <button onClick={() => setIsPhotoModalOpen(true)} className="flex items-center gap-2 py-2 px-4 bg-purple-600 text-white font-semibold rounded-md shadow-md hover:bg-purple-700">
+                        <UploadIcon className="w-5 h-5"/> {tempPhoto ? 'Change Photo' : 'Add Photo'}
+                    </button>
                     <button onClick={handleDownloadPdf} className="flex items-center gap-2 py-2 px-4 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700">
                         <DownloadIcon className="w-5 h-5"/> Download High-Quality PDF
                     </button>
@@ -50,10 +63,20 @@ const PrintDobCertificate: React.FC = () => {
                         <PrintIcon className="w-5 h-5"/> Print
                     </button>
                 </div>
+                {tempPhoto && <p className="text-xs text-purple-600 mt-2">* Temporary photo added. It will appear on the printed/downloaded certificate but won't be saved to the student database.</p>}
             </div>
             <div className="flex justify-center items-start">
-                <DobCertificate student={student} schoolDetails={schoolDetails} photo={student.photo} />
+                <DobCertificate student={student} schoolDetails={schoolDetails} photo={tempPhoto} />
             </div>
+            
+            <PhotoUploadModal 
+                isOpen={isPhotoModalOpen} 
+                onClose={() => setIsPhotoModalOpen(false)} 
+                title="Add Photo to Certificate"
+                onSave={handlePhotoSave}
+                aspectRatio={35/45} // Standard passport photo aspect ratio
+            />
+
              <style>{`
                 body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 @page { size: A4; margin: 0; }

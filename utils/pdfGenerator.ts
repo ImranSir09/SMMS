@@ -75,7 +75,7 @@ const addCertificateHeader = (doc: jsPDF, schoolDetails: SchoolDetails, yPos = 3
 };
 
 // --- 1. Vector DOB Certificate ---
-export const generateDobCertificatePdf = async (student: Student, schoolDetails: SchoolDetails) => {
+export const generateDobCertificatePdf = async (student: Student, schoolDetails: SchoolDetails, photo?: string | null) => {
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     
@@ -93,12 +93,21 @@ export const generateDobCertificatePdf = async (student: Student, schoolDetails:
     const photoX = pageWidth - 35;
     const photoY = y + 10;
     
-    // Placeholder box
+    // Render Photo if available
+    if (photo) {
+        try {
+            doc.addImage(photo, 'JPEG', photoX, photoY, photoW, photoH);
+        } catch (e) { console.warn("Photo add failed", e); }
+    }
+    
+    // Placeholder box border
     doc.setLineWidth(0.2);
     doc.setDrawColor(100);
     doc.rect(photoX, photoY, photoW, photoH);
-    doc.setFontSize(7);
-    doc.text("Affix Photo", photoX + photoW/2, photoY + photoH/2, { align: 'center' });
+    if (!photo) {
+        doc.setFontSize(7);
+        doc.text("Affix Photo", photoX + photoW/2, photoY + photoH/2, { align: 'center' });
+    }
 
     // Title
     y += 15;
@@ -191,7 +200,7 @@ export const generateDobCertificatePdf = async (student: Student, schoolDetails:
 };
 
 // --- 2. Vector Bonafide Certificate ---
-export const generateBonafideCertificatePdf = async (student: Student, schoolDetails: SchoolDetails) => {
+export const generateBonafideCertificatePdf = async (student: Student, schoolDetails: SchoolDetails, photo?: string | null) => {
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
     
@@ -209,11 +218,21 @@ export const generateBonafideCertificatePdf = async (student: Student, schoolDet
     const photoX = pageWidth - 35;
     const photoY = y + 5;
     
+    // Render Photo if available
+    if (photo) {
+        try {
+            doc.addImage(photo, 'JPEG', photoX, photoY, photoW, photoH);
+        } catch (e) { console.warn("Photo add failed", e); }
+    }
+
     doc.setLineWidth(0.2);
     doc.setDrawColor(100);
     doc.rect(photoX, photoY, photoW, photoH);
-    doc.setFontSize(7);
-    doc.text("Affix Photo", photoX + photoW/2, photoY + photoH/2, { align: 'center' });
+    
+    if (!photo) {
+        doc.setFontSize(7);
+        doc.text("Affix Photo", photoX + photoW/2, photoY + photoH/2, { align: 'center' });
+    }
 
     // Title
     y += 15;
@@ -234,10 +253,6 @@ export const generateBonafideCertificatePdf = async (student: Student, schoolDet
     doc.setLineHeightFactor(1.5);
 
     const genderPronoun = student.gender === 'Female' ? 'daughter' : 'son';
-    
-    // Helper to draw justified text with bold variables
-    // Since jsPDF doesn't support mixed styles in justified text easily, we construct lines manually or use simple flow.
-    // For best results, we will use a standard flow with placeholders.
     
     // Paragraph 1
     doc.text(`This is to certify that`, margin, y);
