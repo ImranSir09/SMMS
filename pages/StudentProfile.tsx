@@ -1,10 +1,11 @@
+
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { Student, Mark, Exam, StudentSessionInfo } from '../types';
 import Card from '../components/Card';
-import { EditIcon, TrashIcon, CertificateIcon, UserIcon, HeartHandIcon, CreditCardIcon, BarChart3Icon, HolisticIcon } from '../components/icons';
+import { EditIcon, TrashIcon, CertificateIcon, UserIcon, HeartHandIcon, CreditCardIcon, BarChart3Icon } from '../components/icons';
 import LineChart from '../components/LineChart';
 import Modal from '../components/Modal';
 import { StudentForm } from '../components/StudentForm';
@@ -156,10 +157,9 @@ const StudentProfile: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-2">
-                <button onClick={handleEdit} className={`${buttonStyle} bg-blue-600 text-white`}><EditIcon className="w-3 h-3" /> Edit</button>
-                <button onClick={() => navigate(`/print/hpc/${student.id}`)} className={`${buttonStyle} bg-purple-600 text-white`}><HolisticIcon className="w-3 h-3" /> HPC Report</button>
-                <button onClick={() => navigate('/certificates', { state: { searchId: student.admissionNo } })} className={`${buttonStyle} bg-green-600 text-white col-span-2`}><CertificateIcon className="w-3 h-3" /> Other Certificates</button>
-                <button onClick={handleDelete} className={`${buttonStyle} bg-red-600 text-white col-span-2`}><TrashIcon className="w-3 h-3" /> Delete</button>
+                <button onClick={handleEdit} className={`${buttonStyle} bg-blue-600 text-white`}><EditIcon className="w-3 h-3" /> Edit Details</button>
+                <button onClick={() => navigate('/certificates', { state: { searchId: student.admissionNo } })} className={`${buttonStyle} bg-green-600 text-white`}><CertificateIcon className="w-3 h-3" /> Certificates</button>
+                <button onClick={handleDelete} className={`${buttonStyle} bg-red-600 text-white col-span-2`}><TrashIcon className="w-3 h-3" /> Delete Student</button>
             </div>
 
             <Card className="p-3">
