@@ -86,7 +86,7 @@ export const backupToCloud = async (onProgress?: (msg: string) => void): Promise
         if (!initialized) throw new Error("Cloud connection could not be established. Check internet or settings.");
     }
 
-    const { collection, writeBatch, doc } = firestoreUtils;
+    const { collection, writeBatch, doc, getDocs } = firestoreUtils;
 
     // Always write to the fixed ID to ensure consistency across resets/renames
     const docId = FIXED_BACKUP_ID;
@@ -101,8 +101,28 @@ export const backupToCloud = async (onProgress?: (msg: string) => void): Promise
         const table = db.table(tableName);
         const records = await table.toArray();
 
+        const colRef = collection(rootRef, tableName);
+
+        // STEP 1: Delete existing cloud data for this table to ensure a 1:1 mirror (preventing duplicates)
+        const snapshot = await getDocs(colRef);
+        if (!snapshot.empty) {
+            onProgress?.(`Clearing old cloud data for ${tableName}...`);
+            const deleteBatchSize = 400;
+            const deleteChunks = [];
+            for (let i = 0; i < snapshot.docs.length; i += deleteBatchSize) {
+                deleteChunks.push(snapshot.docs.slice(i, i + deleteBatchSize));
+            }
+
+            for (const chunk of deleteChunks) {
+                const deleteBatch = writeBatch(firestoreDb);
+                chunk.forEach((doc: any) => deleteBatch.delete(doc.ref));
+                await deleteBatch.commit();
+            }
+        }
+
         if (records.length === 0) continue;
 
+        // STEP 2: Upload new local data
         // Firestore batch has a limit of 500 operations
         const batchSize = 450; 
         const chunks = [];
@@ -112,7 +132,6 @@ export const backupToCloud = async (onProgress?: (msg: string) => void): Promise
 
         for (const chunk of chunks) {
             const batch = writeBatch(firestoreDb);
-            const colRef = collection(rootRef, tableName);
             
             chunk.forEach((record: any) => {
                 try {

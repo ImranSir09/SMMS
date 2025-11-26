@@ -235,7 +235,8 @@ const Settings: React.FC = () => {
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `sms-mobile-backup-${new Date().toISOString().split('T')[0]}.json`;
+            // Updated filename as per user request
+            link.download = 'pmposhan.json';
             
             document.body.appendChild(link);
             link.click();
