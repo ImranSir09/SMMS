@@ -5,7 +5,7 @@ import { useAppData } from '../hooks/useAppData';
 import { SunIcon, MoonIcon, ArrowLeftIcon, SchoolIcon, LogOutIcon } from './icons';
 
 const Header: React.FC = () => {
-  const { theme, toggleTheme, schoolDetails, logout, isAuthenticated } = useAppData();
+  const { theme, toggleTheme, logout, isAuthenticated } = useAppData();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -39,19 +39,15 @@ const Header: React.FC = () => {
 
   return (
     <header className="flex-shrink-0 flex items-center justify-between p-2 bg-card border-b border-border h-16 z-20 print:hidden">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 pl-2">
         {isDashboard ? (
           <>
-            {schoolDetails?.logo ? (
-              <img src={schoolDetails.logo} alt="School Logo" className="h-12 w-auto object-contain rounded-md" />
-            ) : (
-              <div className="h-12 w-12 flex items-center justify-center bg-primary/10 rounded-md">
-                <SchoolIcon className="w-7 h-7 text-primary" />
-              </div>
-            )}
+            <div className="h-10 w-10 flex items-center justify-center bg-primary/10 rounded-lg">
+              <SchoolIcon className="w-6 h-6 text-primary" />
+            </div>
             <div>
               <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground from-50% to-foreground/60">
-                  {schoolDetails?.name || 'School Management Pro V2'}
+                  School Management Pro
               </h1>
             </div>
           </>

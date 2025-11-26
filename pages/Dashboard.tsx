@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
@@ -76,6 +75,30 @@ const Dashboard: React.FC = () => {
     
     return (
         <div className="flex flex-col gap-6 animate-fade-in pb-8">
+            
+            {/* School Identity Section */}
+            <div className="flex flex-col items-center justify-center py-4">
+                {schoolDetails?.logo ? (
+                    <img 
+                        src={schoolDetails.logo} 
+                        alt="School Logo" 
+                        className="h-24 w-24 object-contain mb-3 drop-shadow-md" 
+                    />
+                ) : (
+                    <div className="h-20 w-20 flex items-center justify-center bg-primary/10 rounded-full mb-3">
+                        <SchoolIcon className="w-10 h-10 text-primary" />
+                    </div>
+                )}
+                <h1 className="text-2xl font-bold text-center text-foreground uppercase tracking-wide px-4">
+                    {schoolDetails?.name || 'Your School Name'}
+                </h1>
+                {schoolDetails?.address && (
+                    <p className="text-sm text-foreground/70 text-center mt-1 px-6">
+                        {schoolDetails.address}
+                    </p>
+                )}
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
                 <StatCard icon={<HashIcon className="w-5 h-5"/>} label="UDISE" value={schoolDetails?.udiseCode || 'N/A'} className="bg-slate-500 text-white"/>
                 <StatCard icon={<UsersIcon className="w-5 h-5"/>} label="Students" value={dashboardData?.studentCount ?? 0} className="bg-primary text-primary-foreground"/>

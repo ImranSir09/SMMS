@@ -80,15 +80,6 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      {schoolDetails?.logo && (
-        <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none">
-          <img 
-            src={schoolDetails.logo} 
-            alt="School Watermark" 
-            className="w-2/3 h-auto object-contain opacity-[0.02]"
-          />
-        </div>
-      )}
       <div className={`relative z-10 h-screen flex flex-col ${backgroundStyle}`}>
         <Header />
         <main className="flex-1 p-3 pb-28 overflow-y-auto">
