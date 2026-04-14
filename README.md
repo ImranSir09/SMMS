@@ -1,92 +1,106 @@
-# SMMS – School Management System
+# School Management Pro
 
-A modern Progressive Web App for managing school data, students, and reports. Built with Vite and deployed using GitHub Pages. Installable as a mobile app and works offline.
+Modern Progressive Web App for managing school data, students, classes, and academic records. Built for mobile first usage. Installable as Android app. Works offline.
 
 ## Live App
 https://imransir09.github.io/SMMS/
 
+## Overview
+School Management Pro is a lightweight installable school management system. It provides dashboard analytics, student records, session tracking, and reporting tools in a clean mobile friendly interface.
+
 ## Features
 - Dashboard with school overview
-- Student management
-- Class wise navigation
-- Session based records
+- Class wise student navigation
+- Session based data management
+- Student records management
 - SBA module
-- Reports section
+- Reports and analytics
 - Settings panel
-- Mobile first UI
-- Installable PWA
-- Offline support
-- APK build using PWABuilder
+- Mobile responsive UI
+- Installable PWA support
+- Offline functionality
+- Fast GitHub Pages deployment
 
-## PWA Support
-This app supports:
+## Screenshots
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Students
+![Students](screenshots/students.png)
+
+### SBA Module
+![SBA](screenshots/sba.png)
+
+### Reports
+![Reports](screenshots/reports.png)
+
+### Settings
+![Settings](screenshots/settings.png)
+
+## Progressive Web App
 - Install to home screen
+- Fullscreen standalone mode
 - Offline caching
-- Standalone full screen mode
-- Custom icons
-- Manifest configuration
-- Service worker
+- Custom app icons
+- Service worker enabled
+- Manifest configured
+- APK build supported
 
-## Tech Stack
+## Technology Stack
 - Vite
 - React
 - JavaScript
-- PWA
+- Progressive Web App
 - GitHub Pages
 
 ## Installation
-Clone the repository
 
-```
+Clone repository
+
 git clone https://github.com/ImranSir09/SMMS.git
-```
 
 Install dependencies
 
-```
 npm install
-```
 
-Run locally
+Run development server
 
-```
 npm run dev
-```
 
-Build
+## Build
 
-```
 npm run build
-```
 
-## Deploy
-Deployment is automated using GitHub Actions.
-Push to main branch and GitHub Pages will update automatically.
+## Deployment
+Deployment is automated using GitHub Actions. Every push to main branch triggers automatic build and deployment.
 
-## APK Build
-Use PWABuilder:
+Live URL  
+https://imransir09.github.io/SMMS/
 
-https://www.pwabuilder.com/
+## Install as App
+Open the live URL in Chrome and choose Add to Home Screen.
 
-Enter live URL and generate Android APK.
+## Build Android APK
+Use PWABuilder  
+https://www.pwabuilder.com  
+Enter live URL and generate APK.
 
 ## Folder Structure
 
-```
-SMMS
-├── public
-│   ├── manifest.json
-│   ├── sw.js
-│   ├── icon-192.png
-│   └── icon-512.png
-├── src
-├── index.html
-├── vite.config.js
-└── README.md
-```
+SMMS  
+public  
+  manifest.json  
+  sw.js  
+  icon-192.png  
+  icon-512.png  
+src  
+index.html  
+vite.config.js  
+screenshots  
 
 ## Author
 Imran Sir
 
 ## License
-MIT
+MIT License
