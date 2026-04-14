@@ -1,8 +1,12 @@
 {
   "name": "SMMS",
   "short_name": "SMMS",
-  "start_url": "/SMMS/",
+  "description": "School Monitoring and Management System for tracking records, reports and school data.",
+  "id": "/SMMS/",
+  "start_url": "/SMMS/?source=pwa",
+  "scope": "/SMMS/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
