@@ -1,0 +1,92 @@
+{
+  "id": "/",
+  "short_name": "SMS Mobile",
+  "name": "School Management System Mobile",
+  "description": "A comprehensive, offline-first school management application for modern educational institutions.",
+  "icons": [
+    {
+      "src": "https://i.imgur.com/O6f6C5R.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/O6f6C5R.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/O6f6C5R.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/O6f6C5R.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/O6f6C5R.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/O6f6C5R.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/O6f6C5R.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.imgur.com/O6f6C5R.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/pwa-builder/pwa-starter/main/src/assets/icons/maskable_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#2563eb",
+  "background_color": "#f8fafc",
+  "shortcuts": [
+    {
+      "name": "Add Student",
+      "short_name": "New Student",
+      "description": "Quickly add a new student record",
+      "url": "/#/students",
+      "icons": [{ "src": "https://i.imgur.com/O6f6C5R.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://via.placeholder.com/1080x2340.png?text=Dashboard",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Main dashboard showing key school statistics."
+    },
+    {
+      "src": "https://via.placeholder.com/1080x2340.png?text=Students",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Student management screen with class filters."
+    },
+    {
+      "src": "https://via.placeholder.com/1080x2340.png?text=Profile",
+      "sizes": "1080x2340",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Detailed student profile with academic performance."
+    }
+  ]
+}

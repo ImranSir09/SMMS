@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>School Management System Mobile</title>
+    <!-- PWA enhancements -->
+    <link rel="manifest" href="/assets/manifest-CeGd8N7E.json" />
+    <link rel="icon" href="https://i.imgur.com/O6f6C5R.png" sizes="any">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/O6f6C5R.png">
+    <meta name="theme-color" content="#475569" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              background: 'var(--background)',
+              foreground: 'var(--foreground)',
+              'card-foreground': 'var(--card-foreground)',
+              primary: {
+                DEFAULT: 'var(--primary)',
+                hover: 'var(--primary-hover)',
+                foreground: 'var(--primary-foreground)',
+              },
+              accent: {
+                DEFAULT: 'var(--accent)',
+                hover: 'var(--accent-hover)',
+                foreground: 'var(--accent-foreground)',
+              },
+              success: {
+                DEFAULT: 'var(--success)',
+                hover: 'var(--success-hover)',
+                foreground: 'var(--success-foreground)',
+              },
+              input: 'var(--input)',
+              border: 'var(--border)',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    
+    <style>
+      :root {
+        --background: #f4f4f5; /* zinc-100 */
+        --foreground: #27272a; /* zinc-800 */
+        --card: #ffffff;
+        --card-foreground: #27272a;
+        --primary: #475569; /* slate-600 */
+        --primary-hover: #334155; /* slate-700 */
+        --primary-foreground: #ffffff;
+        --accent: #16a34a; /* green-600 */
+        --accent-hover: #15803d; /* green-700 */
+        --accent-foreground: #ffffff;
+        --success: #16a34a; /* green-600 */
+        --success-hover: #15803d; /* green-700 */
+        --success-foreground: #ffffff;
+        --input: #e4e4e7; /* zinc-200 */
+        --border: #d4d4d8; /* zinc-300 */
+      }
+
+      .dark {
+        --background: #09090b; /* zinc-950 */
+        --foreground: #e4e4e7; /* zinc-200 */
+        --card: #18181b; /* zinc-900 */
+        --card-foreground: #e4e4e7;
+        --primary: #94a3b8; /* slate-400 */
+        --primary-hover: #cbd5e1; /* slate-300 */
+        --primary-foreground: #09090b;
+        --accent: #22c55e; /* green-500 */
+        --accent-hover: #16a34a; /* green-600 */
+        --accent-foreground: #09090b;
+        --success: #22c55e; /* green-500 */
+        --success-hover: #16a34a; /* green-600 */
+        --success-foreground: #09090b;
+        --input: #27272a; /* zinc-800 */
+        --border: #3f3f46; /* zinc-700 */
+      }
+      
+      html, body {
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: var(--background);
+        position: relative;
+      }
+
+      .background-design {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.03;
+        transform: scale(1.5);
+        filter: blur(60px);
+      }
+      
+      .dark .background-design {
+        opacity: 0.05;
+      }
+
+      /* Enhanced Glassmorphism Effect */
+      .bg-card {
+        background-color: color-mix(in srgb, var(--card) 85%, transparent);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+        box-shadow: 0 4px 30px color-mix(in srgb, black 5%, transparent);
+      }
+      
+      /* Animation classes */
+      .hover-lift {
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      }
+      .hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 12px -2px color-mix(in srgb, black 8%, transparent), 0 3px 5px -3px color-mix(in srgb, black 8%, transparent);
+      }
+
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      
+      .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out both;
+      }
+      
+      .animate-fade-in-item {
+        animation: fadeInItem 0.5s ease-out forwards;
+      }
+      
+      .animate-scale-in {
+        animation: scaleIn 0.3s ease-out forwards;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes fadeInItem {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      @keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+    </style>
+    
+
+<link rel="stylesheet" href="/index.css">
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^6.25.1",
+    "dexie": "https://aistudiocdn.com/dexie@^4.2.0",
+    "dexie-react-hooks": "https://aistudiocdn.com/dexie-react-hooks@^4.2.0",
+    "html2canvas": "https://aistudiocdn.com/html2canvas@^1.4.1",
+    "jspdf": "https://aistudiocdn.com/jspdf@^3.0.2",
+    "typescript": "https://aistudiocdn.com/typescript@^5.9.3",
+    "jspdf-autotable": "https://aistudiocdn.com/jspdf-autotable@^5.0.2",
+    "firebase/app": "https://esm.sh/firebase@10.12.2/app",
+    "firebase/firestore": "https://esm.sh/firebase@10.12.2/firestore",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "xlsx": "https://esm.sh/xlsx@0.18.5"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-bZhDnA3R.js"></script>
+</head>
+<body>
+    <div class="background-design">
+        <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+            <g fill="var(--primary)" stroke="var(--primary)">
+                <path d="M779 400c0 209.3-169.7 379-379 379S21 609.3 21 400 190.7 21 400 21s379 169.7 379 379zM400 800c220.9 0 400-179.1 400-400S620.9 0 400 0 0 179.1 0 400s179.1 400 400 400z" opacity=".2"></path>
+                <path d="M400 709.3c170.8 0 309.3-138.5 309.3-309.3S570.8 90.7 400 90.7 90.7 229.2 90.7 400s138.5 309.3 309.3 309.3zM400 730c182.3 0 330-147.7 330-330S582.3 70 400 70 70 217.7 70 400s147.7 330 330 330z" opacity=".2"></path>
+                <path d="M400 640c132.5 0 240-107.5 240-240S532.5 160 400 160 160 267.5 160 400s107.5 240 240 240zM400 660.7c144 0 260.7-116.7 260.7-260.7S544 139.3 400 139.3 139.3 256 139.3 400s116.7 260.7 260.7 260.7z" opacity=".2"></path>
+                <path d="M400 560c88.4 0 160-71.6 160-160s-71.6-160-160-160-160 71.6-160 160 71.6 160 160 160zM400 580c99.4 0 180-80.6 180-180s-80.6-180-180-180-180 80.6-180 180 80.6 180 180 180z" opacity=".2"></path>
+                <path d="M400 480c44.2 0 80-35.8 80-80s-35.8-80-80-80-80 35.8-80 80 35.8 80 80 80zM400 500c55.2 0 100-44.8 100-100s-44.8-100-100-100-100 44.8-100 100 44.8 100 100 100z" opacity=".2"></path>
+            </g>
+        </svg>
+    </div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+</body>
+</html>
