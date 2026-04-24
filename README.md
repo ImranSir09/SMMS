@@ -54,24 +54,6 @@ School Management Pro is a lightweight installable school management system. It 
 - Progressive Web App
 - GitHub Pages
 
-## Installation
-
-Clone repository
-
-git clone https://github.com/ImranSir09/SMMS.git
-
-Install dependencies
-
-npm install
-
-Run development server
-
-npm run dev
-
-## Build
-
-npm run build
-
 ## Deployment
 Deployment is automated using GitHub Actions. Every push to main branch triggers automatic build and deployment.
 
