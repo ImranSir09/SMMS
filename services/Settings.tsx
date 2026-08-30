@@ -4,7 +4,7 @@ import { useAppData } from '../hooks/useAppData';
 import { db } from '../services/db';
 import { SchoolDetails, CloudConfig } from '../types';
 import Card from '../components/Card';
-import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon, CloudIcon, UploadCloudIcon, DownloadCloudIcon, UsersIcon } from '../components/icons';
+import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon, CloudIcon, UploadCloudIcon, DownloadCloudIcon, UsersIcon, SmartphoneIcon, GithubIcon } from '../components/icons';
 import { useToast } from '../contexts/ToastContext';
 import SessionManager from '../components/SessionManager';
 import { initFirebase, backupToCloud, restoreFromCloud } from './cloud';
@@ -24,7 +24,7 @@ const DEFAULT_MASKED_CONFIG = {
     measurementId: "Ry0zMlRLTTFWUU5O"
 };
 
-type Tab = 'profile' | 'cloud' | 'data';
+type Tab = 'profile' | 'cloud' | 'data' | 'apk';
 
 const Settings: React.FC = () => {
     const { schoolDetails, refreshSchoolDetails } = useAppData();
@@ -355,6 +355,7 @@ const Settings: React.FC = () => {
                 <TabButton id="profile" label="Profile" icon={<BuildingIcon className="w-4 h-4"/>} />
                 <TabButton id="cloud" label="Cloud Sync" icon={<CloudIcon className="w-4 h-4"/>} />
                 <TabButton id="data" label="Data & Session" icon={<DatabaseIcon className="w-4 h-4"/>} />
+                <TabButton id="apk" label="GitHub APK Build" icon={<SmartphoneIcon className="w-4 h-4"/>} />
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -507,6 +508,78 @@ const Settings: React.FC = () => {
                                 >
                                     Reset All Data
                                 </button>
+                            </div>
+                        </Card>
+                    </div>
+                )}
+
+                {/* APK Tab */}
+                {activeTab === 'apk' && (
+                    <div className="flex flex-col gap-4 animate-fade-in">
+                        <Card className="p-5 border-emerald-500/30 bg-emerald-500/5">
+                            <div className="flex items-center gap-2 text-md font-semibold mb-3 border-b border-emerald-500/20 pb-2 text-emerald-600 dark:text-emerald-400">
+                                <GithubIcon className="w-5 h-5" />
+                                <h2>Automated GitHub APK Builder</h2>
+                            </div>
+                            <p className="text-xs text-foreground/80 leading-relaxed mb-4">
+                                This project includes a pre-configured <strong>GitHub Actions Workflow</strong> (<code>.github/workflows/build-apk.yml</code>) and <strong>Capacitor Android wrapper</strong> (<code>capacitor.config.ts</code>). Pushing code to GitHub automatically builds and packages an installable Android APK (<code>app-debug.apk</code>)!
+                            </p>
+
+                            <div className="space-y-4">
+                                <div className="p-3.5 bg-card border border-border rounded-lg space-y-2">
+                                    <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
+                                        <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] flex items-center justify-center font-bold">1</span>
+                                        Push Code to GitHub
+                                    </h3>
+                                    <p className="text-xs text-foreground/70 pl-7">
+                                        Push or sync this repository to your GitHub account (e.g. <code>git push origin main</code>).
+                                    </p>
+                                </div>
+
+                                <div className="p-3.5 bg-card border border-border rounded-lg space-y-2">
+                                    <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
+                                        <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] flex items-center justify-center font-bold">2</span>
+                                        Automatic Build Triggers
+                                    </h3>
+                                    <p className="text-xs text-foreground/70 pl-7">
+                                        GitHub Actions automatically triggers the <strong>Build Android APK</strong> workflow, compiles the web app into Capacitor Android, builds with Gradle (JDK 17), and signs the debug APK.
+                                    </p>
+                                </div>
+
+                                <div className="p-3.5 bg-card border border-border rounded-lg space-y-2">
+                                    <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
+                                        <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] flex items-center justify-center font-bold">3</span>
+                                        Download Ready APK Artifact
+                                    </h3>
+                                    <p className="text-xs text-foreground/70 pl-7">
+                                        Go to your GitHub repository &rarr; <strong>Actions</strong> tab &rarr; click on the latest workflow run &rarr; under <strong>Artifacts</strong>, click <strong>SchoolManagementPro-v2-debug</strong> to download your Android APK!
+                                    </p>
+                                </div>
+                            </div>
+                        </Card>
+
+                        <Card className="p-4">
+                            <div className="flex items-center gap-2 text-sm font-semibold mb-3 border-b border-border pb-2">
+                                <SmartphoneIcon className="w-4 h-4 text-primary" />
+                                <h3>Configuration Details</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                <div className="p-3 bg-background rounded-lg border border-border">
+                                    <p className="font-semibold text-foreground/90">Package Name / App ID</p>
+                                    <p className="text-foreground/60 font-mono mt-1">com.schoolmanagement.pro</p>
+                                </div>
+                                <div className="p-3 bg-background rounded-lg border border-border">
+                                    <p className="font-semibold text-foreground/90">Capacitor Web Directory</p>
+                                    <p className="text-foreground/60 font-mono mt-1">dist</p>
+                                </div>
+                                <div className="p-3 bg-background rounded-lg border border-border">
+                                    <p className="font-semibold text-foreground/90">Workflow File</p>
+                                    <p className="text-foreground/60 font-mono mt-1">.github/workflows/build-apk.yml</p>
+                                </div>
+                                <div className="p-3 bg-background rounded-lg border border-border">
+                                    <p className="font-semibold text-foreground/90">Build System</p>
+                                    <p className="text-foreground/60 font-mono mt-1">Gradle JDK 17 (Ubuntu Latest)</p>
+                                </div>
                             </div>
                         </Card>
                     </div>
