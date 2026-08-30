@@ -33,12 +33,8 @@ jobs:
       - name: Build Web Application
         run: npm run build
 
-      - name: Ensure Capacitor Android Project & Sync
-        run: |
-          if [ ! -d "android" ] || [ ! -f "android/gradlew" ]; then
-            npx cap add android
-          fi
-          npx cap sync android
+      - name: Sync Capacitor Android
+        run: npx cap sync android
 
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v3
