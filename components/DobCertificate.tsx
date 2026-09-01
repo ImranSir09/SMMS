@@ -21,11 +21,14 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails,
             <div id="dob-certificate" className="w-[210mm] h-[297mm] bg-white p-10 flex flex-col font-serif text-black relative">
                 
                 {/* Watermark */}
-                {schoolDetails?.logo && (
-                    <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
-                        <img src={schoolDetails.logo} alt="Watermark" className="w-3/4 max-h-3/4 object-contain opacity-[0.03]" />
-                    </div>
-                )}
+                <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+                    <img 
+                        src={schoolDetails?.logo || '/icon.png'} 
+                        alt="Watermark" 
+                        className="w-3/4 max-h-3/4 object-contain opacity-[0.03]" 
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+                    />
+                </div>
 
                 {/* Decorative Border */}
                 <div className="absolute inset-4 border-[6px] border-double border-slate-900 pointer-events-none"></div>
@@ -35,9 +38,12 @@ const DobCertificate: React.FC<DobCertificateProps> = ({ student, schoolDetails,
                     {/* Header */}
                     <header className="text-center mb-8 border-b border-gray-300 pb-6">
                         <div className="flex flex-col items-center">
-                            {schoolDetails?.logo && (
-                                <img src={schoolDetails.logo} alt="School Logo" className="w-24 h-24 mb-2 object-contain" />
-                            )}
+                            <img 
+                                src={schoolDetails?.logo || '/icon.png'} 
+                                alt="School Logo" 
+                                className="w-24 h-24 mb-2 object-contain" 
+                                onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+                            />
                             <h1 className="text-4xl font-bold tracking-wide text-slate-900 font-serif uppercase">
                                 {schoolDetails?.name || 'School Name'}
                             </h1>

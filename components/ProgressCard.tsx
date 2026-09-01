@@ -72,7 +72,12 @@ const ProgressCard: React.FC<ProgressCardProps> = ({ student, marks, schoolDetai
             <div className="absolute inset-2 border border-slate-400"></div>
 
             <header className="text-center mb-2 z-10">
-                {schoolDetails.logo && <img src={schoolDetails.logo} alt="School Logo" className="h-28 w-28 mx-auto object-contain mb-1" />}
+                <img 
+                    src={schoolDetails.logo || '/icon.png'} 
+                    alt="School Logo" 
+                    className="h-28 w-28 mx-auto object-contain mb-1" 
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+                />
                 <h1 className="text-2xl font-bold font-gothic tracking-wide">{schoolDetails.name.toUpperCase()}</h1>
                 <p className="text-xs">{schoolDetails.address}</p>
             </header>

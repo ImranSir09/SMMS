@@ -69,15 +69,23 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
             
             {/* Header */}
             <header className="text-center mb-4 border-b-2 border-slate-800 pb-3">
-              <h1 className="text-2xl font-bold uppercase tracking-wider text-slate-900 font-serif">{schoolDetails?.name || 'School Name'}</h1>
-              <p className="text-sm text-slate-700 font-medium">{schoolDetails?.address || 'School Address'}</p>
-              <div className="flex items-center justify-center gap-3 text-xs text-slate-500 mt-1">
-                {schoolDetails?.udiseCode && <span>UDISE: <strong>{schoolDetails.udiseCode}</strong></span>}
-                {schoolDetails?.phone && <span>| Ph: <strong>{schoolDetails.phone}</strong></span>}
-                {schoolDetails?.email && <span>| Email: <strong>{schoolDetails.email}</strong></span>}
-              </div>
-              <div className="mt-2 inline-block bg-slate-900 text-white text-xs font-semibold px-4 py-1 rounded-full uppercase tracking-wider">
-                Consolidated Roll Statement (General / ST & Total) — Session {session}
+              <div className="flex flex-col items-center">
+                <img 
+                  src={schoolDetails?.logo || '/icon.png'} 
+                  alt="School Logo" 
+                  className="w-16 h-16 mb-2 object-contain" 
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+                />
+                <h1 className="text-2xl font-bold uppercase tracking-wider text-slate-900 font-serif">{schoolDetails?.name || 'School Name'}</h1>
+                <p className="text-sm text-slate-700 font-medium">{schoolDetails?.address || 'School Address'}</p>
+                <div className="flex items-center justify-center gap-3 text-xs text-slate-500 mt-1">
+                  {schoolDetails?.udiseCode && <span>UDISE: <strong>{schoolDetails.udiseCode}</strong></span>}
+                  {schoolDetails?.phone && <span>| Ph: <strong>{schoolDetails.phone}</strong></span>}
+                  {schoolDetails?.email && <span>| Email: <strong>{schoolDetails.email}</strong></span>}
+                </div>
+                <div className="mt-2 inline-block bg-slate-900 text-white text-xs font-semibold px-4 py-1 rounded-full uppercase tracking-wider">
+                  Consolidated Roll Statement (General / ST & Total) — Session {session}
+                </div>
               </div>
             </header>
             

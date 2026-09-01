@@ -22,17 +22,23 @@ const SubjectTopperList: React.FC<SubjectTopperListProps> = ({ toppers, examName
         <div className="absolute inset-2 border-2 border-blue-400 rounded-sm"></div>
         
         {/* Watermark Logo */}
-        {schoolDetails?.logo && (
-            <div className="absolute inset-0 flex items-center justify-center z-0">
-                <img src={schoolDetails.logo} alt="Logo" className="w-1/2 max-h-1/2 object-contain opacity-10" />
-            </div>
-        )}
+        <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+            <img 
+                src={schoolDetails?.logo || '/icon.png'} 
+                alt="Logo" 
+                className="w-1/2 max-h-1/2 object-contain opacity-10" 
+                onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+            />
+        </div>
 
         <div className="relative z-10 flex flex-col h-full p-4">
             <header className="text-center mb-10">
-                {schoolDetails?.logo && (
-                    <img src={schoolDetails.logo} alt="School Logo" className="w-28 h-28 mx-auto mb-2 object-contain" />
-                )}
+                <img 
+                    src={schoolDetails?.logo || '/icon.png'} 
+                    alt="School Logo" 
+                    className="w-28 h-28 mx-auto mb-2 object-contain" 
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+                />
               <h1 className="text-3xl font-bold font-gothic text-blue-900 tracking-wider">{schoolDetails.name}</h1>
               <p className="text-md text-gray-700">{schoolDetails.address}</p>
               <h2 className="text-2xl font-semibold mt-8 text-gray-800">Certificate of Academic Excellence</h2>

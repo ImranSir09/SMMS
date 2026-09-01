@@ -17,9 +17,12 @@ const CoCurricularReport: React.FC<CoCurricularReportProps> = ({ student, school
       <div id="co-curricular-report" className="w-[210mm] h-[297mm] bg-white p-4 font-sans text-black flex flex-col">
         <div className="w-full h-full border-4 border-dashed border-black p-4 flex flex-col relative">
           
-          {schoolDetails.logo && (
-            <img src={schoolDetails.logo} alt="School Logo" className="w-20 h-20 object-contain absolute top-6 left-8" />
-          )}
+          <img 
+            src={schoolDetails?.logo || '/icon.png'} 
+            alt="School Logo" 
+            className="w-20 h-20 object-contain absolute top-6 left-8" 
+            onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+          />
 
           <header className="text-center mb-4 mt-2">
             <p className="font-semibold text-lg">Govt. of Jammu and Kashmir</p>

@@ -86,15 +86,14 @@ const Dashboard: React.FC = () => {
                     {/* Logo */}
                     <div className="relative flex-shrink-0">
                         <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white/50 dark:bg-black/20 backdrop-blur-sm p-2 shadow-sm border border-foreground/5 flex items-center justify-center">
-                            {schoolDetails?.logo ? (
-                                <img 
-                                    src={schoolDetails.logo} 
-                                    alt="School Logo" 
-                                    className="w-full h-full object-contain drop-shadow-sm" 
-                                />
-                            ) : (
-                                <SchoolIcon className="w-8 h-8 text-primary" />
-                            )}
+                            <img 
+                                src={schoolDetails?.logo || '/icon.png'} 
+                                alt="School Logo" 
+                                className="w-full h-full object-contain drop-shadow-sm rounded-xl"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/icon.png';
+                                }}
+                            />
                         </div>
                     </div>
 

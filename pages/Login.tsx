@@ -91,13 +91,15 @@ const Login: React.FC = () => {
 
             <div className="w-full max-w-md bg-card border border-border p-8 rounded-2xl shadow-xl z-10 relative">
                 <div className="text-center mb-8">
-                    {schoolDetails?.logo ? (
-                        <img src={schoolDetails.logo} alt="Logo" className="h-20 w-auto mx-auto mb-4 object-contain" />
-                    ) : (
-                        <div className="mx-auto h-16 w-16 flex items-center justify-center bg-primary/10 rounded-full mb-4">
-                            <SchoolIcon className="w-8 h-8 text-primary" />
-                        </div>
-                    )}
+                    <img 
+                        src={schoolDetails?.logo || '/icon.png'} 
+                        alt="Logo" 
+                        className="h-20 w-auto mx-auto mb-4 object-contain rounded-xl drop-shadow-sm" 
+                        onError={(e) => {
+                            // Fallback to default icon if image fails to load
+                            (e.target as HTMLImageElement).src = '/icon.png';
+                        }}
+                    />
                     <h1 className="text-2xl font-bold">{schoolDetails?.name || 'School Management'}</h1>
                     <p className="text-sm text-foreground/60 mt-1">
                         {isResetMode ? 'Reset Access Credentials' : 'Welcome back! Please login to continue.'}

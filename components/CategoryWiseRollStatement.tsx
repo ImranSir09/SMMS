@@ -47,9 +47,12 @@ const CategoryWiseRollStatement: React.FC<RollStatementProps> = ({ students, cla
         {/* Header */}
         <header className="text-center mb-6 border-b-2 border-slate-800 pb-4">
           <div className="flex flex-col items-center">
-            {schoolDetails?.logo && (
-              <img src={schoolDetails.logo} alt="School Logo" className="w-20 h-20 mb-2 object-contain" />
-            )}
+            <img 
+              src={schoolDetails?.logo || '/icon.png'} 
+              alt="School Logo" 
+              className="w-20 h-20 mb-2 object-contain" 
+              onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+            />
             <h1 className="text-2xl font-bold uppercase tracking-wider text-slate-900 font-serif">
               {schoolDetails?.name || 'School Name'}
             </h1>

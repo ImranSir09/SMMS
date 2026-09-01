@@ -17,11 +17,14 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
         <div className="A4-page-container">
             <div id="bonafide-certificate" className="w-[210mm] h-[297mm] bg-white p-10 flex flex-col font-serif text-black relative">
                 {/* Watermark Logo */}
-                {schoolDetails?.logo && (
-                    <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
-                        <img src={schoolDetails.logo} alt="Logo" className="w-3/4 max-h-3/4 object-contain opacity-[0.03]" />
-                    </div>
-                )}
+                <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+                    <img 
+                        src={schoolDetails?.logo || '/icon.png'} 
+                        alt="Logo" 
+                        className="w-3/4 max-h-3/4 object-contain opacity-[0.03]" 
+                        onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+                    />
+                </div>
                 
                 {/* Decorative Border */}
                 <div className="absolute inset-4 border-4 border-double border-slate-800 pointer-events-none"></div>
@@ -32,9 +35,12 @@ const BonafideCertificate: React.FC<BonafideCertificateProps> = ({ student, scho
                     {/* Header */}
                     <header className="text-center mb-8 border-b-2 border-gray-800 pb-6">
                         <div className="flex flex-col items-center">
-                            {schoolDetails?.logo && (
-                                <img src={schoolDetails.logo} alt="School Logo" className="h-24 w-24 object-contain mb-3" />
-                            )}
+                            <img 
+                                src={schoolDetails?.logo || '/icon.png'} 
+                                alt="School Logo" 
+                                className="h-24 w-24 object-contain mb-3" 
+                                onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+                            />
                             <h1 className="text-4xl font-bold text-slate-900 uppercase tracking-wide font-serif">
                                 {schoolDetails?.name || 'Institution Name'}
                             </h1>

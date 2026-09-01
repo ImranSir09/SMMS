@@ -412,14 +412,15 @@ const Settings: React.FC = () => {
                             <div>
                                 <label className="block text-xs font-medium text-foreground/80 mb-1">School Logo</label>
                                 <div className="flex items-center gap-3">
-                                    {logoPreview ? (
-                                        <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 object-contain rounded-md border border-border p-1" />
-                                    ) : (
-                                        <div className="w-16 h-16 rounded-md bg-background flex items-center justify-center text-xs text-foreground/50 border border-border">No Logo</div>
-                                    )}
+                                    <img 
+                                        src={logoPreview || '/icon.png'} 
+                                        alt="Logo Preview" 
+                                        className="w-16 h-16 object-contain rounded-md border border-border p-1 bg-white" 
+                                        onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+                                    />
                                     <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-3 rounded-lg bg-background border border-dashed border-input hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
                                         <UploadIcon className="w-4 h-4 text-foreground/60" />
-                                        <span className="text-xs text-foreground/80">Upload Logo (Auto-Resized)</span>
+                                        <span className="text-xs text-foreground/80">{logoPreview ? 'Change Logo (Auto-Resized)' : 'Upload Custom Logo'}</span>
                                         <input type="file" accept="image/png, image/jpeg" onChange={handleLogoChange} className="hidden" />
                                     </label>
                                 </div>

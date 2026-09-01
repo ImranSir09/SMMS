@@ -66,7 +66,12 @@ const NepProgressCard: React.FC<NepProgressCardProps> = ({ student, marks, schoo
     <div id="nep-progress-card" className="w-[210mm] h-[297mm] bg-white p-4 font-sans text-slate-900">
         <div className="w-full h-full border-2 border-slate-800 p-3 flex flex-col relative">
             <header className="text-center mb-2 z-10">
-                {schoolDetails.logo && <img src={schoolDetails.logo} alt="School Logo" className="h-28 w-28 mx-auto object-contain mb-1" />}
+                <img 
+                    src={schoolDetails.logo || '/icon.png'} 
+                    alt="School Logo" 
+                    className="h-28 w-28 mx-auto object-contain mb-1" 
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/icon.png'; }}
+                />
                 <h1 className="text-2xl font-bold font-gothic tracking-wide">{schoolDetails.name.toUpperCase()}</h1>
                 <p className="text-xs">{schoolDetails.address}</p>
             </header>

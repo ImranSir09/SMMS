@@ -75,9 +75,7 @@ const Setup: React.FC = () => {
     const renderActivationStep = () => (
         <div className="space-y-4 animate-fade-in">
              <div className="text-center mb-6">
-                <div className="inline-flex p-3 rounded-full bg-red-100 text-red-600 mb-3">
-                    <KeyIcon className="w-8 h-8" />
-                </div>
+                <img src="/icon.png" alt="App Icon" className="w-16 h-16 mx-auto mb-3 object-contain rounded-2xl drop-shadow-md" />
                 <h2 className="text-xl font-bold">Product Activation</h2>
                 <p className="text-xs text-foreground/60">This software is protected. Enter key to activate.</p>
             </div>
