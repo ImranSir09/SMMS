@@ -44,7 +44,7 @@ const App: React.FC = () => {
   }, [theme]);
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && !import.meta.env.DEV) {
       const registerServiceWorker = () => {
         navigator.serviceWorker.register('/sw.js')
           .then(registration => console.log('Service Worker registered successfully:', registration))

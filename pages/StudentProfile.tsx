@@ -119,7 +119,7 @@ const StudentProfile: React.FC = () => {
     const handleDelete = async () => {
         if (student && studentId && window.confirm(`Are you sure you want to delete ${student.name}? This will also delete all associated marks and cannot be undone.`)) {
             try {
-                await db.transaction('rw', db.students, db.marks, db.studentExamData, db.hpcReports, db.sbaReports, db.detailedFormativeAssessments, db.studentSessionInfo, async () => {
+                await db.transaction('rw', [db.students, db.marks, db.studentExamData, db.hpcReports, db.sbaReports, db.detailedFormativeAssessments, db.studentSessionInfo] as any, async () => {
                     await db.marks.where('studentId').equals(studentId).delete();
                     await db.studentExamData.where('studentId').equals(studentId).delete();
                     await db.hpcReports.where('studentId').equals(studentId).delete();

@@ -1,9 +1,8 @@
-
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { Student, SchoolDetails } from '../types';
-import { CLASS_OPTIONS } from '../constants';
+import { CLASS_OPTIONS, CATEGORY_OPTIONS } from '../constants';
 import { formatDateLong, dateToWords, formatDateDDMMYYYY } from './formatters';
 
 // --- Helper: Draw Decorative Border ---
@@ -11,190 +10,248 @@ const drawDecorativeBorder = (doc: jsPDF) => {
     const width = doc.internal.pageSize.getWidth();
     const height = doc.internal.pageSize.getHeight();
     
-    // Outer double line
-    doc.setLineWidth(1);
-    doc.rect(5, 5, width - 10, height - 10);
-    doc.setLineWidth(0.5);
-    doc.rect(7, 7, width - 14, height - 14);
+    // Outer border
+    doc.setDrawColor(30, 41, 59); // Slate 800
+    doc.setLineWidth(1.2);
+    doc.rect(6, 6, width - 12, height - 12);
     
-    // Inner thin line
+    // Inner fine line
+    doc.setLineWidth(0.4);
+    doc.setDrawColor(71, 85, 105); // Slate 600
+    doc.rect(8.5, 8.5, width - 17, height - 17);
+    
+    // Innermost hairline
     doc.setLineWidth(0.2);
-    doc.rect(10, 10, width - 20, height - 20);
+    doc.setDrawColor(148, 163, 184); // Slate 400
+    doc.rect(11, 11, width - 22, height - 22);
     
-    // Corner Ornaments (Simple lines for elegance)
-    doc.setLineWidth(1.5);
-    const cornerSize = 15;
+    // Corner Ornaments
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(1.2);
+    const cornerSize = 14;
+    
     // Top Left
-    doc.line(12, 12, 12 + cornerSize, 12);
-    doc.line(12, 12, 12, 12 + cornerSize);
+    doc.line(13, 13, 13 + cornerSize, 13);
+    doc.line(13, 13, 13, 13 + cornerSize);
+    doc.circle(13, 13, 0.8, 'F');
+    
     // Top Right
-    doc.line(width - 12, 12, width - 12 - cornerSize, 12);
-    doc.line(width - 12, 12, width - 12, 12 + cornerSize);
+    doc.line(width - 13, 13, width - 13 - cornerSize, 13);
+    doc.line(width - 13, 13, width - 13, 13 + cornerSize);
+    doc.circle(width - 13, 13, 0.8, 'F');
+    
     // Bottom Left
-    doc.line(12, height - 12, 12 + cornerSize, height - 12);
-    doc.line(12, height - 12, 12, height - 12 - cornerSize);
+    doc.line(13, height - 13, 13 + cornerSize, height - 13);
+    doc.line(13, height - 13, 13, height - 13 - cornerSize);
+    doc.circle(13, height - 13, 0.8, 'F');
+    
     // Bottom Right
-    doc.line(width - 12, height - 12, width - 12 - cornerSize, height - 12);
-    doc.line(width - 12, height - 12, width - 12, height - 12 - cornerSize);
+    doc.line(width - 13, height - 13, width - 13 - cornerSize, height - 13);
+    doc.line(width - 13, height - 13, width - 13, height - 13 - cornerSize);
+    doc.circle(width - 13, height - 13, 0.8, 'F');
 };
 
 // --- Helper: Header with Serif Fonts ---
-const addCertificateHeader = (doc: jsPDF, schoolDetails: SchoolDetails, yPos = 30) => {
+const addCertificateHeader = (doc: jsPDF, schoolDetails: SchoolDetails, yPos = 24) => {
     const pageWidth = doc.internal.pageSize.getWidth();
     
     if (schoolDetails.logo) {
         try {
-            // Supports PNG transparency
-            doc.addImage(schoolDetails.logo, 'PNG', (pageWidth / 2) - 12, yPos - 15, 24, 24);
-            yPos += 15;
-        } catch (e) { console.warn("Logo add failed", e); }
+            doc.addImage(schoolDetails.logo, 'PNG', (pageWidth / 2) - 12, yPos - 10, 24, 24);
+            yPos += 18;
+        } catch (e) { 
+            console.warn("Logo add failed", e); 
+        }
     }
 
     doc.setFont('times', 'bold');
-    doc.setFontSize(24);
-    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(22);
+    doc.setTextColor(15, 23, 42); // Slate 900
     doc.text(schoolDetails.name.toUpperCase(), pageWidth / 2, yPos, { align: 'center' });
     
     yPos += 6;
     doc.setFont('times', 'normal');
-    doc.setFontSize(11);
+    doc.setFontSize(10.5);
+    doc.setTextColor(51, 65, 85);
     doc.text(schoolDetails.address, pageWidth / 2, yPos, { align: 'center' });
     
     yPos += 5;
-    let contact = '';
-    if (schoolDetails.udiseCode) contact += `UDISE: ${schoolDetails.udiseCode}  `;
-    if (schoolDetails.phone) contact += `Ph: ${schoolDetails.phone}`;
-    if (schoolDetails.email) contact += ` | Email: ${schoolDetails.email}`;
+    const metaParts: string[] = [];
+    if (schoolDetails.udiseCode) metaParts.push(`UDISE Code: ${schoolDetails.udiseCode}`);
+    if (schoolDetails.phone) metaParts.push(`Ph: ${schoolDetails.phone}`);
+    if (schoolDetails.email) metaParts.push(`Email: ${schoolDetails.email}`);
     
-    doc.setFontSize(9);
-    doc.setTextColor(60);
-    doc.text(contact, pageWidth / 2, yPos, { align: 'center' });
-    doc.setTextColor(0); // Reset color
-
-    return yPos + 15; // Return next Y position
+    if (metaParts.length > 0) {
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text(metaParts.join('  |  '), pageWidth / 2, yPos, { align: 'center' });
+    }
+    
+    doc.setTextColor(0, 0, 0); // Reset color
+    return yPos + 12; // Return next Y position
 };
 
 // --- 1. Vector DOB Certificate ---
 export const generateDobCertificatePdf = async (student: Student, schoolDetails: SchoolDetails, photo?: string | null) => {
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     
     drawDecorativeBorder(doc);
-    let y = 25;
+    let y = 22;
     y = addCertificateHeader(doc, schoolDetails, y);
 
-    // Divider Line
-    doc.setLineWidth(0.5);
-    doc.line(20, y - 5, pageWidth - 20, y - 5);
+    // Decorative Divider Line
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.6);
+    doc.line(22, y - 4, pageWidth - 22, y - 4);
+    doc.setLineWidth(0.2);
+    doc.line(22, y - 2.5, pageWidth - 22, y - 2.5);
 
-    // Photo Placeholder
-    const photoW = 25;
-    const photoH = 32;
-    const photoX = pageWidth - 35;
-    const photoY = y + 10;
+    // Photo Box / Placeholder
+    const photoW = 28;
+    const photoH = 34;
+    const photoX = pageWidth - 44;
+    const photoY = y + 8;
     
-    // Render Photo if available
     if (photo) {
         try {
             doc.addImage(photo, 'JPEG', photoX, photoY, photoW, photoH);
-        } catch (e) { console.warn("Photo add failed", e); }
-    }
-    
-    // Placeholder box border
-    doc.setLineWidth(0.2);
-    doc.setDrawColor(100);
-    doc.rect(photoX, photoY, photoW, photoH);
-    if (!photo) {
+            doc.setDrawColor(71, 85, 105);
+            doc.setLineWidth(0.3);
+            doc.rect(photoX, photoY, photoW, photoH);
+        } catch (e) { 
+            console.warn("Photo add failed", e); 
+        }
+    } else {
+        doc.setDrawColor(148, 163, 184);
+        doc.setLineWidth(0.3);
+        (doc as any).setLineDash?.([1.5, 1.5], 0);
+        doc.rect(photoX, photoY, photoW, photoH);
+        (doc as any).setLineDash?.([], 0);
+        doc.setFont('times', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Affix Photo", photoX + photoW / 2, photoY + photoH / 2 - 2, { align: 'center' });
         doc.setFontSize(7);
-        doc.text("Affix Photo", photoX + photoW/2, photoY + photoH/2, { align: 'center' });
+        doc.text("(Passport Size)", photoX + photoW / 2, photoY + photoH / 2 + 3, { align: 'center' });
+        doc.setTextColor(0, 0, 0);
     }
 
     // Title
-    y += 15;
+    y += 12;
     doc.setFont('times', 'bold');
-    doc.setFontSize(22);
+    doc.setFontSize(18);
+    doc.setTextColor(15, 23, 42);
     doc.text('DATE OF BIRTH CERTIFICATE', pageWidth / 2, y, { align: 'center' });
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth / 2 - 50, y + 2, pageWidth / 2 + 50, y + 2);
-    doc.line(pageWidth / 2 - 50, y + 3.5, pageWidth / 2 + 50, y + 3.5); // Double underline style
+    
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.6);
+    doc.line(pageWidth / 2 - 55, y + 2.5, pageWidth / 2 + 55, y + 2.5);
+    doc.setLineWidth(0.2);
+    doc.line(pageWidth / 2 - 45, y + 4, pageWidth / 2 + 45, y + 4);
 
     // Intro Text
-    y += 20;
+    y += 16;
     doc.setFont('times', 'italic');
-    doc.setFontSize(12);
-    doc.text('This is to certify that the following information has been taken from the original Admission Register of the school.', pageWidth / 2, y, { align: 'center', maxWidth: pageWidth - 60 });
+    doc.setFontSize(11);
+    doc.setTextColor(71, 85, 105);
+    doc.text('This is to certify that the following information has been taken from the original Admission Register of the school.', pageWidth / 2, y, { align: 'center', maxWidth: pageWidth - 65 });
 
     // Details Section
-    y += 20;
-    const labelX = 30;
-    const valueX = 85;
-    const lineHeight = 12;
+    y += 16;
+    const labelX = 26;
+    const valueX = 75;
+    const lineEndX = pageWidth - 50;
+    const lineHeight = 11;
 
     const drawDetailRow = (label: string, value: string) => {
         doc.setFont('times', 'bold');
-        doc.setFontSize(11);
+        doc.setFontSize(10.5);
+        doc.setTextColor(51, 65, 85);
         doc.text(label.toUpperCase(), labelX, y);
         
         doc.setFont('times', 'bold');
-        doc.setFontSize(13);
-        doc.text(value, valueX, y);
+        doc.setFontSize(11.5);
+        doc.setTextColor(15, 23, 42);
+        doc.text(value || '-', valueX, y);
         
-        // Dotted line
+        // Dotted leader line
         doc.setLineWidth(0.2);
-        doc.setLineDash([1, 1], 0);
-        doc.line(valueX, y + 1, pageWidth - 60, y + 1);
-        doc.setLineDash([], 0);
+        doc.setDrawColor(203, 213, 225);
+        (doc as any).setLineDash?.([0.8, 1.2], 0);
+        doc.line(valueX, y + 1.2, lineEndX, y + 1.2);
+        (doc as any).setLineDash?.([], 0);
         
         y += lineHeight;
     };
 
     drawDetailRow("Name of Student", student.name);
-    drawDetailRow("Admission No", student.admissionNo);
+    drawDetailRow("Admission No.", student.admissionNo);
     drawDetailRow("Father's Name", student.fathersName);
     drawDetailRow("Mother's Name", student.mothersName);
-    drawDetailRow("Class / Section", `${student.className}  '${student.section}'`);
+    drawDetailRow("Class / Section", `${student.className || '-'}  '${student.section || '-'}'`);
     drawDetailRow("D.O.B (Figures)", formatDateDDMMYYYY(student.dob));
     
-    // DOB Words
+    // DOB in Words
     doc.setFont('times', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(10.5);
+    doc.setTextColor(51, 65, 85);
     doc.text("D.O.B (WORDS)", labelX, y);
-    doc.setFont('times', 'bolditalic');
-    doc.setFontSize(12);
-    const dobWords = dateToWords(student.dob);
-    const splitDob = doc.splitTextToSize(dobWords, pageWidth - valueX - 40);
-    doc.text(splitDob, valueX, y);
-    doc.setLineWidth(0.2);
-    doc.setLineDash([1, 1], 0);
-    doc.line(valueX, y + 2, pageWidth - 60, y + 2);
-    doc.setLineDash([], 0);
     
-    y += lineHeight * 2;
+    doc.setFont('times', 'bolditalic');
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    const dobWords = dateToWords(student.dob);
+    const splitDob = doc.splitTextToSize(dobWords, lineEndX - valueX);
+    doc.text(splitDob, valueX, y);
+    
+    doc.setLineWidth(0.2);
+    doc.setDrawColor(203, 213, 225);
+    (doc as any).setLineDash?.([0.8, 1.2], 0);
+    doc.line(valueX, y + 1.5, lineEndX, y + 1.5);
+    (doc as any).setLineDash?.([], 0);
+    
+    y += (splitDob.length * 5) + 14;
 
-    // Footer Note
+    // Official Verification Notice Box
+    doc.setDrawColor(226, 232, 240);
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(26, y - 3, pageWidth - 52, 12, 1.5, 1.5, 'FD');
+    
     doc.setFont('times', 'italic');
     doc.setFontSize(9);
-    doc.setTextColor(100);
-    doc.text("Note: This certificate is issued for official purposes only based on school records.", pageWidth / 2, y, { align: 'center' });
-    doc.setTextColor(0);
+    doc.setTextColor(100, 116, 139);
+    doc.text("Note: This certificate is issued for official purposes only based on certified school admission records.", pageWidth / 2, y + 4, { align: 'center' });
 
     // Signatures
-    const sigY = 250;
-    const date = new Date().toLocaleDateString('en-GB');
+    const sigY = pageHeight - 38;
+    const date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    const place = schoolDetails.address.split(',').pop()?.trim() || 'School Campus';
     
     doc.setFont('times', 'normal');
-    doc.setFontSize(11);
+    doc.setFontSize(10.5);
+    doc.setTextColor(51, 65, 85);
     
-    // Left
-    doc.text(`Place: ${schoolDetails.address.split(',').pop()?.trim() || '___________'}`, 30, sigY - 6);
-    doc.text(`Date: ${date}`, 30, sigY);
+    // Left: Issue particulars
+    doc.text(`Place: ${place}`, 28, sigY - 5);
+    doc.text(`Date of Issue: ${date}`, 28, sigY + 2);
 
-    // Right
+    // Right: Principal / Headmaster
+    const rightCenterX = pageWidth - 48;
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.6);
+    doc.line(rightCenterX - 28, sigY - 8, rightCenterX + 28, sigY - 8);
+    
     doc.setFont('times', 'bold');
-    doc.text("Principal / Headmaster", pageWidth - 40, sigY, { align: 'center' });
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Principal / Headmaster", rightCenterX, sigY - 2, { align: 'center' });
+    
     doc.setFont('times', 'normal');
-    doc.setFontSize(9);
-    doc.text("(Signature with Seal)", pageWidth - 40, sigY + 5, { align: 'center' });
+    doc.setFontSize(8.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text("(Signature with Seal)", rightCenterX, sigY + 4, { align: 'center' });
 
     doc.save(`${student.name}_DOB_Certificate.pdf`);
 };
@@ -203,145 +260,165 @@ export const generateDobCertificatePdf = async (student: Student, schoolDetails:
 export const generateBonafideCertificatePdf = async (student: Student, schoolDetails: SchoolDetails, photo?: string | null) => {
     const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     
     drawDecorativeBorder(doc);
-    let y = 25;
+    let y = 22;
     y = addCertificateHeader(doc, schoolDetails, y);
 
     // Divider
-    doc.setLineWidth(0.5);
-    doc.line(20, y - 5, pageWidth - 20, y - 5);
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.6);
+    doc.line(22, y - 4, pageWidth - 22, y - 4);
+    doc.setLineWidth(0.2);
+    doc.line(22, y - 2.5, pageWidth - 22, y - 2.5);
 
-    // Photo Placeholder (Right aligned)
-    const photoW = 25;
-    const photoH = 32;
-    const photoX = pageWidth - 35;
-    const photoY = y + 5;
+    // Photo Box / Placeholder
+    const photoW = 28;
+    const photoH = 34;
+    const photoX = pageWidth - 44;
+    const photoY = y + 8;
     
-    // Render Photo if available
     if (photo) {
         try {
             doc.addImage(photo, 'JPEG', photoX, photoY, photoW, photoH);
-        } catch (e) { console.warn("Photo add failed", e); }
-    }
-
-    doc.setLineWidth(0.2);
-    doc.setDrawColor(100);
-    doc.rect(photoX, photoY, photoW, photoH);
-    
-    if (!photo) {
+            doc.setDrawColor(71, 85, 105);
+            doc.setLineWidth(0.3);
+            doc.rect(photoX, photoY, photoW, photoH);
+        } catch (e) { 
+            console.warn("Photo add failed", e); 
+        }
+    } else {
+        doc.setDrawColor(148, 163, 184);
+        doc.setLineWidth(0.3);
+        (doc as any).setLineDash?.([1.5, 1.5], 0);
+        doc.rect(photoX, photoY, photoW, photoH);
+        (doc as any).setLineDash?.([], 0);
+        doc.setFont('times', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Affix Photo", photoX + photoW / 2, photoY + photoH / 2 - 2, { align: 'center' });
         doc.setFontSize(7);
-        doc.text("Affix Photo", photoX + photoW/2, photoY + photoH/2, { align: 'center' });
+        doc.text("(Passport Size)", photoX + photoW / 2, photoY + photoH / 2 + 3, { align: 'center' });
+        doc.setTextColor(0, 0, 0);
     }
 
     // Title
-    y += 15;
+    y += 12;
     doc.setFont('times', 'bold');
-    doc.setFontSize(22);
+    doc.setFontSize(18);
+    doc.setTextColor(15, 23, 42);
     doc.text('BONAFIDE CERTIFICATE', pageWidth / 2, y, { align: 'center' });
-    // Decorative line under title
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth / 2 - 45, y + 2, pageWidth / 2 + 45, y + 2);
     
-    y += 25;
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.6);
+    doc.line(pageWidth / 2 - 50, y + 2.5, pageWidth / 2 + 50, y + 2.5);
+    doc.setLineWidth(0.2);
+    doc.line(pageWidth / 2 - 40, y + 4, pageWidth / 2 + 40, y + 4);
+    
+    y += 18;
 
-    // Content
-    const margin = 25;
+    // Body Text
+    const margin = 24;
     const textWidth = pageWidth - (margin * 2);
-    doc.setFont('times', 'normal');
-    doc.setFontSize(14);
-    doc.setLineHeightFactor(1.5);
-
     const genderPronoun = student.gender === 'Female' ? 'daughter' : 'son';
     
-    // Paragraph 1
-    doc.text(`This is to certify that`, margin, y);
-    doc.setFont('times', 'bold');
-    doc.text(student.name.toUpperCase(), margin + 45, y);
     doc.setFont('times', 'normal');
-    
-    y += 10;
-    doc.text(`${genderPronoun} of Mr.`, margin, y);
-    doc.setFont('times', 'bold');
-    doc.text(student.fathersName.toUpperCase(), margin + 35, y);
-    doc.setFont('times', 'normal');
-    doc.text(`, is a bonafide student of this institution.`, margin + 35 + (doc.getTextWidth(student.fathersName.toUpperCase()) + 2), y);
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.setLineHeightFactor(1.5);
 
-    y += 12;
-    doc.text(`The student is studying in Class`, margin, y);
-    doc.setFont('times', 'bold');
-    doc.text(student.className, margin + 62, y);
-    doc.setFont('times', 'normal');
-    doc.text(`(Section '${student.section}') and bears Enrollment`, margin + 70, y); // Approx positioning
-    
-    y += 10;
-    doc.text(`Number`, margin, y);
-    doc.setFont('times', 'bold');
-    doc.text(student.admissionNo, margin + 18, y);
-    doc.setFont('times', 'normal');
-    doc.text(`for the academic session`, margin + 35, y);
-    doc.text(`____________________.`, margin + 85, y);
+    const p1 = `This is to certify that ${student.name.toUpperCase()}, ${genderPronoun} of Mr. ${student.fathersName.toUpperCase()}, is a bonafide student of this institution.`;
+    const splitP1 = doc.splitTextToSize(p1, textWidth);
+    doc.text(splitP1, margin, y);
+    y += (splitP1.length * 6) + 4;
 
-    y += 15;
-    const p3 = `During the period of study, the student has conducted themselves in a disciplined manner and is pursuing studies in accordance with the rules and regulations of the institution. This certificate is issued upon their request for whatever purpose it may serve.`;
+    const p2 = `The student is currently enrolled in Class ${student.className || '-'} (Section '${student.section || '-'}') under Admission/Enrollment Number ${student.admissionNo || '-'}.`;
+    const splitP2 = doc.splitTextToSize(p2, textWidth);
+    doc.text(splitP2, margin, y);
+    y += (splitP2.length * 6) + 4;
+
+    const p3 = `During the academic tenure, the student has maintained satisfactory conduct, discipline, and regular attendance in compliance with the institutional regulations. This certificate is issued upon request for official reference and documentation.`;
     const splitP3 = doc.splitTextToSize(p3, textWidth);
-    doc.text(splitP3, margin, y, { align: 'justify', maxWidth: textWidth });
+    doc.text(splitP3, margin, y, { maxWidth: textWidth });
+    y += (splitP3.length * 6) + 8;
+
+    // Student Particulars Box
+    const boxW = textWidth;
+    const boxH = 46;
+    doc.setDrawColor(203, 213, 225);
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(margin, y, boxW, boxH, 2, 2, 'FD');
     
-    y += (splitP3.length * 8) + 10;
-
-    // Details Box
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.2);
-    doc.rect(margin, y, textWidth, 50);
-    
-    let detailY = y + 10;
-    const detailLabelX = margin + 10;
-    const detailValueX = margin + 60;
-    const detailRowH = 8;
-
-    doc.setFontSize(12);
-    const addDetail = (label: string, value: string) => {
-        doc.setFont('times', 'bold');
-        doc.text(label, detailLabelX, detailY);
-        doc.setFont('times', 'normal');
-        doc.text(value, detailValueX, detailY);
-        detailY += detailRowH;
-    }
-
-    addDetail("Name:", student.name);
-    addDetail("Admission No:", student.admissionNo);
-    addDetail("Class:", student.className);
-    addDetail("Date of Birth:", student.dob ? formatDateLong(student.dob) : 'N/A');
-    addDetail("Duration:", `_________________ to _________________`);
-
-    y += 60;
-    doc.setFontSize(11);
-    doc.setFont('times', 'italic');
-    doc.text("\"We hereby confirm that the above-mentioned particulars are true to the best of our knowledge and school records.\"", pageWidth/2, y, { align: 'center', maxWidth: textWidth });
-
-    // Footer
-    const sigY = 250;
-    doc.setFont('times', 'normal');
-    doc.setFontSize(12);
-    
-    const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    doc.text(`Issued on: ${date}`, margin, sigY - 20);
-
-    // Signatures
-    // Left
+    // Box Title
     doc.setFont('times', 'bold');
-    doc.text("Prepared By", margin + 10, sigY, { align: 'center' });
-    doc.line(margin, sigY - 5, margin + 30, sigY - 5);
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105);
+    doc.text("STUDENT PARTICULARS", margin + 8, y + 7);
+    doc.setLineWidth(0.2);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(margin + 8, y + 9, margin + boxW - 8, y + 9);
 
-    // Right
-    const rightX = pageWidth - margin - 20;
-    doc.text("Principal / Headmaster", rightX, sigY, { align: 'center' });
-    doc.line(rightX - 30, sigY - 5, rightX + 30, sigY - 5);
-    doc.setFontSize(9);
+    let detailY = y + 15;
+    const dLabelX = margin + 8;
+    const dValueX = margin + 55;
+    const dRowH = 6.5;
+
+    const addDetail = (lbl: string, val: string) => {
+        doc.setFont('times', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(71, 85, 105);
+        doc.text(lbl, dLabelX, detailY);
+        
+        doc.setFont('times', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(15, 23, 42);
+        doc.text(val, dValueX, detailY);
+        detailY += dRowH;
+    };
+
+    addDetail("Full Name:", student.name);
+    addDetail("Admission No:", student.admissionNo);
+    addDetail("Class / Grade:", `${student.className || '-'} (Sec: ${student.section || '-'})`);
+    addDetail("Date of Birth:", student.dob ? formatDateLong(student.dob) : 'N/A');
+    addDetail("Father's Name:", student.fathersName);
+
+    y += boxH + 10;
+    
+    // Attestation Statement
+    doc.setFontSize(9.5);
+    doc.setFont('times', 'italic');
+    doc.setTextColor(100, 116, 139);
+    doc.text("\"We hereby attest that the above particulars are true and verified from official school records.\"", pageWidth / 2, y, { align: 'center', maxWidth: textWidth });
+
+    // Footer & Signatures
+    const sigY = pageHeight - 38;
+    const date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    
     doc.setFont('times', 'normal');
-    doc.text("(Seal & Signature)", rightX, sigY + 5, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Date of Issue: ${date}`, margin, sigY - 2);
 
-    doc.save(`${student.name}_Bonafide.pdf`);
+    // Left Signature: Prepared By
+    const leftSigX = margin + 25;
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.5);
+    doc.line(leftSigX - 20, sigY - 6, leftSigX + 20, sigY - 6);
+    doc.setFont('times', 'bold');
+    doc.text("Prepared By", leftSigX, sigY, { align: 'center' });
+
+    // Right Signature: Principal
+    const rightSigX = pageWidth - margin - 25;
+    doc.line(rightSigX - 25, sigY - 6, rightSigX + 25, sigY - 6);
+    doc.setFont('times', 'bold');
+    doc.text("Principal / Headmaster", rightSigX, sigY, { align: 'center' });
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text("(Seal & Signature)", rightSigX, sigY + 4.5, { align: 'center' });
+
+    doc.save(`${student.name}_Bonafide_Certificate.pdf`);
 };
 
 // --- 3. Vector Consolidated Roll Statement ---
@@ -350,39 +427,42 @@ export const generateConsolidatedRollStatementPdf = async (
     schoolDetails: SchoolDetails,
     session: string
 ) => {
-    const doc = new jsPDF({ orientation: 'landscape' });
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
     const TARGET_CATEGORIES = ['General', 'ST'];
 
-    // Simple text header for roll statement as it's a report, not a certificate
-    let yPos = 15;
+    let yPos = 14;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text(schoolDetails.name.toUpperCase(), doc.internal.pageSize.getWidth() / 2, yPos, { align: 'center' });
-    yPos += 6;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(schoolDetails.address, doc.internal.pageSize.getWidth() / 2, yPos, { align: 'center' });
+    doc.setFontSize(16);
+    doc.setTextColor(15, 23, 42);
+    doc.text(schoolDetails.name.toUpperCase(), pageWidth / 2, yPos, { align: 'center' });
     
-    yPos += 10;
-    doc.setFontSize(12);
+    yPos += 5.5;
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text(schoolDetails.address, pageWidth / 2, yPos, { align: 'center' });
+    
+    yPos += 7;
+    doc.setFontSize(11.5);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Consolidated Category & Gender Wise Roll Statement (${session})`, doc.internal.pageSize.getWidth() / 2, yPos, { align: 'center' });
+    doc.setTextColor(30, 41, 59);
+    doc.text(`Consolidated Category & Gender Wise Roll Statement (Session: ${session})`, pageWidth / 2, yPos, { align: 'center' });
 
     const head = [
         [
             { content: 'Class', rowSpan: 2, styles: { valign: 'middle', halign: 'center', fontStyle: 'bold' } },
             ...TARGET_CATEGORIES.map(cat => ({ content: cat, colSpan: 3, styles: { halign: 'center', fontStyle: 'bold' } })),
-            { content: 'Grand Total', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold', fillColor: [220, 220, 220] } }
+            { content: 'Grand Total', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold', fillColor: [30, 41, 59], textColor: 255 } }
         ],
         [
-            ...TARGET_CATEGORIES.flatMap(() => ['M', 'F', 'T']),
+            ...TARGET_CATEGORIES.flatMap(() => ['M', 'F', 'Total']),
             'M', 'F', 'Total'
         ]
     ];
 
     const body: any[] = [];
     
-    // Sort Classes
     const classNames = Array.from(studentsByClass.keys()).sort((a, b) => {
         const indexA = CLASS_OPTIONS.indexOf(a);
         const indexB = CLASS_OPTIONS.indexOf(b);
@@ -390,9 +470,8 @@ export const generateConsolidatedRollStatementPdf = async (
         return a.localeCompare(b, undefined, { numeric: true });
     });
 
-    // Grand Totals across all classes
     const grandTotals: { [key: string]: { M: number, F: number, T: number } } = {};
-    [...TARGET_CATEGORIES, 'Grand Total'].forEach(k => grandTotals[k] = { M:0, F:0, T:0 });
+    [...TARGET_CATEGORIES, 'Grand Total'].forEach(k => grandTotals[k] = { M: 0, F: 0, T: 0 });
 
     classNames.forEach(className => {
         const students = studentsByClass.get(className) || [];
@@ -401,7 +480,6 @@ export const generateConsolidatedRollStatementPdf = async (
         let rowGrandM = 0, rowGrandF = 0, rowGrandT = 0;
 
         TARGET_CATEGORIES.forEach(cat => {
-            // Logic: If student is ST -> ST. Else -> General.
             const catStudents = students.filter(s => {
                 const c = s.category || 'General';
                 return cat === 'ST' ? c === 'ST' : c !== 'ST'; 
@@ -411,23 +489,19 @@ export const generateConsolidatedRollStatementPdf = async (
             const f = catStudents.filter(s => s.gender === 'Female').length;
             const t = catStudents.length; 
 
-            row.push(m, f, t);
+            row.push(m || '', f || '', t || '');
 
-            // Add to Column Totals
             grandTotals[cat].M += m;
             grandTotals[cat].F += f;
             grandTotals[cat].T += t;
 
-            // Add to Row Totals
             rowGrandM += m;
             rowGrandF += f;
             rowGrandT += t;
         });
 
-        // Grand Total Columns for this Row
-        row.push(rowGrandM, rowGrandF, rowGrandT);
+        row.push(rowGrandM || '', rowGrandF || '', rowGrandT || '');
         
-        // Add to Grand Totals Footer
         grandTotals['Grand Total'].M += rowGrandM;
         grandTotals['Grand Total'].F += rowGrandF;
         grandTotals['Grand Total'].T += rowGrandT;
@@ -435,7 +509,6 @@ export const generateConsolidatedRollStatementPdf = async (
         body.push(row);
     });
 
-    // Footer Row
     const footerRow = ['TOTAL'];
     [...TARGET_CATEGORIES, 'Grand Total'].forEach(cat => {
         footerRow.push(String(grandTotals[cat].M));
@@ -444,109 +517,269 @@ export const generateConsolidatedRollStatementPdf = async (
     });
 
     autoTable(doc, {
-        head: head,
+        head: head as any,
         body: body,
         foot: [footerRow],
-        startY: 45,
+        startY: yPos + 4,
         theme: 'grid',
-        headStyles: { fillColor: [44, 62, 80], textColor: 255, lineWidth: 0.1 },
-        footStyles: { fillColor: [44, 62, 80], textColor: 255, fontStyle: 'bold' },
-        styles: { fontSize: 9, cellPadding: 1.5, halign: 'center', lineColor: [0, 0, 0], lineWidth: 0.1 },
+        headStyles: { fillColor: [44, 62, 80], textColor: 255, lineWidth: 0.1, halign: 'center' },
+        footStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        styles: { fontSize: 8.5, cellPadding: 2, halign: 'center', lineColor: [180, 190, 200], lineWidth: 0.1 },
         columnStyles: {
-            0: { fontStyle: 'bold', halign: 'left' },
-            // Style the Grand Total columns specially
-            [1 + (TARGET_CATEGORIES.length * 3)]: { fillColor: [240, 240, 240] },
-            [2 + (TARGET_CATEGORIES.length * 3)]: { fillColor: [240, 240, 240] },
-            [3 + (TARGET_CATEGORIES.length * 3)]: { fillColor: [220, 220, 220], fontStyle: 'bold' }
+            0: { fontStyle: 'bold', halign: 'left', fillColor: [248, 250, 252] },
+            [1 + (TARGET_CATEGORIES.length * 3)]: { fillColor: [241, 245, 249] },
+            [2 + (TARGET_CATEGORIES.length * 3)]: { fillColor: [241, 245, 249] },
+            [3 + (TARGET_CATEGORIES.length * 3)]: { fillColor: [226, 232, 240], fontStyle: 'bold' }
         }
     });
 
-    // Footer Signature
-    const finalY = (doc as any).lastAutoTable.finalY + 20;
-    doc.setFontSize(10);
+    const finalY = (doc as any).lastAutoTable.finalY + 16;
+    doc.setFontSize(9.5);
     doc.setFont('helvetica', 'normal');
-    doc.text("Signature of Head of Institution", doc.internal.pageSize.getWidth() - 20, finalY, { align: 'right' });
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB')}`, 14, finalY);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text("Signature of Head of Institution", pageWidth - 14, finalY, { align: 'right' });
 
-    doc.save(`Consolidated_Roll_${session}.pdf`);
+    doc.save(`Consolidated_Roll_Statement_${session}.pdf`);
 };
 
-export const generatePdfFromElement = async (elementId: string, filename: string) => {
-    const input = document.getElementById(elementId);
-    if (!input) return;
-    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
-    pdf.save(`${filename}.pdf`);
-};
-
-export const generateMultiPagePdfFromElements = async (elementIds: string[], filename: string) => {
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    for (let i = 0; i < elementIds.length; i++) {
-        const elementId = elementIds[i];
-        const input = document.getElementById(elementId);
-        if (!input) continue;
-        if (i > 0) pdf.addPage();
-        const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-        const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    }
-    pdf.save(`${filename}.pdf`);
-};
-
+// --- 4. Vector Roll Statement ---
 export const generateRollStatementVectorPdf = async (
     students: Student[],
     className: string,
     schoolDetails: SchoolDetails,
     filename: string
 ) => {
-    const doc = new jsPDF();
-    let y = 15;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 16;
     
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(schoolDetails.name.toUpperCase(), doc.internal.pageSize.getWidth()/2, y, { align: 'center' });
-    y += 7;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(schoolDetails.address, doc.internal.pageSize.getWidth()/2, y, { align: 'center' });
+    doc.setTextColor(15, 23, 42);
+    doc.text(schoolDetails.name.toUpperCase(), pageWidth / 2, y, { align: 'center' });
     
-    y += 10;
+    y += 5.5;
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text(schoolDetails.address, pageWidth / 2, y, { align: 'center' });
+    
+    if (schoolDetails.udiseCode || schoolDetails.phone) {
+        y += 4.5;
+        const subInfo = [
+            schoolDetails.udiseCode ? `UDISE: ${schoolDetails.udiseCode}` : '',
+            schoolDetails.phone ? `Ph: ${schoolDetails.phone}` : '',
+            schoolDetails.email ? `Email: ${schoolDetails.email}` : ''
+        ].filter(Boolean).join('  |  ');
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text(subInfo, pageWidth / 2, y, { align: 'center' });
+    }
+    
+    y += 7;
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Roll Statement - Class ${className}`, doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+    doc.setTextColor(30, 41, 59);
+    doc.text(`Class Roll Statement — Class ${className}`, pageWidth / 2, y, { align: 'center' });
     
-    const tableColumn = ["Roll No", "Admission No", "Student Name", "Father's Name", "Category", "D.O.B"];
+    const tableColumn = ["Roll No", "Adm No", "Student Name", "Father's Name", "Gender", "Category", "D.O.B"];
     const tableRows: (string | number | undefined | null)[][] = [];
 
     students.forEach(student => {
-        const studentData = [
-            student.rollNo,
-            student.admissionNo,
-            student.name,
-            student.fathersName,
+        tableRows.push([
+            student.rollNo || '-',
+            student.admissionNo || '-',
+            student.name || '-',
+            student.fathersName || '-',
+            student.gender || '-',
             student.category || 'General',
-            student.dob,
-        ];
-        tableRows.push(studentData);
+            student.dob || '-',
+        ]);
     });
 
     autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: y + 5,
-        theme: 'grid',
-        headStyles: { fillColor: [44, 62, 80] },
+        startY: y + 4,
+        theme: 'striped',
+        headStyles: { fillColor: [44, 62, 80], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        styles: { fontSize: 8.5, cellPadding: 2.2, halign: 'center', lineColor: [226, 232, 240], lineWidth: 0.1 },
+        columnStyles: {
+            0: { halign: 'center', fontStyle: 'bold' },
+            1: { halign: 'center' },
+            2: { halign: 'left', fontStyle: 'bold' },
+            3: { halign: 'left' },
+            4: { halign: 'center' },
+            5: { halign: 'center' },
+            6: { halign: 'center' },
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
     });
+
+    const finalY = (doc as any).lastAutoTable.finalY + 16;
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Total Students: ${students.length}   |   Date: ${new Date().toLocaleDateString('en-GB')}`, 14, finalY);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text("Principal / Headmaster", pageWidth - 14, finalY, { align: 'right' });
     
     doc.save(`${filename}.pdf`);
 };
 
-export const generateCategoryRollStatementPdf = async (students: Student[], className: string, schoolDetails: SchoolDetails) => {
-    const doc = new jsPDF();
-    doc.text("Category Roll Statement Placeholder", 10, 10);
-    doc.save(`Category_Roll_${className}.pdf`);
+// --- 5. Vector Category-Wise Roll Statement ---
+export const generateCategoryRollStatementPdf = async (
+    students: Student[],
+    className: string,
+    schoolDetails: SchoolDetails
+) => {
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 16;
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text(schoolDetails.name.toUpperCase(), pageWidth / 2, y, { align: 'center' });
+
+    y += 5.5;
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text(schoolDetails.address, pageWidth / 2, y, { align: 'center' });
+
+    y += 7;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 41, 59);
+    doc.text(`Gender & Category Wise Roll Statement — Class ${className}`, pageWidth / 2, y, { align: 'center' });
+
+    const GENDERS = ['Male', 'Female', 'Other'];
+    const summary: { [category: string]: { [gender: string]: number } } = {};
+    CATEGORY_OPTIONS.forEach(cat => {
+        summary[cat] = { Male: 0, Female: 0, Other: 0 };
+    });
+
+    students.forEach(student => {
+        const category = student.category && CATEGORY_OPTIONS.includes(student.category) ? student.category : 'General';
+        const gender = student.gender && GENDERS.includes(student.gender) ? student.gender : 'Other';
+        if (summary[category]) {
+            summary[category][gender]++;
+        }
+    });
+
+    const genderTotals = { Male: 0, Female: 0, Other: 0 };
+    GENDERS.forEach(gender => {
+        genderTotals[gender as keyof typeof genderTotals] = CATEGORY_OPTIONS.reduce((acc, category) => acc + summary[category][gender], 0);
+    });
+
+    const categoryTotals: { [category: string]: number } = {};
+    CATEGORY_OPTIONS.forEach(category => {
+        categoryTotals[category] = GENDERS.reduce((acc, gender) => acc + summary[category][gender], 0);
+    });
+
+    const head = [
+        ['Category', 'Male', 'Female', 'Other', 'Total']
+    ];
+
+    const body = CATEGORY_OPTIONS.map(cat => [
+        cat,
+        summary[cat].Male || 0,
+        summary[cat].Female || 0,
+        summary[cat].Other || 0,
+        categoryTotals[cat] || 0
+    ]);
+
+    const foot = [
+        [
+            'TOTAL',
+            genderTotals.Male,
+            genderTotals.Female,
+            genderTotals.Other,
+            students.length
+        ]
+    ];
+
+    autoTable(doc, {
+        head,
+        body,
+        foot,
+        startY: y + 5,
+        theme: 'grid',
+        headStyles: { fillColor: [44, 62, 80], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        footStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        styles: { fontSize: 9.5, cellPadding: 3, halign: 'center', lineColor: [180, 190, 200] },
+        columnStyles: {
+            0: { fontStyle: 'bold', halign: 'left', fillColor: [248, 250, 252] },
+            4: { fontStyle: 'bold', fillColor: [241, 245, 249] }
+        }
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY + 20;
+    doc.setFontSize(9.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Total Students: ${students.length}   |   Date: ${new Date().toLocaleDateString('en-GB')}`, 14, finalY);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 23, 42);
+    doc.text("Principal / Headmaster", pageWidth - 14, finalY, { align: 'right' });
+
+    doc.save(`Category_Roll_Statement_Class_${className}.pdf`);
+};
+
+// --- High-Quality HTML-to-PDF Capture ---
+export const generatePdfFromElement = async (elementId: string, filename: string) => {
+    const input = document.getElementById(elementId);
+    if (!input) return;
+    
+    const canvas = await html2canvas(input, { 
+        scale: 3, 
+        useCORS: true, 
+        logging: false,
+        backgroundColor: '#ffffff'
+    });
+    
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`${filename}.pdf`);
+};
+
+// --- Multi-Page High-Quality HTML-to-PDF Capture ---
+export const generateMultiPagePdfFromElements = async (elementIds: string[], filename: string) => {
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    let pageAdded = false;
+    for (let i = 0; i < elementIds.length; i++) {
+        const elementId = elementIds[i];
+        const input = document.getElementById(elementId);
+        if (!input) continue;
+        
+        if (pageAdded) pdf.addPage();
+        
+        const canvas = await html2canvas(input, { 
+            scale: 3, 
+            useCORS: true, 
+            logging: false,
+            backgroundColor: '#ffffff'
+        });
+        
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        pageAdded = true;
+    }
+    
+    pdf.save(`${filename}.pdf`);
 };

@@ -112,7 +112,7 @@ const SessionManager: React.FC = () => {
         addToast(`Deleting session '${sessionName}'...`, 'info');
 
         try {
-            await db.transaction('rw', ...db.tables, async (tx) => {
+            await db.transaction('rw', db.tables as any, async (tx: any) => {
                 const examsToDelete = await tx.table('exams').where({ session: sessionName }).toArray();
                 const examIdsToDelete = examsToDelete.map(exam => exam.id);
 

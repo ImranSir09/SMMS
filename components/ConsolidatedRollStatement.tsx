@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Student, SchoolDetails } from '../types';
 import { CLASS_OPTIONS } from '../constants';
@@ -14,7 +13,6 @@ const TARGET_CATEGORIES = ['General', 'ST'];
 const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ studentsByClass, schoolDetails, session }) => {
 
     const summaryData = useMemo(() => {
-        // Sort classes logically
         const classNames = Array.from(studentsByClass.keys()).sort((a: string, b: string) => {
             const indexA = CLASS_OPTIONS.indexOf(a);
             const indexB = CLASS_OPTIONS.indexOf(b);
@@ -24,10 +22,8 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
             return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
         });
 
-        // Data structure: Class -> Category -> Gender -> Count
         const data: { [className: string]: { [category: string]: { Male: number; Female: number; Other: number } } } = {};
         
-        // Totals
         const categoryTotals: { [category: string]: { Male: number; Female: number; Other: number } } = {};
         [...TARGET_CATEGORIES, 'Grand Total'].forEach(cat => {
             categoryTotals[cat] = { Male: 0, Female: 0, Other: 0 };
@@ -35,7 +31,6 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
 
         classNames.forEach((className: string) => {
             data[className] = {};
-            // Initialize rows
             [...TARGET_CATEGORIES, 'Grand Total'].forEach(cat => {
                 data[className][cat] = { Male: 0, Female: 0, Other: 0 };
             });
@@ -45,17 +40,11 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
             students.forEach(student => {
                 const gender = (student.gender === 'Male' || student.gender === 'Female') ? student.gender : 'Other';
                 const rawCategory = student.category || 'General';
-                
-                // Determine bucket: If it's ST, go to ST. Everyone else goes to General (as per typical consolidated view logic if only these 2 exist), 
-                // OR strict filtering. Given the request "General, ST and Total", usually 'General' implies 'Others' here or strict General.
-                // Let's map: ST -> ST, Everything else -> General (to ensure totals match). 
                 const categoryBucket = rawCategory === 'ST' ? 'ST' : 'General';
 
-                // Increment Specific Category
                 data[className][categoryBucket][gender]++;
                 categoryTotals[categoryBucket][gender]++;
 
-                // Increment Grand Total (Always counts everyone)
                 data[className]['Grand Total'][gender]++;
                 categoryTotals['Grand Total'][gender]++;
             });
@@ -66,7 +55,7 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
 
     const Td: React.FC<{ children: React.ReactNode, isHeader?: boolean, isTotal?: boolean, colSpan?: number, rowSpan?: number, className?: string }> = ({ children, isHeader = false, isTotal = false, colSpan, rowSpan, className = '' }) => (
         <td 
-            className={`border border-black p-1 text-center text-[10px] align-middle ${isHeader ? 'font-bold bg-gray-100' : ''} ${isTotal ? 'font-bold bg-gray-50' : ''} ${className}`} 
+            className={`border border-slate-300 p-1.5 text-center text-xs align-middle ${isHeader ? 'font-bold bg-slate-800 text-white' : ''} ${isTotal ? 'font-bold bg-slate-100' : ''} ${className}`} 
             colSpan={colSpan} 
             rowSpan={rowSpan}
         >
@@ -76,63 +65,70 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
 
     return (
         <div className="A4-page-container landscape">
-          <div id="consolidated-roll-statement" className="w-[297mm] h-auto min-h-[210mm] bg-white p-6 font-sans text-black flex flex-col">
-            <header className="text-center mb-4">
-              <h1 className="text-xl font-bold uppercase">{schoolDetails?.name || 'School Name'}</h1>
-              <p className="text-sm">{schoolDetails?.address || 'School Address'}</p>
-              <h2 className="text-lg font-semibold mt-2 border-b-2 border-black inline-block">Consolidated Roll Statement (General / ST) - Session {session}</h2>
+          <div id="consolidated-roll-statement" className="w-[297mm] h-auto min-h-[210mm] bg-white p-8 font-sans text-slate-900 flex flex-col border border-slate-200">
+            
+            {/* Header */}
+            <header className="text-center mb-4 border-b-2 border-slate-800 pb-3">
+              <h1 className="text-2xl font-bold uppercase tracking-wider text-slate-900 font-serif">{schoolDetails?.name || 'School Name'}</h1>
+              <p className="text-sm text-slate-700 font-medium">{schoolDetails?.address || 'School Address'}</p>
+              <div className="flex items-center justify-center gap-3 text-xs text-slate-500 mt-1">
+                {schoolDetails?.udiseCode && <span>UDISE: <strong>{schoolDetails.udiseCode}</strong></span>}
+                {schoolDetails?.phone && <span>| Ph: <strong>{schoolDetails.phone}</strong></span>}
+                {schoolDetails?.email && <span>| Email: <strong>{schoolDetails.email}</strong></span>}
+              </div>
+              <div className="mt-2 inline-block bg-slate-900 text-white text-xs font-semibold px-4 py-1 rounded-full uppercase tracking-wider">
+                Consolidated Roll Statement (General / ST & Total) — Session {session}
+              </div>
             </header>
             
-            <main className="flex-1 overflow-x-auto">
-                <table className="w-full border-collapse border border-black">
+            {/* Table */}
+            <main className="flex-1 overflow-x-auto my-2">
+                <table className="w-full border-collapse border border-slate-400">
                     <thead>
                         <tr>
-                            <Td isHeader rowSpan={2} className="w-32">Class</Td>
+                            <Td isHeader rowSpan={2} className="w-36 text-left pl-3">Class</Td>
                             {TARGET_CATEGORIES.map(cat => (
-                                <Td isHeader colSpan={3} key={cat}>{cat}</Td>
+                                <Td isHeader colSpan={3} key={cat} className="bg-slate-800 border-x border-slate-600">{cat}</Td>
                             ))}
-                            <Td isHeader colSpan={3} className="bg-gray-200">Grand Total</Td>
+                            <Td isHeader colSpan={3} className="bg-slate-950 border-l-2 border-slate-700">Grand Total</Td>
                         </tr>
-                        <tr>
-                            {/* General & ST Columns */}
+                        <tr className="bg-slate-700 text-white text-[11px]">
                             {TARGET_CATEGORIES.map(cat => (
                                 <React.Fragment key={cat}>
-                                    <Td isHeader className="w-10">M</Td>
-                                    <Td isHeader className="w-10">F</Td>
-                                    <Td isHeader className="w-12 bg-gray-50">T</Td>
+                                    <td className="border border-slate-500 p-1 text-center bg-slate-700 text-white font-semibold w-12">M</td>
+                                    <td className="border border-slate-500 p-1 text-center bg-slate-700 text-white font-semibold w-12">F</td>
+                                    <td className="border border-slate-500 p-1 text-center bg-slate-600 text-white font-bold w-14">Total</td>
                                 </React.Fragment>
                             ))}
-                            {/* Grand Total Columns */}
-                            <Td isHeader className="w-10 bg-gray-200">M</Td>
-                            <Td isHeader className="w-10 bg-gray-200">F</Td>
-                            <Td isHeader className="w-12 bg-gray-300 border-l-2 border-black">Total</Td>
+                            <td className="border border-slate-600 p-1 text-center bg-slate-900 text-white font-semibold w-12">M</td>
+                            <td className="border border-slate-600 p-1 text-center bg-slate-900 text-white font-semibold w-12">F</td>
+                            <td className="border border-slate-600 p-1 text-center bg-slate-950 text-white font-bold w-16 border-l-2 border-slate-400">Total</td>
                         </tr>
                     </thead>
                     <tbody>
-                        {summaryData.classNames.map(className => {
+                        {summaryData.classNames.map((className, idx) => {
                             return (
-                                <tr key={className}>
-                                    <Td isHeader>{className}</Td>
+                                <tr key={className} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+                                    <td className="border border-slate-300 p-1.5 font-bold text-slate-800 text-left pl-3">{className}</td>
                                     {TARGET_CATEGORIES.map(cat => {
                                         const counts = summaryData.data[className][cat];
                                         const total = counts.Male + counts.Female + counts.Other;
                                         return (
                                             <React.Fragment key={cat}>
-                                                <Td>{counts.Male || ''}</Td>
-                                                <Td>{counts.Female || ''}</Td>
-                                                <Td className="font-bold bg-gray-50">{total || ''}</Td>
+                                                <td className="border border-slate-300 p-1.5 text-center text-slate-700">{counts.Male || '-'}</td>
+                                                <td className="border border-slate-300 p-1.5 text-center text-slate-700">{counts.Female || '-'}</td>
+                                                <td className="border border-slate-300 p-1.5 text-center font-bold text-slate-900 bg-slate-100/60">{total || '-'}</td>
                                             </React.Fragment>
                                         );
                                     })}
-                                    {/* Row Grand Total */}
                                     {(() => {
                                         const counts = summaryData.data[className]['Grand Total'];
                                         const total = counts.Male + counts.Female + counts.Other;
                                         return (
                                             <React.Fragment>
-                                                <Td className="bg-gray-100 font-bold">{counts.Male}</Td>
-                                                <Td className="bg-gray-100 font-bold">{counts.Female}</Td>
-                                                <Td className="bg-gray-200 font-bold border-l-2 border-black">{total}</Td>
+                                                <td className="border border-slate-300 p-1.5 text-center bg-slate-100 font-semibold text-slate-800">{counts.Male || '-'}</td>
+                                                <td className="border border-slate-300 p-1.5 text-center bg-slate-100 font-semibold text-slate-800">{counts.Female || '-'}</td>
+                                                <td className="border border-slate-300 p-1.5 text-center bg-slate-200 font-black text-slate-950 border-l-2 border-slate-400">{total || '-'}</td>
                                             </React.Fragment>
                                         )
                                     })()}
@@ -141,44 +137,50 @@ const ConsolidatedRollStatement: React.FC<ConsolidatedRollStatementProps> = ({ s
                         })}
                     </tbody>
                     <tfoot>
-                        <tr className="border-t-2 border-black">
-                           <Td isTotal isHeader>TOTAL</Td>
-                           {TARGET_CATEGORIES.map(cat => {
-                               const totals = summaryData.categoryTotals[cat];
-                               const total = totals.Male + totals.Female + totals.Other;
-                               return (
-                                   <React.Fragment key={cat}>
-                                       <Td isTotal>{totals.Male}</Td>
-                                       <Td isTotal>{totals.Female}</Td>
-                                       <Td isTotal className="bg-gray-100">{total}</Td>
-                                   </React.Fragment>
-                               );
-                           })}
-                           {(() => {
-                               const totals = summaryData.categoryTotals['Grand Total'];
-                               const total = totals.Male + totals.Female + totals.Other;
-                               return (
-                                   <React.Fragment>
-                                       <Td isTotal className="bg-gray-200">{totals.Male}</Td>
-                                       <Td isTotal className="bg-gray-200">{totals.Female}</Td>
-                                       <Td isTotal className="bg-black text-white border-l-2 border-white">{total}</Td>
-                                   </React.Fragment>
-                               );
-                           })()}
+                        <tr className="bg-slate-200 font-bold border-t-2 border-slate-800 text-slate-950">
+                            <td className="border border-slate-400 p-2 text-left pl-3 uppercase tracking-wider font-black">TOTAL</td>
+                            {TARGET_CATEGORIES.map(cat => {
+                                const counts = summaryData.categoryTotals[cat];
+                                const total = counts.Male + counts.Female + counts.Other;
+                                return (
+                                    <React.Fragment key={cat}>
+                                        <td className="border border-slate-400 p-2 text-center">{counts.Male}</td>
+                                        <td className="border border-slate-400 p-2 text-center">{counts.Female}</td>
+                                        <td className="border border-slate-400 p-2 text-center bg-slate-300 font-black">{total}</td>
+                                    </React.Fragment>
+                                );
+                            })}
+                            {(() => {
+                                const counts = summaryData.categoryTotals['Grand Total'];
+                                const total = counts.Male + counts.Female + counts.Other;
+                                return (
+                                    <React.Fragment>
+                                        <td className="border border-slate-400 p-2 text-center bg-slate-300 font-bold">{counts.Male}</td>
+                                        <td className="border border-slate-400 p-2 text-center bg-slate-300 font-bold">{counts.Female}</td>
+                                        <td className="border border-slate-400 p-2 text-center bg-slate-400 font-black text-sm border-l-2 border-slate-600">{total}</td>
+                                    </React.Fragment>
+                                );
+                            })()}
                         </tr>
                     </tfoot>
                 </table>
             </main>
             
-            <footer className="mt-auto pt-8 text-xs text-gray-600 flex justify-between items-end">
-              <div>
-                  <p>Date: {new Date().toLocaleDateString('en-GB')}</p>
+            {/* Footer */}
+            <footer className="mt-auto pt-6 text-xs text-slate-600 flex justify-between items-end">
+              <div className="space-y-1">
+                <p><span className="font-semibold text-slate-800">Date of Report:</span> {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                <p><span className="font-semibold text-slate-800">Session:</span> {session}</p>
               </div>
               <div className="text-center">
-                  <div className="w-48 border-b border-black mb-1"></div>
-                  <p className="font-bold">Signature of Head of Institution</p>
+                <div className="border-t-2 border-slate-800 w-52 mb-1"></div>
+                <p className="font-bold text-sm text-slate-900">Signature of Head of Institution</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider">(with Official Seal)</p>
               </div>
             </footer>
+            <p className="text-center text-[8px] text-slate-400 mt-2 border-t border-slate-200 pt-1">
+              School Management Mobile System — Official Consolidated Record
+            </p>
           </div>
         </div>
     );

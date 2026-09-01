@@ -20,7 +20,7 @@ const CategoryWiseRollStatement: React.FC<RollStatementProps> = ({ students, cla
         students.forEach(student => {
             const category = student.category && CATEGORY_OPTIONS.includes(student.category) ? student.category : 'General';
             const gender = student.gender && GENDERS.includes(student.gender) ? student.gender : 'Other';
-            if (summary[category]) { // Ensure category exists
+            if (summary[category]) {
                 summary[category][gender]++;
             }
         });
@@ -42,47 +42,100 @@ const CategoryWiseRollStatement: React.FC<RollStatementProps> = ({ students, cla
 
     return (
     <div className="A4-page-container">
-      <div id="category-roll-statement" className="w-[210mm] h-auto min-h-[297mm] bg-white p-8 font-sans text-black flex flex-col">
-        <header className="text-center mb-6">
-          <h1 className="text-2xl font-bold uppercase">{schoolDetails?.name || 'School Name'}</h1>
-          <p className="text-md">{schoolDetails?.address || 'School Address'}</p>
-          <h2 className="text-xl font-semibold mt-4">Gender & Category Wise Roll Statement - Class {className}</h2>
+      <div id="category-roll-statement" className="w-[210mm] h-auto min-h-[297mm] bg-white p-10 font-sans text-slate-900 flex flex-col border border-slate-200">
+        
+        {/* Header */}
+        <header className="text-center mb-6 border-b-2 border-slate-800 pb-4">
+          <div className="flex flex-col items-center">
+            {schoolDetails?.logo && (
+              <img src={schoolDetails.logo} alt="School Logo" className="w-20 h-20 mb-2 object-contain" />
+            )}
+            <h1 className="text-2xl font-bold uppercase tracking-wider text-slate-900 font-serif">
+              {schoolDetails?.name || 'School Name'}
+            </h1>
+            <p className="text-sm text-slate-700 mt-1 font-medium">{schoolDetails?.address || 'School Address'}</p>
+            <div className="flex items-center justify-center gap-3 text-xs text-slate-500 mt-1">
+              {schoolDetails?.udiseCode && <span>UDISE: <strong>{schoolDetails.udiseCode}</strong></span>}
+              {schoolDetails?.phone && <span>| Ph: <strong>{schoolDetails.phone}</strong></span>}
+              {schoolDetails?.email && <span>| Email: <strong>{schoolDetails.email}</strong></span>}
+            </div>
+            <div className="mt-4 inline-block bg-slate-900 text-white text-sm font-semibold px-4 py-1 rounded-full uppercase tracking-wider">
+              Gender & Category Wise Roll Statement — Class {className}
+            </div>
+          </div>
         </header>
         
-        <main className="flex-1">
-            <h3 className="text-lg font-bold text-center mb-2">Numerical Summary</h3>
-            <table className="w-full border-collapse border border-gray-400 text-sm">
+        {/* Main Content */}
+        <main className="flex-1 my-4">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700">Category Breakdown Matrix</h3>
+              <span className="text-xs font-semibold bg-slate-100 text-slate-700 px-3 py-1 rounded border border-slate-300">
+                Class: {className} | Enrolled: {summaryData.grandTotal}
+              </span>
+            </div>
+
+            <table className="w-full border-collapse border border-slate-300 text-sm">
                 <thead>
-                    <tr className="bg-gray-200">
-                        <th className="border border-gray-400 p-2 font-semibold">Category</th>
-                        {GENDERS.map(gender => <th key={gender} className="border border-gray-400 p-2 font-semibold">{gender}</th>)}
-                        <th className="border border-gray-400 p-2 font-semibold">Total</th>
+                    <tr className="bg-slate-800 text-white">
+                        <th className="border border-slate-400 p-2.5 font-semibold text-left">Category</th>
+                        {GENDERS.map(gender => (
+                          <th key={gender} className="border border-slate-400 p-2.5 font-semibold text-center w-24">
+                            {gender}
+                          </th>
+                        ))}
+                        <th className="border border-slate-400 p-2.5 font-bold text-center bg-slate-900 w-28">
+                          Total
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
-                    {CATEGORY_OPTIONS.map(category => (
-                        <tr key={category}>
-                            <td className="border border-gray-400 p-2 font-semibold text-left">{category}</td>
-                            {GENDERS.map(gender => <td key={gender} className="border border-gray-400 p-2 text-center">{summaryData.summary[category]?.[gender] ?? 0}</td>)}
-                            <td className="border border-gray-400 p-2 text-center font-bold">{summaryData.categoryTotals[category] ?? 0}</td>
+                    {CATEGORY_OPTIONS.map((category, idx) => (
+                        <tr key={category} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                            <td className="border border-slate-300 p-2.5 font-semibold text-slate-800 text-left">
+                              {category}
+                            </td>
+                            {GENDERS.map(gender => (
+                              <td key={gender} className="border border-slate-300 p-2.5 text-center text-slate-700">
+                                {summaryData.summary[category]?.[gender] ?? 0}
+                              </td>
+                            ))}
+                            <td className="border border-slate-300 p-2.5 text-center font-bold text-slate-900 bg-slate-100/70">
+                              {summaryData.categoryTotals[category] ?? 0}
+                            </td>
                         </tr>
                     ))}
                 </tbody>
                 <tfoot>
-                    <tr className="bg-gray-200 font-bold">
-                        <td className="border border-gray-400 p-2 text-left">Total</td>
-                        {GENDERS.map(gender => <td key={gender} className="border border-gray-400 p-2 text-center">{summaryData.genderTotals[gender as keyof typeof summaryData.genderTotals]}</td>)}
-                        <td className="border border-gray-400 p-2 text-center">{summaryData.grandTotal}</td>
+                    <tr className="bg-slate-200 font-bold border-t-2 border-slate-800 text-slate-900">
+                        <td className="border border-slate-400 p-2.5 text-left uppercase tracking-wider">Total</td>
+                        {GENDERS.map(gender => (
+                          <td key={gender} className="border border-slate-400 p-2.5 text-center">
+                            {summaryData.genderTotals[gender as keyof typeof summaryData.genderTotals]}
+                          </td>
+                        ))}
+                        <td className="border border-slate-400 p-2.5 text-center bg-slate-300 font-black text-base">
+                          {summaryData.grandTotal}
+                        </td>
                     </tr>
                 </tfoot>
             </table>
         </main>
         
-        <footer className="mt-auto pt-8 text-sm text-gray-600 flex justify-between">
-          <span>Date: {new Date().toLocaleDateString('en-GB')}</span>
-          <span>Grand Total Students: {summaryData.grandTotal}</span>
+        {/* Footer */}
+        <footer className="mt-auto pt-10 text-xs text-slate-600 flex justify-between items-end">
+          <div className="space-y-1">
+            <p><span className="font-semibold text-slate-800">Date of Report:</span> {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+            <p><span className="font-semibold text-slate-800">Total Enrollment:</span> {summaryData.grandTotal} Students</p>
+          </div>
+          <div className="text-center">
+            <div className="border-t-2 border-slate-800 w-48 mb-1"></div>
+            <p className="font-bold text-sm text-slate-900">Principal / Headmaster</p>
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider">(Signature & Seal)</p>
+          </div>
         </footer>
-        <p className="text-center text-[9px] text-gray-600 mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
+        <p className="text-center text-[8px] text-slate-400 mt-4 border-t border-slate-200 pt-1">
+          School Management Mobile System — Official Report
+        </p>
       </div>
     </div>
     );

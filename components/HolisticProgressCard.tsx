@@ -122,17 +122,27 @@ const HolisticProgressCard: React.FC<HPCProps> = ({
 
             {/* Page 1 */}
             <PageContainer id={`hpc-page1-${student.id}`}>
-                <p className="text-center font-semibold">Govt. of Jammu and Kashmir</p>
-                <h1 className="text-center text-xl font-bold border-y-2 border-black my-2 py-1">GOVERNMENT MIDDLE SCHOOL SENZI</h1>
-                <h2 className="text-center text-lg font-bold text-cyan-600 my-4">Holistic Progress Card</h2>
-                <h3 className="text-center text-md font-bold underline my-4">Student Profile</h3>
+                <p className="text-center font-semibold text-slate-700 uppercase tracking-wide">Govt. of Jammu and Kashmir</p>
+                <h1 className="text-center text-2xl font-bold border-y-2 border-black my-2 py-1.5 uppercase font-serif tracking-wider">
+                    {schoolDetails?.name || 'School Name'}
+                </h1>
+                {schoolDetails?.address && <p className="text-center text-xs text-slate-600 -mt-1 mb-2">{schoolDetails.address}</p>}
+                <h2 className="text-center text-lg font-bold text-cyan-700 my-2 tracking-wide uppercase">Holistic Progress Card</h2>
+                <h3 className="text-center text-sm font-bold border-b border-black pb-0.5 inline-block mx-auto mb-4 uppercase">Student Profile</h3>
 
                 <div className="flex-grow flex items-center justify-center">
                     <div className="grid grid-cols-5 gap-4 w-full">
                         <div className="col-span-1"></div>
                         <div className="col-span-3 flex flex-col items-center">
-                            {photo ? <img src={photo} alt="Student" className="w-28 h-32 object-cover border-2 border-black" /> : <div className="w-28 h-32 border-2 border-black bg-gray-200"></div>}
-                            <div className="border-2 border-dashed border-black p-2 mt-4 w-full text-xs space-y-1">
+                            {photo ? (
+                                <img src={photo} alt="Student" className="w-28 h-32 object-cover border-2 border-black shadow-sm" />
+                            ) : (
+                                <div className="w-28 h-32 border-2 border-dashed border-gray-400 bg-gray-100 flex flex-col items-center justify-center text-xs text-gray-500 font-semibold">
+                                    <span>Affix Photo</span>
+                                    <span className="text-[9px]">(Passport Size)</span>
+                                </div>
+                            )}
+                            <div className="border-2 border-black bg-slate-50/50 p-3 mt-4 w-full text-xs space-y-1.5 rounded-sm">
                                 {[
                                     {label: "Admission No", value: student.admissionNo}, {label: "Name", value: student.name},
                                     {label: "Father's Name", value: student.fathersName}, {label: "Mother's Name", value: student.mothersName},
@@ -140,10 +150,10 @@ const HolisticProgressCard: React.FC<HPCProps> = ({
                                     {label: "Address", value: student.address}, {label: "Gender", value: student.gender},
                                     {label: "Class", value: student.className}, {label: "Category", value: student.category},
                                     {label: "Aadhar No", value: student.aadharNo}, {label: "Bank Account", value: student.accountNo},
-                                    {label: "Bank Name", value: schoolDetails.name}, // Assuming school bank, not student's. Document is ambiguous.
+                                    {label: "Bank Name", value: schoolDetails?.name || 'N/A'},
                                     {label: "IFSC Code", value: student.ifscCode}, {label: "Contact No", value: student.contact},
                                 ].map(item => (
-                                    <p key={item.label}><strong className="w-32 inline-block">{item.label}:</strong> {item.value}</p>
+                                    <p key={item.label} className="border-b border-dotted border-gray-300 pb-0.5"><strong className="w-32 inline-block font-bold text-slate-800">{item.label}:</strong> <span className="font-medium text-slate-900">{item.value || '-'}</span></p>
                                 ))}
                             </div>
                         </div>
@@ -153,11 +163,12 @@ const HolisticProgressCard: React.FC<HPCProps> = ({
 
                 <div className="flex justify-end mt-auto pt-4">
                     <div className="text-center">
-                        <p className="font-bold">Principal/Headmaster</p>
-                        <p>{schoolDetails.name}</p>
+                        <div className="border-t-2 border-black w-44 mb-1"></div>
+                        <p className="font-bold">Principal / Headmaster</p>
+                        <p className="text-[10px] text-gray-600">{schoolDetails?.name}</p>
                     </div>
                 </div>
-                 <p className="text-[8px] text-center mt-2">This document was created from School Management Mobile System by Imran Gani Mugloo Teacher Zone Vailoo</p>
+                 <p className="text-[8px] text-center mt-2 text-gray-500">This document was created from School Management Mobile System</p>
             </PageContainer>
             
             {/* Page 2 */}
