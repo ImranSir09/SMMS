@@ -2,29 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAppData } from '../hooks/useAppData';
 import { db } from '../services/db';
-import { SchoolDetails, CloudConfig } from '../types';
+import { SchoolDetails } from '../types';
 import Card from '../components/Card';
-import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon, CloudIcon, UploadCloudIcon, DownloadCloudIcon, UsersIcon, SmartphoneIcon, GithubIcon } from '../components/icons';
+import { BuildingIcon, MailIcon, PhoneIcon, HashIcon, MapPinIcon, UploadIcon, DownloadIcon, DatabaseIcon, AlertTriangleIcon, SaveIcon } from '../components/icons';
 import { useToast } from '../contexts/ToastContext';
 import SessionManager from '../components/SessionManager';
-import { initFirebase, backupToCloud, restoreFromCloud } from './cloud';
 
 const inputStyle = "p-3 w-full bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-colors";
 const buttonStyle = "py-3 px-5 rounded-lg text-sm font-semibold transition-colors";
 const primaryButtonStyle = `${buttonStyle} bg-primary text-primary-foreground hover:bg-primary-hover`;
 
-// Masked Configuration (Base64 Encoded) to prevent plain-text exposure
-const DEFAULT_MASKED_CONFIG = {
-    apiKey: "QUl6YVN5RDFaTXMtelJQS1ZNWGRJb3N4dDk2cE5uY2xpZUNweXQ4",
-    authDomain: "c2Nob29sLW1hbmFnZW1lbnQtcHJvLTUyYWJjLmZpcmViYXNlYXBwLmNvbQ==",
-    projectId: "c2Nob29sLW1hbmFnZW1lbnQtcHJvLTUyYWJj",
-    storageBucket: "c2Nob29sLW1hbmFnZW1lbnQtcHJvLTUyYWJjLmZpcmViYXNlc3RvcmFnZS5hcHA=",
-    messagingSenderId: "NzI0NjE4MDI5MTM2",
-    appId: "MTo3MjQ2MTgwMjkxMzY6d2ViOjdiY2Y3MmYwODQxYzUzMWJlNDQ5NTU=",
-    measurementId: "Ry0zMlRLTTFWUU5O"
-};
-
-type Tab = 'profile' | 'cloud' | 'data' | 'apk';
+type Tab = 'profile' | 'data';
 
 const Settings: React.FC = () => {
     const { schoolDetails, refreshSchoolDetails } = useAppData();
@@ -34,51 +22,13 @@ const Settings: React.FC = () => {
     const [details, setDetails] = useState<Partial<SchoolDetails>>({});
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    
-    // Cloud State
-    const [cloudConfig, setCloudConfig] = useState<CloudConfig>({
-        apiKey: '',
-        authDomain: '',
-        projectId: '',
-        storageBucket: '',
-        messagingSenderId: '',
-        appId: ''
-    });
-    const [isSyncing, setIsSyncing] = useState(false);
 
     useEffect(() => {
         if (schoolDetails) {
             setDetails(schoolDetails);
             setLogoPreview(schoolDetails.logo);
         }
-        loadCloudConfig();
     }, [schoolDetails]);
-
-    const loadCloudConfig = async () => {
-        const config = await db.cloudConfig.get(1);
-        if (config) {
-            setCloudConfig(config);
-            await initFirebase();
-        } else {
-            // Auto-configure using masked defaults if no config exists
-            try {
-                const defaultConfig: CloudConfig = {
-                    apiKey: atob(DEFAULT_MASKED_CONFIG.apiKey),
-                    authDomain: atob(DEFAULT_MASKED_CONFIG.authDomain),
-                    projectId: atob(DEFAULT_MASKED_CONFIG.projectId),
-                    storageBucket: atob(DEFAULT_MASKED_CONFIG.storageBucket),
-                    messagingSenderId: atob(DEFAULT_MASKED_CONFIG.messagingSenderId),
-                    appId: atob(DEFAULT_MASKED_CONFIG.appId)
-                };
-                setCloudConfig(defaultConfig);
-                await db.cloudConfig.put({ ...defaultConfig, id: 1 });
-                await initFirebase();
-                // console.log("Auto-configured cloud settings.");
-            } catch (e) {
-                console.error("Failed to decode default config", e);
-            }
-        }
-    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -176,7 +126,6 @@ const Settings: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-
     const handleSaveDetails = async () => {
         if (!validateDetails()) {
             addToast('Please correct the errors before saving.', 'error');
@@ -186,43 +135,6 @@ const Settings: React.FC = () => {
             await db.schoolDetails.update(details.id, details);
             addToast('School details updated successfully!', 'success');
             refreshSchoolDetails();
-        }
-    };
-    
-    const handleSaveCloudConfig = async () => {
-        await db.cloudConfig.put({ ...cloudConfig, id: 1 });
-        addToast('Cloud configuration saved!', 'success');
-        await initFirebase();
-    };
-
-    const handleCloudBackup = async () => {
-        if (isSyncing) return;
-        setIsSyncing(true);
-        try {
-            await backupToCloud((msg) => addToast(msg, 'info'));
-            addToast('Cloud backup completed successfully!', 'success');
-        } catch (error: any) {
-            console.error(error);
-            addToast(`Backup failed: ${error.message}`, 'error');
-        } finally {
-            setIsSyncing(false);
-        }
-    };
-
-    const handleCloudRestore = async () => {
-        if (isSyncing) return;
-        if (!window.confirm("WARNING: Restoring from cloud will OVERWRITE all local data. Are you sure?")) return;
-        
-        setIsSyncing(true);
-        try {
-            await restoreFromCloud((msg) => addToast(msg, 'info'));
-            addToast('Data restored from cloud! Reloading...', 'success');
-            setTimeout(() => window.location.reload(), 2000);
-        } catch (error: any) {
-            console.error(error);
-            addToast(`Restore failed: ${error.message}`, 'error');
-        } finally {
-            setIsSyncing(false);
         }
     };
 
@@ -238,7 +150,6 @@ const Settings: React.FC = () => {
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            // Updated filename as per request
             link.download = 'smsbackup.json';
             
             document.body.appendChild(link);
@@ -353,9 +264,7 @@ const Settings: React.FC = () => {
             {/* Tabs */}
             <div className="bg-card rounded-lg shadow-sm border border-border flex overflow-x-auto">
                 <TabButton id="profile" label="Profile" icon={<BuildingIcon className="w-4 h-4"/>} />
-                <TabButton id="cloud" label="Cloud Sync" icon={<CloudIcon className="w-4 h-4"/>} />
                 <TabButton id="data" label="Data & Session" icon={<DatabaseIcon className="w-4 h-4"/>} />
-                <TabButton id="apk" label="GitHub APK Build" icon={<SmartphoneIcon className="w-4 h-4"/>} />
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -430,49 +339,6 @@ const Settings: React.FC = () => {
                     </Card>
                 )}
 
-                {/* Cloud Tab */}
-                {activeTab === 'cloud' && (
-                    <Card className="p-4 animate-fade-in">
-                        <div className="flex items-center gap-1.5 text-md font-semibold mb-4 border-b border-border pb-2 text-blue-600 dark:text-blue-400">
-                            <CloudIcon className="w-5 h-5" />
-                            <h2>Cloud Configuration & Sync</h2>
-                        </div>
-                        <div className="space-y-4 max-w-2xl mx-auto">
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg">
-                                <p className="text-xs text-foreground/80 leading-relaxed">
-                                    <strong>Why use Cloud Sync?</strong><br/>
-                                    Securely backup your school data to Google Firebase (Free). This allows you to restore your data if you clear your browser cache or switch devices.
-                                    <br/><a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline font-semibold mt-1 inline-block">Get your Firebase Config here</a>.
-                                </p>
-                            </div>
-                            
-                            <div className="grid gap-3">
-                                <label className="block text-xs font-medium text-foreground/80">Firebase Configuration</label>
-                                <input type="password" placeholder="API Key" value={cloudConfig.apiKey} onChange={e => setCloudConfig({...cloudConfig, apiKey: e.target.value})} className={inputStyle} />
-                                <input type="password" placeholder="Project ID" value={cloudConfig.projectId} onChange={e => setCloudConfig({...cloudConfig, projectId: e.target.value})} className={inputStyle} />
-                                <input type="password" placeholder="App ID" value={cloudConfig.appId} onChange={e => setCloudConfig({...cloudConfig, appId: e.target.value})} className={inputStyle} />
-                                <input type="password" placeholder="Auth Domain" value={cloudConfig.authDomain} onChange={e => setCloudConfig({...cloudConfig, authDomain: e.target.value})} className={inputStyle} />
-                                <input type="password" placeholder="Storage Bucket" value={cloudConfig.storageBucket} onChange={e => setCloudConfig({...cloudConfig, storageBucket: e.target.value})} className={inputStyle} />
-                                <input type="text" placeholder="Messaging Sender ID" value={cloudConfig.messagingSenderId} onChange={e => setCloudConfig({...cloudConfig, messagingSenderId: e.target.value})} className={inputStyle} />
-                                <input type="password" placeholder="Measurement ID (Optional)" value={cloudConfig.measurementId || ''} onChange={e => setCloudConfig({...cloudConfig, measurementId: e.target.value})} className={inputStyle} />
-                            </div>
-                            
-                            <button onClick={handleSaveCloudConfig} className="w-full py-2 rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950 transition-colors text-xs font-bold">
-                                Save Configuration
-                            </button>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 border-t border-border pt-4">
-                                <button onClick={handleCloudBackup} disabled={isSyncing || !cloudConfig.apiKey} className={`${buttonStyle} bg-blue-600 text-white flex items-center justify-center gap-2 disabled:opacity-50`}>
-                                    <UploadCloudIcon className="w-5 h-5" /> {isSyncing ? 'Syncing...' : 'Backup to Cloud'}
-                                </button>
-                                <button onClick={handleCloudRestore} disabled={isSyncing || !cloudConfig.apiKey} className={`${buttonStyle} bg-orange-600 text-white flex items-center justify-center gap-2 disabled:opacity-50`}>
-                                    <DownloadCloudIcon className="w-5 h-5" /> {isSyncing ? 'Syncing...' : 'Restore from Cloud'}
-                                </button>
-                            </div>
-                        </div>
-                    </Card>
-                )}
-
                 {/* Data Tab */}
                 {activeTab === 'data' && (
                     <div className="flex flex-col gap-4 animate-fade-in">
@@ -509,78 +375,6 @@ const Settings: React.FC = () => {
                                 >
                                     Reset All Data
                                 </button>
-                            </div>
-                        </Card>
-                    </div>
-                )}
-
-                {/* APK Tab */}
-                {activeTab === 'apk' && (
-                    <div className="flex flex-col gap-4 animate-fade-in">
-                        <Card className="p-5 border-emerald-500/30 bg-emerald-500/5">
-                            <div className="flex items-center gap-2 text-md font-semibold mb-3 border-b border-emerald-500/20 pb-2 text-emerald-600 dark:text-emerald-400">
-                                <GithubIcon className="w-5 h-5" />
-                                <h2>Automated GitHub APK Builder</h2>
-                            </div>
-                            <p className="text-xs text-foreground/80 leading-relaxed mb-4">
-                                This project includes a pre-configured <strong>GitHub Actions Workflow</strong> (<code>.github/workflows/build-apk.yml</code>) and <strong>Capacitor Android wrapper</strong> (<code>capacitor.config.ts</code>). Pushing code to GitHub automatically builds and packages an installable Android APK (<code>app-debug.apk</code>)!
-                            </p>
-
-                            <div className="space-y-4">
-                                <div className="p-3.5 bg-card border border-border rounded-lg space-y-2">
-                                    <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
-                                        <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] flex items-center justify-center font-bold">1</span>
-                                        Push Code to GitHub
-                                    </h3>
-                                    <p className="text-xs text-foreground/70 pl-7">
-                                        Push or sync this repository to your GitHub account (e.g. <code>git push origin main</code>).
-                                    </p>
-                                </div>
-
-                                <div className="p-3.5 bg-card border border-border rounded-lg space-y-2">
-                                    <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
-                                        <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] flex items-center justify-center font-bold">2</span>
-                                        Automatic Build Triggers
-                                    </h3>
-                                    <p className="text-xs text-foreground/70 pl-7">
-                                        GitHub Actions automatically triggers the <strong>Build Android APK</strong> workflow, compiles the web app into Capacitor Android, builds with Gradle (JDK 17), and signs the debug APK.
-                                    </p>
-                                </div>
-
-                                <div className="p-3.5 bg-card border border-border rounded-lg space-y-2">
-                                    <h3 className="text-xs font-bold text-foreground flex items-center gap-2">
-                                        <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] flex items-center justify-center font-bold">3</span>
-                                        Download Ready APK Artifact
-                                    </h3>
-                                    <p className="text-xs text-foreground/70 pl-7">
-                                        Go to your GitHub repository &rarr; <strong>Actions</strong> tab &rarr; click on the latest workflow run &rarr; under <strong>Artifacts</strong>, click <strong>SchoolManagementPro-v2-debug</strong> to download your Android APK!
-                                    </p>
-                                </div>
-                            </div>
-                        </Card>
-
-                        <Card className="p-4">
-                            <div className="flex items-center gap-2 text-sm font-semibold mb-3 border-b border-border pb-2">
-                                <SmartphoneIcon className="w-4 h-4 text-primary" />
-                                <h3>Configuration Details</h3>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                <div className="p-3 bg-background rounded-lg border border-border">
-                                    <p className="font-semibold text-foreground/90">Package Name / App ID</p>
-                                    <p className="text-foreground/60 font-mono mt-1">com.schoolmanagement.pro</p>
-                                </div>
-                                <div className="p-3 bg-background rounded-lg border border-border">
-                                    <p className="font-semibold text-foreground/90">Capacitor Web Directory</p>
-                                    <p className="text-foreground/60 font-mono mt-1">dist</p>
-                                </div>
-                                <div className="p-3 bg-background rounded-lg border border-border">
-                                    <p className="font-semibold text-foreground/90">Workflow File</p>
-                                    <p className="text-foreground/60 font-mono mt-1">.github/workflows/build-apk.yml</p>
-                                </div>
-                                <div className="p-3 bg-background rounded-lg border border-border">
-                                    <p className="font-semibold text-foreground/90">Build System</p>
-                                    <p className="text-foreground/60 font-mono mt-1">Gradle JDK 17 (Ubuntu Latest)</p>
-                                </div>
                             </div>
                         </Card>
                     </div>

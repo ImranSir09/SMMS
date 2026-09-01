@@ -2,10 +2,10 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppData } from '../hooks/useAppData';
-import { SunIcon, MoonIcon, ArrowLeftIcon, SchoolIcon, LogOutIcon } from './icons';
+import { SunIcon, MoonIcon, ArrowLeftIcon, LogOutIcon } from './icons';
 
 const Header: React.FC = () => {
-  const { theme, toggleTheme, logout, isAuthenticated, schoolDetails } = useAppData();
+  const { theme, toggleTheme, logout, isAuthenticated } = useAppData();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -40,38 +40,18 @@ const Header: React.FC = () => {
   return (
     <header className="flex-shrink-0 flex items-center justify-between p-2 bg-card border-b border-border h-16 z-20 print:hidden">
       <div className="flex items-center gap-3 pl-2">
-        {isDashboard ? (
-          <>
-            <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-card border border-border/80 p-1 shadow-sm overflow-hidden">
-              <img 
-                src={schoolDetails?.logo || '/icon.png'} 
-                alt="App Logo" 
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/icon.png';
-                }}
-              />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground from-50% to-foreground/60">
-                  {schoolDetails?.name || 'School Management Pro'}
-              </h1>
-            </div>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeftIcon className="w-6 h-6" />
-            </button>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground from-50% to-foreground/60">
-                {getPageTitle()}
-            </h1>
-          </>
+        {!isDashboard && (
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeftIcon className="w-6 h-6" />
+          </button>
         )}
+        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-foreground from-50% to-foreground/60">
+          {getPageTitle()}
+        </h1>
       </div>
 
       <div className="flex items-center justify-end gap-2">

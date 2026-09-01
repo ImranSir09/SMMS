@@ -75,43 +75,6 @@ const Dashboard: React.FC = () => {
     
     return (
         <div className="flex flex-col gap-6 animate-fade-in pb-8">
-            
-            {/* School Identity Section - Compact Horizontal Design */}
-            <div className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-card via-background to-card border border-border/50 shadow-md p-4">
-                {/* Background Decor */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none translate-y-1/2 -translate-x-1/2"></div>
-
-                <div className="relative z-10 flex flex-row items-center justify-center gap-5">
-                    {/* Logo */}
-                    <div className="relative flex-shrink-0">
-                        <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white/50 dark:bg-black/20 backdrop-blur-sm p-2 shadow-sm border border-foreground/5 flex items-center justify-center">
-                            <img 
-                                src={schoolDetails?.logo || '/icon.png'} 
-                                alt="School Logo" 
-                                className="w-full h-full object-contain drop-shadow-sm rounded-xl"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = '/icon.png';
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Typography */}
-                    <div className="flex flex-col justify-center">
-                        <h1 className="text-lg md:text-2xl font-black text-foreground tracking-tight uppercase leading-tight drop-shadow-sm">
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-foreground/80">
-                                {schoolDetails?.name || 'School Name'}
-                            </span>
-                        </h1>
-                        <div className="mt-1.5 flex items-center gap-1 opacity-70">
-                            <div className="h-1 w-1 bg-accent rounded-full"></div>
-                            <div className="h-0.5 w-12 bg-gradient-to-r from-accent to-transparent rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div className="grid grid-cols-2 gap-3">
                 <StatCard icon={<HashIcon className="w-5 h-5"/>} label="UDISE" value={schoolDetails?.udiseCode || 'N/A'} className="bg-slate-500 text-white"/>
                 <StatCard icon={<UsersIcon className="w-5 h-5"/>} label="Students" value={dashboardData?.studentCount ?? 0} className="bg-primary text-primary-foreground"/>
