@@ -5,6 +5,9 @@ const APP_SHELL_URLS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/icon.png',
+  '/icon-192.png',
+  '/icon-512.png',
   '/index.tsx'
 ];
 
